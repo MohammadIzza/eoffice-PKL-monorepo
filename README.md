@@ -1,134 +1,141 @@
-# 🚀 E-OFFICE PKL - Quick Setup Guide
+# FRONTEND STRUCTURE DOCUMENTATION
 
-Panduan instalasi pertama kali untuk **E-Office Persuratan FSM UNDIP**.
+## 📁 Folder Structure
 
----
-
-## 📋 Prerequisites
-
-- **Bun** >= 1.1.6
-- **Docker & Docker Compose**
-- **Git**
-
-```bash
-bun --version    # 1.1.6+
-docker --version # 24.x+
+```
+src/
+├── app/                          # Next.js App Router
+│   ├── (auth)/                   # Public routes (login/register)
+│   ├── (dashboard)/              # Protected routes (main app)
+│   ├── pengajuan/pkl/            # PKL submission flow
+│   └── surat/detail/[id]/        # Letter detail
+│
+├── components/
+│   ├── ui/                       # Atomic UI components (shadcn/ui)
+│   ├── features/pkl/             # PKL-specific components
+│   ├── layouts/                  # Layout wrappers
+│   └── shared/                   # Shared components
+│
+├── services/                     # API integration
+│   ├── auth.service.ts
+│   ├── letter.service.ts
+│   └── approval.service.ts
+│
+├── hooks/                        # Custom React hooks
+│   ├── api/                      # API-related hooks
+│   │   ├── useAuth.ts
+│   │   ├── useLetters.ts
+│   │   └── useApproval.ts
+│   └── ui/                       # UI-related hooks
+│       └── useToast.ts
+│
+├── types/                        # TypeScript types
+│   ├── letter.types.ts
+│   ├── user.types.ts
+│   ├── approval.types.ts
+│   └── common.types.ts
+│
+├── stores/                       # State management (Zustand)
+│   ├── authStore.ts
+│   └── pklFormStore.ts
+│
+└── lib/
+    ├── api.ts                    # API client
+    ├── utils.ts                  # Utilities
+    └── constants/                # App constants
+        └── index.ts
 ```
 
----
+## 🎯 Separation of Concerns
 
-## ⚡ Quick Start
+### 1. **Routing & Pages** (`app/`)
+- Only render components
+- No business logic
+- Use route groups: `(auth)` and `(dashboard)`
 
-### 1️⃣ Clone & Install
-```bash
-git clone https://github.com/your-org/eoffice-PKL-monorepo.git
-cd eoffice-PKL-monorepo
+### 2. **UI Components** (`components/ui/`)
+- Atomic, reusable components
+- No business logic
+- Props only
+
+### 3. **Feature Components** (`components/features/`)
+- Domain-specific logic
+- Can use hooks and state
+- PKL forms, approval UI, etc.
+
+### 4. **Services** (`services/`)
+- API integration
+- Pure functions
+- Return promises
+
+### 5. **Hooks** (`hooks/`)
+- Business logic
+- Side effects
+- State management
+
+### 6. **Types** (`types/`)
+- TypeScript interfaces
+- Type definitions
+- Centralized types
+
+### 7. **Stores** (`stores/`)
+- Global state (Zustand)
+- Auth, form state, etc.
+
+## 🚀 Usage Examples
+
+### Page Component
+```tsx
+// app/(dashboard)/surat/page.tsx
+import { LetterList } from '@/components/features/letters';
+
+export default function LettersPage() {
+  return <LetterList />;
+}
 ```
 
-### 2️⃣ Database Setup
-```bash
-cd e-office-api-v2
-docker compose -f docker-compose.dev.yml up -d
+### Feature Component
+```tsx
+// components/features/letters/LetterList.tsx
+import { useLetters } from '@/hooks/api';
+
+export function LetterList() {
+  const { letters, isLoading } = useLetters();
+  
+  if (isLoading) return <div>Loading...</div>;
+  
+  return <div>{/* render letters */}</div>;
+}
 ```
 
-### 3️⃣ Backend Setup
-```bash
-# Install dependencies
-bun install
+### Hook
+```tsx
+// hooks/api/useLetters.ts
+import { useQuery } from '@tanstack/react-query';
+import { letterService } from '@/services';
 
-# Create .env file
-cat > .env << EOF
-DATABASE_URL="postgresql://e-office-api-v2:90d467e0d673bc1a8fba21ed@localhost:5432/e-office-api-v2"
-NODE_ENV=development
-PORT=3000
-MINIO_ENDPOINT=localhost
-MINIO_PORT=9000
-MINIO_USE_SSL=false
-MINIO_ACCESS_KEY=minioadmin
-MINIO_SECRET_KEY=minioadmin
-MINIO_BUCKET_NAME=e-office-files
-BETTER_AUTH_SECRET=$(openssl rand -base64 32)
-EOF
-
-# Setup database
-bunx prisma generate
-bunx prisma migrate deploy
-bun run src/db/seed.ts
+export function useLetters() {
+  return useQuery({
+    queryKey: ['letters'],
+    queryFn: () => letterService.getMyLetters()
+  });
+}
 ```
 
-### 4️⃣ Frontend Setup
-```bash
-cd ../e-office-webapp-v2
-bun install
+### Service
+```tsx
+// services/letter.service.ts
+import { client } from '@/lib/api';
 
-# Create .env.local
-cat > .env.local << EOF
-NEXT_PUBLIC_API_URL=http://localhost:3000
-EOF
+export const letterService = {
+  getMyLetters: () => client.letter.my.get()
+};
 ```
 
-### 5️⃣ MinIO Setup (Optional)
-```bash
-docker run -d --name minio \
-  -p 9000:9000 -p 9001:9001 \
-  -e "MINIO_ROOT_USER=minioadmin" \
-  -e "MINIO_ROOT_PASSWORD=minioadmin" \
-  quay.io/minio/minio server /data --console-address ":9001"
-```
+## 📦 Next Steps
 
-### 6️⃣ Run Application
-```bash
-# Terminal 1 - Backend
-cd e-office-api-v2 && bun run dev
-
-# Terminal 2 - Frontend
-cd e-office-webapp-v2 && bun run dev
-```
-
----
-
-## 🔐 Test Login
-
-| Role | Email | Password |
-|------|-------|----------|
-| Superadmin | superadmin@fsm.internal | password1234 |
-| Mahasiswa | mahasiswa@students.undip.ac.id | password1234 |
-
-**URLs:**
-- Frontend: http://localhost:3001
-- Backend: http://localhost:3000
-- Swagger: http://localhost:3000/swagger
-- MinIO: http://localhost:9001
-
----
-
-## 🐛 Common Issues
-
-**Port already in use:**
-```bash
-lsof -i :3000    # Check port
-kill -9 <PID>    # Kill process
-```
-
-**Database error:**
-```bash
-docker ps                                  # Check container
-docker restart e-office-api-v2-postgres   # Restart
-```
-
-**Module not found:**
-```bash
-rm -rf node_modules bun.lockb
-bun install
-bunx prisma generate
-```
-
----
-
-## 📚 Next Steps
-
-- Read: [BUSINESS_PROCESS.md](BUSINESS_PROCESS.md)
-- Prisma Studio: `bunx prisma studio`
-- Development: `bun run dev`
-
-✅ **Ready!**
+1. Move existing pages to route groups
+2. Implement services layer
+3. Create custom hooks
+4. Setup state management
+5. Add type definitions
