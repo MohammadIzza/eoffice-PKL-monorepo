@@ -168,7 +168,7 @@ export default function Step4Review() {
                 
             {/* TOMBOL FINAL: DILINK KE HALAMAN STATUS (STEP 5) */}
             <Button asChild className="h-11 px-6 bg-[#0079BD] text-white font-bold hover:bg-blue-700 rounded-[8px] cursor-pointer">
-                <Link href="/pengajuan/pkl/status">
+                <Link href="/dashboard/pengajuan/pkl/status">
                 Ajukan Permohonan
                 </Link>
             </Button>

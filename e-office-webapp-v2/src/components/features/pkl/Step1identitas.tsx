@@ -80,8 +80,8 @@ export default function Step1identitas() {
   const onSubmit = (data: FormData) => {
     console.log("Data Step 1 Submit:", data);
     
-    // Redirect
-    router.push("/pengajuan/pkl/detail-pengajuan");
+    // Redirect ke dashboard route
+    router.push("/dashboard/pengajuan/pkl/detail-pengajuan");
   };
 
   // --- STYLES ---

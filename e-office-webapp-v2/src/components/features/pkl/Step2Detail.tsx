@@ -71,7 +71,7 @@ export default function Step2Detail() {
   // AC: Navigasi ke step 3 setelah validasi berhasil
   const onSubmit = (data: FormData) => {
     console.log("Data Step 2 Valid:", data);
-    router.push("/pengajuan/pkl/lampiran");
+    router.push("/dashboard/pengajuan/pkl/lampiran");
   };
 
   // --- STYLES (Pixel Perfect Sesuai Screenshot Desain) ---

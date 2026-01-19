@@ -201,7 +201,7 @@ export default function Step3Lampiran() {
           
           {/* TOMBOL LANJUT YANG SUDAH DIAKTIFKAN & DILINK KE REVIEW */}
           <Button asChild className="h-11 px-6 bg-[#0079BD] text-white font-bold hover:bg-blue-700 cursor-pointer rounded-[8px]">
-            <Link href="/pengajuan/pkl/review">
+            <Link href="/dashboard/pengajuan/pkl/review">
               Lanjut
             </Link>
           </Button>
