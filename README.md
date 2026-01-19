@@ -20,31 +20,34 @@
 
 ## 🎯 Tentang Project
 
-**E-Office Surat** adalah aplikasi web untuk mahasiswa mengajukan surat akademik (PKL, penelitian, dll) secara online dengan approval workflow otomatis.
+**E-Office Surat** adalah sistem digital untuk pengelolaan surat akademik mahasiswa Universitas Diponegoro. Sistem ini memungkinkan mahasiswa mengajukan surat (PKL, penelitian, dll) secara online dengan proses approval otomatis melalui 8 level pejabat.
 
-### Masalah yang Diselesaikan
+### Cara Kerja
 
-**Sebelum:**
-- Mahasiswa harus datang ke kampus untuk submit surat
-- Proses approval manual dan lama (7-14 hari)
-- Susah tracking status surat
-- Surat sering hilang atau tertunda
+**Alur Umum:**
+1. Mahasiswa login → isi form multi-step (5 langkah)
+2. Submit surat → masuk ke approval workflow (8 level approver)
+3. Setiap approver dapat approve/reject/revise
+4. Mahasiswa dapat tracking status real-time
+5. Setelah semua approve → surat diberi nomor resmi → download PDF
 
-**Sesudah:**
-- Submit surat dari rumah (24/7)
-- Approval otomatis dengan notifikasi real-time
-- Tracking status langsung di dashboard
-- Proses lebih cepat (2-3 hari)
+**Karakteristik Sistem:**
+- **Paperless** - Proses sepenuhnya digital tanpa kertas
+- **Real-Time** - Status approval update langsung ke mahasiswa
+- **Automated** - Notifikasi otomatis ke setiap approver
+- **Audit Trail** - Semua history approval tercatat permanent
+- **Role-Based** - Permission sesuai role user (mahasiswa, dosen, admin, dll)
 
 ### Fitur Utama
 
-1. **Multi-Step Form** - Pengisian data bertahap (identitas → detail → lampiran → review)
-2. **8-Level Approval** - Workflow approval terstruktur (Dosen → Koordinator → Prodi → ... → Penomoran)
-3. **Real-Time Tracking** - Mahasiswa bisa lihat status approval live
-4. **File Upload** - Upload proposal, KTM, transkrip nilai
-5. **Auto Notification** - Email/push notification setiap ada update
-6. **Digital Signature** - TTD digital untuk setiap approval
-7. **PDF Generation** - Download surat final dengan nomor resmi
+1. **Multi-Step Form** - Pengisian data bertahap: Identitas → Detail PKL → Upload Lampiran → Review → Submit
+2. **8-Level Approval Workflow** - Dosen Pembimbing → Dosen Koordinator → Ketua Prodi → Admin → Supervisor Akademik → Manajer TU → Wakil Dekan (TTD) → Penomoran UPA
+3. **Real-Time Status Tracking** - Dashboard monitoring progress approval langsung
+4. **File Management** - Upload dokumen pendukung (proposal, transkrip, surat balasan)
+5. **Notification System** - Email/push notification otomatis setiap ada update
+6. **Digital Signature** - TTD digital untuk setiap level approval
+7. **PDF Generation** - Generate surat final dengan nomor resmi otomatis
+8. **Role-Based Access Control** - Permission berbeda untuk mahasiswa, dosen, admin, pejabat
 
 ---
 
@@ -628,6 +631,12 @@ npm run dev                          # Start dev server (port 3001)
 
 ### Umum
 
+**Q: Apa fungsi utama sistem ini?**  
+A: Digitalisasi proses pengajuan dan approval surat akademik mahasiswa dengan workflow otomatis 8 level.
+
+**Q: Siapa saja yang menggunakan sistem ini?**  
+A: Mahasiswa (mengajukan surat), Dosen (approval level 1-2), Ketua Prodi (approval level 3), Admin (approval level 4), Supervisor Akademik (level 5), Manajer TU (level 6), Wakil Dekan (level 7 + TTD), UPA (penomoran level 8).
+
 **Q: Apa itu monorepo?**  
 A: 1 repository untuk backend + frontend. Keuntungan: sharing types, atomic deployment, easier collaboration.
 
@@ -635,10 +644,10 @@ A: 1 repository untuk backend + frontend. Keuntungan: sharing types, atomic depl
 A: Bun 3x lebih cepat dalam runtime & package installation, built-in TypeScript support, kompatibel dengan Node.js packages.
 
 **Q: Apakah wajib pakai Docker?**  
-A: Tidak wajib untuk development. Tapi sangat recommended untuk production (consistency).
+A: Tidak wajib untuk development, tapi recommended untuk production (consistency & easy deployment).
 
-**Q: Bisa deploy di shared hosting?**  
-A: Tidak recommended. Butuh VPS/Cloud dengan Docker atau Node.js runtime.
+**Q: Berapa lama proses approval rata-rata?**  
+A: Tergantung responsiveness approver, rata-rata 2-3 hari kerja untuk semua 8 level.
 
 ### Development
 
