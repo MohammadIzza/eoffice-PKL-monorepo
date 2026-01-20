@@ -1,706 +1,1072 @@
-# 📚 E-Office Surat - Dokumentasi Project
+# 📋 DOKUMENTASI BISNIS PROSES E-OFFICE FSM UNDIP
 
-> Sistem Pengajuan & Persetujuan Surat Akademik Online  
-> Universitas Diponegoro
-
----
-
-## 📖 Daftar Isi
-
-- [Tentang Project](#-tentang-project)
-- [Struktur Monorepo](#-struktur-monorepo)
-- [Backend (API)](#-backend-api)
-- [Frontend (Web App)](#-frontend-web-app)
-- [Alur Pengajuan Surat](#-alur-pengajuan-surat)
-- [Teknologi](#-teknologi)
-- [Cara Install](#-cara-install)
-- [FAQ](#-faq)
+**Versi:** 1.0  
+**Tanggal:** 20 Januari 2026  
+**Project:** Sistem E-Office Persuratan Fakultas Sains dan Matematika UNDIP
 
 ---
 
-## 🎯 Tentang Project
+## 📖 DAFTAR ISI
 
-**E-Office Surat** adalah sistem digital untuk pengelolaan surat akademik mahasiswa Universitas Diponegoro. Sistem ini memungkinkan mahasiswa mengajukan surat (PKL, penelitian, dll) secara online dengan proses approval otomatis melalui 8 level pejabat.
-
-### Cara Kerja
-
-**Alur Umum:**
-1. Mahasiswa login → isi form multi-step (5 langkah)
-2. Submit surat → masuk ke approval workflow (8 level approver)
-3. Setiap approver dapat approve/reject/revise
-4. Mahasiswa dapat tracking status real-time
-5. Setelah semua approve → surat diberi nomor resmi → download PDF
-
-**Karakteristik Sistem:**
-- **Paperless** - Proses sepenuhnya digital tanpa kertas
-- **Real-Time** - Status approval update langsung ke mahasiswa
-- **Automated** - Notifikasi otomatis ke setiap approver
-- **Audit Trail** - Semua history approval tercatat permanent
-- **Role-Based** - Permission sesuai role user (mahasiswa, dosen, admin, dll)
-
-### Fitur Utama
-
-1. **Multi-Step Form** - Pengisian data bertahap: Identitas → Detail PKL → Upload Lampiran → Review → Submit
-2. **8-Level Approval Workflow** - Dosen Pembimbing → Dosen Koordinator → Ketua Prodi → Admin → Supervisor Akademik → Manajer TU → Wakil Dekan (TTD) → Penomoran UPA
-3. **Real-Time Status Tracking** - Dashboard monitoring progress approval langsung
-4. **File Management** - Upload dokumen pendukung (proposal, transkrip, surat balasan)
-5. **Notification System** - Email/push notification otomatis setiap ada update
-6. **Digital Signature** - TTD digital untuk setiap level approval
-7. **PDF Generation** - Generate surat final dengan nomor resmi otomatis
-8. **Role-Based Access Control** - Permission berbeda untuk mahasiswa, dosen, admin, pejabat
+1. [Overview Sistem](#1-overview-sistem)
+2. [Struktur Organisasi](#2-struktur-organisasi)
+3. [Roles & Permissions](#3-roles--permissions)
+4. [Alur Bisnis Proses Utama](#4-alur-bisnis-proses-utama)
+5. [User Journey](#5-user-journey)
+6. [Workflow Examples](#6-workflow-examples)
+7. [Business Rules](#7-business-rules)
+8. [Edge Cases & Scenarios](#8-edge-cases--scenarios)
 
 ---
 
-## 📁 Struktur Monorepo
+## 1. OVERVIEW SISTEM
 
-Project ini menggunakan **monorepo** (1 repository untuk backend + frontend).
+### 1.1 Tujuan Sistem
+Sistem E-Office FSM UNDIP adalah aplikasi berbasis web untuk mengelola proses persuratan di lingkungan Fakultas Sains dan Matematika Universitas Diponegoro, dengan fokus pada:
+- Digitalisasi proses pengajuan dan approval surat
+- Workflow approval yang terstruktur dan teraudit
+- Tracking status surat real-time
+- Disposisi tugas antar role
+- Tanda tangan digital
+- Penomoran surat otomatis
 
-```
-eoffice-PKL-monorepo/
-│
-├── e-office-api-v2/              Backend API (Elysia.js + Bun)
-│   ├── prisma/                   Database schema & migrations
-│   ├── src/
-│   │   ├── routes/               API endpoints
-│   │   ├── services/             Business logic
-│   │   ├── middlewares/          Auth & RBAC
-│   │   └── lib/                  Utilities
-│   └── docker-compose.yml        Database & storage setup
-│
-├── e-office-webapp-v2/           Frontend Web (Next.js + React)
-│   └── src/
-│       ├── app/                  Pages & routes
-│       ├── components/           UI components
-│       ├── services/             API calls
-│       ├── hooks/                Custom hooks
-│       ├── stores/               Global state (Zustand)
-│       └── types/                TypeScript types
-│
-└── PROJECT_DOCUMENTATION.md      File ini
-```
+### 1.2 Scope
+**Dalam Scope:**
+- Surat Keluar (Outgoing Letter) dari mahasiswa
+- Workflow approval multi-step
+- Disposisi tugas
+- Tanda tangan digital
+- Penomoran manual
+- Dashboard & reporting basic
 
-### Kenapa Monorepo?
+**Luar Scope (Phase 1):**
+- Surat Masuk (Incoming Letter) dari eksternal
+- Integrasi SIAKAD (API)
+- Email notification
+- Mobile app
+- Export Excel/PDF batch
 
-- ✅ Backend & frontend dalam 1 repository (mudah manage)
-- ✅ Sharing types TypeScript antar BE & FE (type-safe)
-- ✅ Deploy bersamaan (atomic deployment)
-- ✅ Code review lebih mudah
+### 1.3 Users
+- **Mahasiswa:** ~500 orang
+- **Dosen/Staff:** ~50 orang
+- **Admin:** ~2 orang
+- **Concurrent Users (Peak):** ~50 users
+- **Surat/Bulan (Peak):** ~100 surat
+- **Surat/Bulan (Normal):** ~50 surat
 
 ---
 
-## 🔧 Backend (API)
+## 2. STRUKTUR ORGANISASI
 
-**Lokasi:** `e-office-api-v2/`
-
-Backend menggunakan **Elysia.js** (framework modern, cepat) dengan **Bun** runtime.
-
-### Struktur Folder Backend
-
+### 2.1 Hierarchy
 ```
-e-office-api-v2/
-├── prisma/
-│   ├── schema.prisma             Database schema (tabel, relasi)
-│   └── migrations/               Database migrations (perubahan DB)
+Fakultas Sains dan Matematika (FSM)
 │
-├── src/
-│   ├── routes/                   API endpoints
-│   │   ├── public/               Public routes (login, register)
-│   │   ├── master/               Master data (user, prodi, dosen)
-│   │   └── me.ts                 User profile endpoints
-│   │
-│   ├── services/                 Business logic
-│   │   └── database_models/      CRUD operations per tabel
-│   │
-│   ├── middlewares/              Middleware
-│   │   ├── auth.ts               JWT authentication
-│   │   └── context.ts            Request context
-│   │
-│   ├── lib/                      Utilities
-│   │   ├── auth.ts               Better-Auth setup
-│   │   └── casbin.ts             RBAC (role-based access control)
-│   │
-│   ├── db/
-│   │   ├── index.ts              Database client (Prisma)
-│   │   └── seed.ts               Seed data awal
-│   │
-│   ├── config.ts                 App configuration
-│   ├── server.ts                 Server setup
-│   └── index.ts                  Entry point
+├── Departemen Informatika
+│   ├── Program Studi S1 Informatika
+│   │   └── Mahasiswa S1 Informatika
+│   └── Program Studi S2 Informatika
+│       └── Mahasiswa S2 Informatika
 │
-├── casbin/
-│   └── model.conf                RBAC model configuration
+├── Departemen Matematika
+│   ├── Program Studi S1 Matematika
+│   └── Program Studi S2 Matematika
 │
-└── docker-compose.yml            PostgreSQL + MinIO setup
+└── Departemen Fisika
+    ├── Program Studi S1 Fisika
+    └── Program Studi S2 Fisika
 ```
 
-### Fungsi Setiap Folder
+### 2.2 Unit Relationship
+- **Fakultas** (root)
+  - **Departemen** (child of Fakultas)
+    - **Program Studi** (child of Departemen)
+      - **Mahasiswa** (belongs to Program Studi)
 
-| Folder | Fungsi |
-|--------|--------|
-| **prisma/** | Database schema & migration history |
-| **routes/** | Definisi API endpoints (GET, POST, PUT, DELETE) |
-| **services/** | Business logic & database operations |
-| **middlewares/** | Auth check, permission check, logging |
-| **lib/** | Helper functions & utilities |
-| **db/** | Database connection & seed data |
-| **casbin/** | RBAC (siapa boleh akses apa) |
+**Unit Hierarchy Traversal:**
+- Jika tidak ada role di level Program Studi → naik ke Departemen
+- Jika tidak ada role di level Departemen → naik ke Fakultas
+- Maximum depth: 5 levels
 
-### Database Schema (Simplified)
+---
 
-**Core Tables:**
+## 3. ROLES & PERMISSIONS
 
-1. **User** - Semua user (mahasiswa, dosen, admin)
-2. **Role** - Roles (mahasiswa, dosen_pembimbing, ketua_prodi, admin, dll)
-3. **LetterInstance** - Surat yang diajukan mahasiswa
-4. **ApprovalHistory** - Log approval (siapa approve, kapan, comment)
-5. **Departemen** - Departemen/Fakultas
-6. **ProgramStudi** - Program studi
-7. **Mahasiswa** - Data mahasiswa (extend User)
-8. **Pegawai** - Data dosen/staff (extend User)
+### 3.1 Role Types
 
-### API Endpoints (REST)
+| Role | Scope | Responsibilities | Permissions |
+|------|-------|------------------|-------------|
+| **Mahasiswa** | Program Studi | Mengajukan surat | Create draft, Submit, Self-revise, View own letters |
+| **Dosen Pembimbing** | Program Studi | Approve surat bimbingan | Approve, Reject, Revise, Disposisi |
+| **Coordinator PKL/Penelitian** | Departemen | Koordinasi PKL/Penelitian | Approve, Reject, Revise, Disposisi |
+| **Ketua Prodi (Kaprodi)** | Program Studi | Approve surat prodi | Approve, Reject, Revise, Disposisi |
+| **Supervisor Akademik** | Departemen | Verifikasi akademik | Approve, Reject, Revise |
+| **Manajer Tata Usaha** | Fakultas | Administrasi surat | Approve, Reject, TTD |
+| **Dekan** | Fakultas | Persetujuan dekan | Approve, Reject, Revise, Disposisi |
+| **Wakil Dekan 1/2/3** | Fakultas | Persetujuan & TTD | Approve, Reject, TTD |
+| **UPA** | Fakultas | Penomoran surat | Input nomor surat |
+| **Admin Departemen** | Departemen | Manage surat departemen | Override ALL actions di scope departemen |
+| **Admin Fakultas** | Fakultas | Manage sistem | Override ALL actions, Manage workflow, Manage templates |
 
-**Authentication:**
-- `POST /public/sign-in` - Login
-- `POST /public/register` - Register mahasiswa
-- `GET /me` - Get current user info
+### 3.2 Permission Matrix
 
-**Master Data (Admin):**
-- `GET /master/user` - List users
-- `POST /master/user` - Create user
-- `GET /master/departemen` - List departemen
-- `GET /master/prodi` - List program studi
+| Action | Mahasiswa | Dosen | Kaprodi | Dekan | WD | Admin |
+|--------|-----------|-------|---------|-------|-----|-------|
+| Create Draft | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Submit Letter | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Self-Revise | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Approve Step | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ (override) |
+| Reject Step | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ (override) |
+| Revise Step | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ (override) |
+| Create Disposisi | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ (override) |
+| TTD | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ (override) |
+| Penomoran | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ (UPA/Admin) |
+| View All Letters | ❌ | Unit only | Unit only | All | All | All |
+| Edit Letter Data | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Delete Letter | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Manage Workflow | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Manage Templates | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
 
-**Letter Management:**
-- `POST /letter/submit` - Submit surat baru
-- `GET /letter/my` - Get my letters
-- `GET /letter/:id` - Get detail surat
-- `POST /letter/:id/approve` - Approve surat
-- `POST /letter/:id/reject` - Reject surat
-- `POST /letter/:id/revise` - Minta revisi
+### 3.3 Role Assignment Rules
+- **1 Role = 1 User** (kecuali Dosen Pembimbing yang bisa banyak)
+- **1 User bisa punya multiple roles** (contoh: Kaprodi sekaligus Dosen Pembimbing)
+- **Role terikat dengan Unit** (contoh: Kaprodi S1 Informatika ≠ Kaprodi S2 Informatika)
 
-**File Upload:**
-- `POST /upload` - Upload file (proposal, KTM, dll)
-- `GET /file/:key` - Download file
+---
 
-### Authentication & Authorization
+## 4. ALUR BISNIS PROSES UTAMA
 
-**Better-Auth (Login):**
-- Email/password authentication
-- JWT token generation
-- Session management
+### 4.1 High-Level Process Flow
 
-**Casbin (Authorization):**
+```mermaid
+graph TD
+    A[Mahasiswa Login] --> B[Pilih Jenis Surat]
+    B --> C[Isi Form Dinamis]
+    C --> D[Upload Dokumen Pendukung]
+    D --> E[Submit Surat]
+    E --> F{Workflow Started}
+    
+    F --> G[Step 1: Dosen Pembimbing]
+    G --> H{Action?}
+    H -->|Approve| I[Step 2: Coordinator]
+    H -->|Reject| Z[Surat Rejected]
+    H -->|Revise| AA[Kembali ke Mahasiswa]
+    
+    I --> J{Action?}
+    J -->|Approve| K[Step 3: Kaprodi]
+    J -->|Reject| Z
+    J -->|Revise| AA
+    
+    K --> L{Action?}
+    L -->|Approve| M[Step 4: Supervisor Akademik]
+    L -->|Reject| Z
+    L -->|Revise| AA
+    
+    M --> N{Action?}
+    N -->|Approve| O[Step 5: Manajer TU]
+    N -->|Reject| Z
+    N -->|Revise| AA
+    
+    O --> P{Action?}
+    P -->|Approve| Q[Step 6: Wakil Dekan 1]
+    P -->|Reject| Z
+    P -->|Revise| AA
+    
+    Q --> R{TTD?}
+    R -->|TTD| S[Step 7: UPA Penomoran]
+    R -->|Reject| Z
+    
+    S --> T[Input Nomor Surat]
+    T --> U[Generate Final PDF]
+    U --> V[Surat Completed]
+    V --> W[Mahasiswa Download]
+    
+    AA --> X[Mahasiswa Edit]
+    X --> Y[Resubmit]
+    Y --> F
+```
+
+### 4.2 Process Stages
+
+#### **Stage 1: Persiapan Surat (Mahasiswa)**
+1. Mahasiswa login ke sistem
+2. Pilih menu "Buat Surat Baru"
+3. Pilih jenis surat dari dropdown (contoh: "Surat Pengantar PKL")
+4. Sistem menampilkan form dinamis sesuai jenis surat
+5. Mahasiswa mengisi form:
+   - Data diri (auto-fill dari database)
+   - Field spesifik (contoh: tempat PKL, durasi)
+   - Upload dokumen pendukung (proposal, KTM, dll)
+6. Sistem generate preview PDF dari template
+7. Mahasiswa review preview
+8. Mahasiswa save sebagai DRAFT atau langsung SUBMIT
+
+**Output:** Surat dengan status DRAFT atau PROCESSING
+
+---
+
+#### **Stage 2: Workflow Approval (Multi-Step)**
+
+**Step 1: Dosen Pembimbing**
+- **Trigger:** Mahasiswa submit surat
+- **Assignment:** Auto-assign ke dosen pembimbing mahasiswa (dari database)
+- **Actions:**
+  - **Approve:** Kirim ke step berikutnya (dengan/tanpa pesan)
+  - **Reject:** Surat ditolak, workflow selesai (wajib pesan min 10 char)
+  - **Revise:** Kembalikan ke mahasiswa untuk perbaikan (wajib pesan)
+  - **Disposisi:** Tugaskan ke staff/dosen lain untuk persiapan dokumen
+- **Time limit:** 24 jam (setelah itu auto-reminder)
+- **Notification:** Email + In-app notification
+
+**Step 2: Coordinator PKL/Penelitian**
+- **Trigger:** Step 1 approved
+- **Assignment:** Auto-assign berdasarkan role "Coordinator PKL" di departemen
+- **Actions:** Sama seperti Step 1
+- **Additional:** Bisa tambah form field (contoh: "Catatan Coordinator")
+
+**Step 3: Ketua Program Studi (Kaprodi)**
+- **Trigger:** Step 2 approved
+- **Assignment:** Auto-assign ke Kaprodi prodi mahasiswa
+- **Actions:** Sama seperti Step 1
+- **Special:** Kaprodi bisa lihat semua surat di prodi-nya
+
+**Step 4: Supervisor Akademik**
+- **Trigger:** Step 3 approved
+- **Assignment:** Auto-assign ke Supervisor Akademik departemen
+- **Actions:** Approve/Reject/Revise (no disposisi)
+- **Focus:** Verifikasi data akademik (IPK, semester, dll)
+
+**Step 5: Manajer Tata Usaha**
+- **Trigger:** Step 4 approved
+- **Assignment:** Auto-assign ke Manajer TU fakultas
+- **Actions:** Approve/Reject atau TTD (tergantung workflow)
+- **Additional:** Bisa upload lampiran tambahan
+
+**Step 6: Wakil Dekan 1 (Final Approval + TTD)**
+- **Trigger:** Step 5 approved
+- **Assignment:** Auto-assign ke Wakil Dekan 1
+- **Actions:**
+  - **Approve + TTD:** Upload gambar TTD atau live signature pad
+  - **Reject:** Surat ditolak
+- **Output:** PDF dengan TTD terembed
+
+**Step 7: UPA Penomoran**
+- **Trigger:** Step 6 TTD
+- **Assignment:** Auto-assign ke UPA
+- **Action:** Input nomor surat manual (format bebas)
+- **Validation:** Cek duplikasi nomor
+- **Output:** PDF final dengan nomor surat
+
+**Step 8: Notifikasi Selesai**
+- **Trigger:** Step 7 selesai
+- **Action:** Auto-notify mahasiswa
+- **Status:** COMPLETED
+- **Output:** Mahasiswa bisa download PDF final
+
+---
+
+#### **Stage 3: Skenario Khusus**
+
+**A. Self-Revision oleh Mahasiswa**
+```
+Timeline:
+1. Mahasiswa submit surat → Step 1 approved → Step 2 pending
+2. Mahasiswa sadar salah input data
+3. Mahasiswa klik "Ajukan Revisi Sendiri"
+4. Sistem validasi:
+   - Cek status = PROCESSING ✅
+   - Cek belum di step TTD ✅
+   - Cek ada step yang sudah approved ✅
+5. Workflow mundur 1 step (ke Step 1)
+6. Step 1-2 reset ke "waiting"
+7. Step 1 set "pending" (perlu re-approval)
+8. Mahasiswa edit data
+9. Mahasiswa resubmit
+10. Step 1 approver dapat notifikasi "Surat diresubmit setelah revisi"
+11. Workflow jalan ulang dari Step 1
+```
+
+**Rules:**
+- Bisa revisi unlimited
+- Hanya sebelum step TTD
+- Mundur ke step terakhir yang approved
+- Approver yang sudah approve harus review ulang
+
+---
+
+**B. Revise oleh Approver**
+```
+Timeline:
+1. Kaprodi review surat di Step 3
+2. Kaprodi klik "Revise" + isi alasan (min 10 char)
+3. Workflow kembali ke mahasiswa
+4. Status surat: NEED_REVISION
+5. Mahasiswa dapat notifikasi
+6. Mahasiswa edit data
+7. Mahasiswa resubmit
+8. Workflow mulai dari awal (Step 1)
+```
+
+**Perbedaan dengan Self-Revision:**
+- Self-revision: Mahasiswa inisiatif, mundur 1 step
+- Revise by approver: Approver inisiatif, reset total
+
+---
+
+**C. Disposisi (Task Delegation)**
+```
+Timeline:
+1. Kaprodi sedang review surat di Step 3
+2. Kaprodi butuh dokumen tambahan dari Staff TU
+3. Kaprodi klik "Buat Disposisi"
+4. Isi form disposisi:
+   - Ditugaskan ke: [Pilih user - Staff TU]
+   - Instruksi: "Tolong siapkan transkrip nilai terbaru"
+   - Priority: URGENT (default semua urgent)
+5. Submit disposisi
+6. Staff TU dapat notifikasi
+7. Kaprodi TIDAK BISA approve sebelum disposisi selesai (BLOCKING)
+8. Staff TU buka disposisi → upload dokumen → mark "Completed"
+9. Kaprodi dapat notifikasi "Disposisi selesai"
+10. Kaprodi bisa approve step 3
+```
+
+**Rules:**
+- Disposisi BLOCKING (harus selesai dulu)
+- Bisa nested (Staff TU disposisi lagi ke user lain)
+- Semua disposisi priority: URGENT
+- No deadline
+
+---
+
+**D. Admin Override**
+```
+Scenario:
+- Kaprodi sedang cuti/sakit
+- Surat urgent butuh approval
+- Admin Departemen bisa override
+
+Timeline:
+1. Admin Departemen login
+2. Buka detail surat yang pending di Kaprodi
+3. Sistem deteksi: Admin punya akses override (scope departemen)
+4. Muncul button "Override Approval"
+5. Admin klik override
+6. Isi form:
+   - Action: Approve/Reject/Revise
+   - Pesan override: (wajib min 10 char)
+7. Submit override
+8. Sistem:
+   - Execute action (approve)
+   - Log: "Approved by Dr. Ahmad (Kaprodi) - Overridden by Admin Budi"
+   - Notify Kaprodi asli: "Surat sudah di-override admin"
+9. Workflow lanjut ke step berikutnya
+```
+
+**Rules:**
+- Admin Departemen: Override step di scope departemen saja
+- Admin Fakultas: Override semua step
+- Wajib pesan (min 10 char)
+- Audit trail lengkap
+- Notify user asli
+
+---
+
+**E. Messaging antar Role**
+```
+Timeline:
+1. Step 2 (Coordinator) review surat
+2. Coordinator approve + tulis pesan: "Data sudah benar, lanjutkan"
+3. Step 3 (Kaprodi) dapat notifikasi
+4. Kaprodi buka surat → lihat pesan di timeline
+5. Kaprodi reject + tulis pesan: "Semester masih salah"
+6. Workflow terminated, mahasiswa dapat notifikasi
+7. Mahasiswa lihat timeline:
+   - ✅ Step 2: Coordinator approved - "Data sudah benar"
+   - ✗ Step 3: Kaprodi rejected - "Semester masih salah"
+```
+
+**Rules:**
+- Approve: Pesan optional
+- Reject: Pesan wajib (min 10 char)
+- Revise: Pesan wajib (min 10 char)
+- Pesan bisa diedit/delete oleh pengirim
+- Semua participant workflow bisa lihat pesan
+
+---
+
+## 5. USER JOURNEY
+
+### 5.1 Journey: Mahasiswa Mengajukan Surat Pengantar PKL
+
+**Persona:** Budi, Mahasiswa S1 Informatika Semester 7
+
+**Goal:** Mendapatkan surat pengantar PKL untuk melamar di PT Maju Jaya
+
+**Steps:**
+
+1. **Login**
+   - Budi akses `https://eoffice.fsm.undip.ac.id`
+   - Login dengan SSO UNDIP (username: budi, password: ****)
+   - Redirect ke dashboard
+
+2. **Dashboard**
+   - Lihat status surat:
+     - 1 surat pending (Surat Keterangan Aktif - menunggu Kaprodi)
+     - 2 surat approved
+   - Klik button "Buat Surat Baru"
+
+3. **Pilih Jenis Surat**
+   - Dropdown muncul dengan opsi:
+     - Surat Pengantar PKL
+     - Surat Keterangan Aktif
+     - Surat Rekomendasi Beasiswa
+     - dll
+   - Pilih "Surat Pengantar PKL"
+   - Sistem load form dinamis
+
+4. **Isi Form**
+   - Data diri (auto-fill):
+     - Nama: Budi Santoso
+     - NIM: 24060121140001
+     - Prodi: S1 Informatika
+     - Semester: 7
+   - Field khusus PKL:
+     - Jenis Pengantar: [Pilih] PKL
+     - Tempat PKL: PT Maju Jaya
+     - Alamat: Jl. Sudirman No. 123, Semarang
+     - Durasi: 3 bulan
+   - Upload dokumen:
+     - Proposal PKL (PDF, max 5MB) ✅
+     - KTM (JPG, max 5MB) ✅
+   - Preview muncul (PDF dengan template terisi)
+
+5. **Submit**
+   - Klik "Submit untuk Approval"
+   - Konfirmasi: "Surat akan dikirim ke Dosen Pembimbing Anda"
+   - Klik "Ya, Submit"
+   - Success: "Surat berhasil disubmit. Nomor tracking: #SRT-2026-001"
+
+6. **Tracking**
+   - Redirect ke detail surat
+   - Lihat timeline:
+     ```
+     ✅ Step 1: Mahasiswa Submit
+        👤 Budi Santoso
+        🕐 20 Jan 2026, 10:00
+        💬 "Mohon diproses pak"
+     
+     ⏳ Step 2: Dosen Pembimbing - Menunggu
+        👤 Dr. Ahmad (Dosen Pembimbing)
+        Status: Pending approval
+     ```
+
+7. **Wait for Approval** (Day 1)
+   - Budi dapat notifikasi: "Dr. Ahmad has approved your letter"
+   - Timeline update:
+     ```
+     ✅ Step 2: Dosen Pembimbing Approved
+        👤 Dr. Ahmad
+        🕐 20 Jan 2026, 14:30
+        💬 "Data sudah benar, saya approve"
+     
+     ⏳ Step 3: Coordinator PKL - Menunggu
+     ```
+
+8. **Revisi Request** (Day 2)
+   - Notifikasi: "Prof. Siti mengajukan revisi"
+   - Budi buka surat → lihat pesan:
+     ```
+     🔄 Step 3: Coordinator PKL Revisi
+        👤 Prof. Siti
+        💬 "Durasi PKL harus 4 bulan, bukan 3 bulan. Tolong perbaiki."
+     ```
+   - Status surat: NEED_REVISION
+
+9. **Edit & Resubmit**
+   - Klik "Edit Surat"
+   - Ubah durasi: 3 bulan → 4 bulan
+   - Klik "Resubmit"
+   - Success: "Surat berhasil diresubmit"
+
+10. **Final Approval** (Day 3-7)
+    - Workflow berjalan lagi dari Step 2
+    - Semua step approve
+    - Step 6 (WD1) TTD
+    - Step 7 (UPA) input nomor: 001/SK-FSM/I/2026
+    - Status: COMPLETED
+
+11. **Download**
+    - Notifikasi: "Surat Anda telah selesai diproses"
+    - Klik "Download PDF"
+    - PDF final dengan:
+      - Header FSM UNDIP
+      - Nomor surat: 001/SK-FSM/I/2026
+      - TTD Wakil Dekan 1
+      - QR Code verification
+
+---
+
+### 5.2 Journey: Kaprodi Approve Surat
+
+**Persona:** Dr. Budi, Ketua Prodi S1 Informatika
+
+**Goal:** Review dan approve surat mahasiswa
+
+**Steps:**
+
+1. **Notifikasi**
+   - Email: "You have 5 pending approvals"
+   - Login ke sistem
+   - Dashboard menampilkan:
+     - 5 surat pending approval
+     - 23 surat di prodi (this month)
+     - 18 surat completed (this month)
+
+2. **Review Surat**
+   - Klik surat pertama
+   - Lihat detail:
+     - Mahasiswa: Andi (S1 Informatika)
+     - Jenis: Surat Keterangan Aktif
+     - Timeline: Step 1-2 approved, Step 3 (Kaprodi) pending
+   - Lihat PDF preview
+   - Lihat data form:
+     - Semester: 5
+     - Keperluan: Beasiswa Bank
+     - IPK: 3.75
+
+3. **Disposisi**
+   - Dr. Budi butuh verifikasi IPK dari Staff TU
+   - Klik "Buat Disposisi"
+   - Isi:
+     - Ditugaskan ke: Siti (Staff TU)
+     - Instruksi: "Tolong verifikasi IPK mahasiswa ini dari SIAKAD"
+   - Submit disposisi
+   - Status: "Cannot approve until disposition completed"
+
+4. **Wait Disposisi** (30 menit kemudian)
+   - Notifikasi: "Disposition completed by Siti"
+   - Siti upload screenshot IPK dari SIAKAD (3.75 ✅)
+
+5. **Approve**
+   - Dr. Budi review hasil disposisi
+   - Data valid
+   - Klik "Approve"
+   - (Optional) Tambah pesan: "Data sudah terverifikasi"
+   - Submit
+   - Success: "Surat approved. Next step: Supervisor Akademik"
+
+6. **Lanjut ke Surat Berikutnya**
+   - Repeat untuk 4 surat lainnya
+   - Total waktu: ~20 menit untuk 5 surat
+
+---
+
+### 5.3 Journey: Admin Override Approval
+
+**Persona:** Admin Budi, Admin Departemen Informatika
+
+**Goal:** Override approval karena Kaprodi cuti
+
+**Steps:**
+
+1. **Laporan Urgent**
+   - Staff TU lapor: "Ada surat urgent, tapi Kaprodi cuti"
+   - Admin Budi login
+
+2. **Cari Surat**
+   - Dashboard → Filter: "Pending di Kaprodi"
+   - 1 surat muncul: Surat Pengantar PKL - Urgent
+   - Klik detail surat
+
+3. **Override**
+   - Sistem deteksi: Admin punya akses override
+   - Muncul box:
+     ```
+     🔑 Admin Override
+     Anda dapat melakukan approval sebagai admin untuk step ini
+     [Button: Override Approval]
+     ```
+   - Klik button
+
+4. **Dialog Override**
+   - Form muncul:
+     - Step: Step 3 - Kaprodi
+     - User asli: Dr. Ahmad (Kaprodi)
+     - Action: [Pilih] Approve
+     - Pesan override: (wajib min 10 char)
+   - Isi pesan: "Override karena Kaprodi sedang cuti. Data sudah saya verifikasi dan approved."
+   - Klik "Confirm Override"
+
+5. **Result**
+   - Success: "Step overridden successfully"
+   - Timeline update:
+     ```
+     ✅ Step 3: Kaprodi Approved [OVERRIDE]
+        👤 Dr. Ahmad (Kaprodi)
+        🔑 Overridden by: Admin Budi
+        🕐 20 Jan 2026, 09:15
+        💬 "Override karena Kaprodi sedang cuti. Data sudah saya verifikasi dan approved."
+     ```
+   - Notifikasi ke Dr. Ahmad: "Surat #SRT-001 telah di-override oleh Admin"
+   - Workflow lanjut ke Step 4
+
+---
+
+## 6. WORKFLOW EXAMPLES
+
+### 6.1 Workflow: Surat Pengantar PKL (9 Steps)
+
+```
+Step 1: Mahasiswa [DRAFT]
+  ↓ Submit
+Step 2: Dosen Pembimbing [APPROVAL]
+  ↓ Approve
+Step 3: Coordinator PKL [APPROVAL]
+  ↓ Approve
+Step 4: Ketua Prodi [APPROVAL]
+  ↓ Approve
+Step 5: Supervisor Akademik [APPROVAL]
+  ↓ Approve
+Step 6: Manajer Tata Usaha [APPROVAL]
+  ↓ Approve
+Step 7: Wakil Dekan 1 [TTD]
+  ↓ TTD
+Step 8: UPA [PENOMORAN]
+  ↓ Input Nomor
+Step 9: Selesai → Mahasiswa [NOTIFICATION]
+```
+
+**Estimasi Waktu:**
+- Normal: 5-7 hari kerja
+- Fast-track: 2-3 hari kerja (jika semua approver responsive)
+
+---
+
+### 6.2 Workflow: Surat Keterangan Aktif (5 Steps)
+
+```
+Step 1: Mahasiswa [DRAFT]
+  ↓ Submit
+Step 2: Supervisor Akademik [APPROVAL]
+  ↓ Approve
+Step 3: Manajer Tata Usaha [TTD]
+  ↓ TTD
+Step 4: UPA [PENOMORAN]
+  ↓ Input Nomor
+Step 5: Selesai → Mahasiswa [NOTIFICATION]
+```
+
+**Estimasi Waktu:**
+- Normal: 2-3 hari kerja
+- Fast-track: Same day (jika urgent)
+
+---
+
+### 6.3 Custom Workflow (Configurable by Admin)
+
+Admin bisa buat workflow custom via UI:
+
+**Contoh: Surat Rekomendasi Beasiswa**
+```
+Admin define:
+1. Step 1: Mahasiswa (DRAFT)
+2. Step 2: Dosen Pembimbing (APPROVAL)
+   - Form field tambahan: "Rekomendasi dosen" (textarea, required)
+3. Step 3: Kaprodi (APPROVAL)
+   - Form field: "Persetujuan Kaprodi" (checkbox, required)
+4. Step 4: Wakil Dekan 3 (TTD + APPROVAL)
+   - Skip Dekan (langsung WD3)
+5. Step 5: UPA (PENOMORAN)
+6. Step 6: Done
+```
+
+---
+
+## 7. BUSINESS RULES
+
+### 7.1 Surat Status Lifecycle
+
+```
+DRAFT → PROCESSING → COMPLETED
+  ↓         ↓           ↑
+  ↓    REJECTED        ↑
+  ↓         ↓           ↑
+  ↓  NEED_REVISION     ↑
+  ↓         ↓           ↑
+  ↓  SELF_REVISION     ↑
+  └─────────┴───────────┘
+```
+
+**Status Transitions:**
+- `DRAFT` → `PROCESSING` (saat submit)
+- `PROCESSING` → `COMPLETED` (saat workflow selesai)
+- `PROCESSING` → `REJECTED` (saat di-reject)
+- `PROCESSING` → `NEED_REVISION` (saat approver revise)
+- `PROCESSING` → `SELF_REVISION` (saat mahasiswa self-revise)
+- `NEED_REVISION` → `PROCESSING` (saat resubmit)
+- `SELF_REVISION` → `PROCESSING` (saat resubmit)
+
+**Terminal States:**
+- `COMPLETED` (tidak bisa diubah)
+- `REJECTED` (tidak bisa direactivate, harus buat baru)
+
+---
+
+### 7.2 Approval Rules
+
+**General:**
+- Approver hanya bisa approve surat yang assigned ke dia
+- Approval bisa dilakukan sekali per step
+- Setelah approve, tidak bisa undo (kecuali admin override)
+- Message optional saat approve
+- Message wajib (min 10 char) saat reject/revise
+
+**Disposisi:**
+- Blocking: Harus selesai dulu sebelum bisa approve
+- Nested: Penerima disposisi bisa disposisi lagi ke user lain
+- No deadline: Semua urgent
+- Bisa buat disposisi kapan saja (during/after workflow)
+
+**TTD:**
+- Hanya role dengan permission TTD yang bisa TTD
+- TTD bisa upload gambar atau signature pad
+- TTD disimpan untuk reuse
+- Satu user bisa punya multiple TTD (pilih default)
+- TTD tertempel di PDF saat generate final
+
+**Penomoran:**
+- Manual input oleh UPA atau Admin
+- Format bebas (admin yang tentukan convention)
+- Validasi duplikasi
+- Nomor sequence reset per bulan dan tahun
+- Setelah nomor di-assign, surat tidak bisa dibatalkan
+
+---
+
+### 7.3 Self-Revision Rules
+
+**Kapan bisa:**
+- Status = `PROCESSING` ✅
+- Ada step yang sudah approved ✅
+- Belum masuk step TTD ❌
+- Belum step penomoran ❌
+
+**Mekanisme:**
+- Workflow mundur 1 step dari step terakhir yang approved
+- Step yang sudah approved reset ke "pending" (need re-approval)
+- Unlimited revisi
+
+**Contoh:**
+```
+Current state:
+  Step 1: Approved ✅
+  Step 2: Approved ✅
+  Step 3: Pending ⏳
+
+Self-revise → Mundur ke Step 2:
+  Step 1: Approved ✅
+  Step 2: Pending (need re-approval)
+  Step 3: Waiting
+
+Mahasiswa edit → Resubmit → Step 2 approver review ulang
+```
+
+---
+
+### 7.4 Admin Override Rules
+
+**Scope:**
+- Admin Departemen: Override step di role departemen saja
+- Admin Fakultas: Override semua step
+
+**Scope Detection:**
+- Berdasarkan role user yang di-assign
+  - Role "Dosen Pembimbing" (scope: Prodi) → Admin Departemen bisa override
+  - Role "Kaprodi" (scope: Prodi) → Admin Departemen bisa override
+  - Role "Dekan" (scope: Fakultas) → Admin Fakultas bisa override
+
+**Actions:**
+- Bisa override: Approve, Reject, Revise, TTD, Penomoran, Disposisi (ALL)
+- Wajib pesan (min 10 char)
+- Audit trail: Log siapa yang override
+
+**Notification:**
+- User asli yang seharusnya approve dapat notifikasi
+- Timeline menampilkan "Overridden by Admin"
+
+---
+
+### 7.5 Notification Rules
+
+**Triggers:**
+- Surat assigned ke user → Notify user
+- Step approved → Notify mahasiswa + next approver
+- Step rejected → Notify mahasiswa
+- Step revised → Notify mahasiswa
+- Disposisi created → Notify assignee
+- Disposisi completed → Notify creator
+- Override → Notify original user
+- 24 jam belum approve → Reminder notification
+
+**Channels:**
+- In-app notification (badge + list)
+- No email (Phase 1)
+
+---
+
+### 7.6 File Upload Rules
+
+**Limits:**
+- Max file size: 5 MB per file
+- Allowed types: Admin yang tentukan per field (PDF, JPG, PNG, DOCX)
+- Max jumlah file: Admin yang tentukan per field
+- Total storage per surat: 25 MB
+
+**Validation:**
+- File size check (client + server)
+- MIME type check
+- Virus scan (optional, Phase 2)
+
+---
+
+### 7.7 Template Rules
+
+**Management:**
+- Admin upload DOCX template via UI
+- Placeholder syntax: `{field_name}`
+- Bisa variasi per unit (Template Informatika ≠ Template Matematika)
+
+**Auto-update:**
+- Kalau template diupdate → Surat existing auto-update ke template baru
+- PDF regenerate saat workflow lanjut
+
+**Placeholders:**
+- `{student_name}`, `{student_nim}`, `{student_prodi}`
+- `{form_data.field_name}` - Data dari form dinamis
+- `{recipient}` - Tujuan surat
+- `{current_date}` - Tanggal otomatis
+- `{letter_number}` - Nomor surat (setelah penomoran)
+- `{signature_X}` - TTD di step X
+
+---
+
+## 8. EDGE CASES & SCENARIOS
+
+### 8.1 Race Condition: Concurrent Approval
+
+**Scenario:**
+- 2 admin override bersamaan untuk step yang sama
+
+**Solution:**
+- Database lock pada WorkflowStepExecution.status
+- Optimistic locking dengan version number
+- First come first serve
+- Second admin dapat error: "Step sudah diproses oleh admin lain"
+
+---
+
+### 8.2 Approver Resign/Inactive
+
+**Scenario:**
+- Kaprodi resign, ada 10 surat pending approval
+
+**Solution:**
+- Admin Departemen bisa mass-assign ke Kaprodi baru
+- Atau admin override satu-satu
+- Atau auto-escalate setelah 7 hari (Phase 2)
+
+---
+
+### 8.3 Workflow Stuck (No Approver)
+
+**Scenario:**
+- Workflow butuh "Coordinator PKL" tapi role kosong (tidak ada user)
+
+**Solution:**
+- Saat submit, validasi: Cek semua step punya assignee
+- Kalau ada step tanpa assignee → Error: "Workflow tidak bisa dimulai. Role XXX tidak ada user."
+- Admin harus assign user ke role dulu
+
+---
+
+### 8.4 Disposisi Infinite Loop
+
+**Scenario:**
+- User A disposisi ke User B
+- User B disposisi ke User A
+- Infinite loop
+
+**Solution:**
+- Disposisi hanya bisa ke "role di bawah" (hierarki unit)
+- Validasi: Cek history disposisi, tidak boleh assign ke user yang sudah pernah create disposisi di chain ini
+
+---
+
+### 8.5 Self-Revise During Disposisi
+
+**Scenario:**
+- Kaprodi buat disposisi ke Staff TU
+- Mahasiswa self-revise sementara disposisi masih pending
+
+**Solution:**
+- Self-revise auto-cancel semua disposisi yang belum completed
+- Notify disposisi assignee: "Disposisi dibatalkan karena surat di-revisi"
+
+---
+
+### 8.6 Nomor Surat Duplikat
+
+**Scenario:**
+- UPA input nomor 001/SK-FSM/I/2026
+- Sudah ada surat dengan nomor yang sama
+
+**Solution:**
+- Real-time validation saat input
+- Error: "Nomor surat sudah digunakan"
+- Suggest next available number
+
+---
+
+### 8.7 Template Placeholder Missing
+
+**Scenario:**
+- Template punya placeholder `{form_data.tempat_pkl}`
+- Form tidak ada field `tempat_pkl` (typo: `tempat_PKL`)
+
+**Solution:**
+- PDF generation tetap jalan
+- Placeholder yang tidak ketemu → replace dengan "[FIELD NOT FOUND]"
+- Admin dapat warning email
+- Log error untuk debugging
+
+---
+
+### 8.8 File Upload Fail (MinIO Down)
+
+**Scenario:**
+- Mahasiswa upload file, MinIO server down
+
+**Solution:**
+- Retry 3x dengan exponential backoff
+- Kalau masih gagal → Error message: "File upload gagal, silakan coba lagi"
+- Draft tetap tersimpan (tanpa file)
+- Mahasiswa bisa edit draft dan upload ulang nanti
+
+---
+
+### 8.9 PDF Generation Timeout
+
+**Scenario:**
+- Template besar (50 halaman) + banyak gambar
+- LibreOffice conversion timeout (>30 detik)
+
+**Solution:**
+- Async PDF generation (queue-based)
+- User tidak nunggu, dapat notifikasi saat PDF ready
+- Retry jika gagal
+- Fallback: Notify admin untuk manual generation
+
+---
+
+### 8.10 Mahasiswa Lulus/Drop Out
+
+**Scenario:**
+- Mahasiswa punya 3 surat pending
+- Mahasiswa drop out / lulus
+- Account di-nonaktifkan
+
+**Solution:**
+- Workflow tetap jalan (tidak auto-cancel)
+- Admin bisa override semua step
+- Surat tetap bisa completed untuk keperluan administrasi
+
+---
+
+## 9. PERFORMANCE & SCALABILITY
+
+### 9.1 Expected Load
+- **Concurrent Users (Peak):** 50 users
+- **Surat/Bulan (Peak):** 100 surat
+- **Response Time Target:** < 2 detik per request
+- **Uptime Target:** 99% (7.2 jam downtime/bulan)
+
+### 9.2 Database Optimization
+- Index pada foreign keys
+- Index pada status columns
+- Pagination untuk list queries (max 20 items per page)
+- Caching untuk dropdown data (roles, units, letter types)
+
+### 9.3 File Storage
+- MinIO with auto-cleanup (delete files dari surat yang older than 2 tahun)
+- Compression untuk PDF (optimize file size)
+- CDN untuk serve static files (Phase 2)
+
+---
+
+## 10. SECURITY & COMPLIANCE
+
+### 10.1 Authentication
+- SSO UNDIP integration (optional)
+- Better-Auth (session-based)
+- Password hashing (bcrypt)
+- Session timeout: 8 jam
+
+### 10.2 Authorization
 - Role-based access control (RBAC)
-- Format: `role → permission → resource`
-- Contoh: `mahasiswa` boleh `create` surat, tapi tidak boleh `approve`
+- Permission check di setiap endpoint
+- Unit-based data isolation (Kaprodi hanya lihat surat prodi-nya)
 
-### Workflow State Machine
+### 10.3 Audit Trail
+- Log semua actions (create, update, delete, override)
+- Track user, timestamp, IP address
+- Immutable audit log (append-only)
+- Retention: 5 tahun
 
-**Status Surat:**
-- `DRAFT` - Belum submit (bisa edit/delete)
-- `PENDING` - Sudah submit, waiting approval
-- `IN_PROGRESS` - Sedang direview
-- `REVISION` - Diminta revisi (back to mahasiswa)
-- `COMPLETED` - Semua approval done + ada nomor surat
-- `REJECTED` - Ditolak permanent
-- `CANCELLED` - Dibatalkan oleh mahasiswa
-
----
-
-## 💻 Frontend (Web App)
-
-**Lokasi:** `e-office-webapp-v2/`
-
-Frontend menggunakan **Next.js 16** (App Router) dengan **React 19**.
-
-### Struktur Folder Frontend
-
-```
-e-office-webapp-v2/src/
-├── app/                          Next.js App Router (pages)
-│   ├── (auth)/                   Public routes (no auth)
-│   │   └── login/                Login page
-│   │
-│   └── (dashboard)/              Protected routes (need auth)
-│       ├── page.tsx              Dashboard home
-│       ├── pengajuan/pkl/        PKL submission flow (5 steps)
-│       │   ├── identitas/        Step 1: Data mahasiswa
-│       │   ├── detail-pengajuan/ Step 2: Detail PKL
-│       │   ├── lampiran/         Step 3: Upload files
-│       │   ├── review/           Step 4: Review sebelum submit
-│       │   └── status/           Step 5: Status tracking
-│       │
-│       └── surat/                Surat management
-│           └── detail/[id]/      Detail surat & history
-│
-├── components/                   UI Components
-│   ├── ui/                       Base components (button, input, card)
-│   │   └── ... (18 components)   shadcn/ui components
-│   │
-│   ├── features/pkl/             PKL-specific components
-│   │   ├── Step1identitas.tsx    Form identitas mahasiswa
-│   │   ├── Step2Detail.tsx       Form detail PKL
-│   │   ├── Step3Lampiran.tsx     Upload component
-│   │   ├── Step4Review.tsx       Review summary
-│   │   ├── Step5Status.tsx       Status tracker
-│   │   ├── Stepper.tsx           Multi-step indicator
-│   │   ├── Navbar.tsx            Navigation bar
-│   │   └── Breadcrumbs.tsx       Breadcrumb navigation
-│   │
-│   ├── layouts/                  Layout wrappers
-│   │   ├── DashboardLayout.tsx   Main dashboard layout
-│   │   └── Sidebar.tsx           Navigation sidebar
-│   │
-│   └── shared/                   Shared components
-│       ├── Navbar.tsx            Global navbar
-│       └── Footer.tsx            Global footer
-│
-├── services/                     API Integration
-│   ├── auth.service.ts           Login, logout, register
-│   ├── letter.service.ts         CRUD surat
-│   ├── approval.service.ts       Approve, reject, revise
-│   └── file.service.ts           Upload/download files
-│
-├── hooks/                        Custom React Hooks
-│   ├── api/                      Data fetching hooks
-│   │   ├── useAuth.ts            Auth operations
-│   │   ├── useLetters.ts         Letter CRUD
-│   │   └── useApproval.ts        Approval actions
-│   │
-│   └── ui/                       UI interaction hooks
-│       ├── useToast.ts           Toast notifications
-│       ├── useModal.ts           Modal dialogs
-│       └── useDebounce.ts        Debounce input
-│
-├── stores/                       Global State (Zustand)
-│   ├── authStore.ts              User, token, roles (persistent)
-│   ├── pklFormStore.ts           Multi-step form state
-│   └── notificationStore.ts      Real-time notifications
-│
-├── types/                        TypeScript Types
-│   ├── auth.types.ts             User, Role, Permission
-│   ├── letter.types.ts           Letter, LetterInstance
-│   ├── approval.types.ts         ApprovalHistory
-│   ├── form.types.ts             Form data types
-│   └── api.types.ts              API response types
-│
-└── lib/                          Utilities
-    ├── api.ts                    Eden Treaty API client
-    ├── utils.ts                  Helper functions
-    └── constants.ts              App constants
-```
-
-### Fungsi Setiap Folder
-
-| Folder | Fungsi | Contoh |
-|--------|--------|--------|
-| **app/** | Pages & routing (file-based) | `app/login/page.tsx` → `/login` |
-| **components/ui/** | Base UI components | Button, Input, Card, Form |
-| **components/features/** | Feature-specific components | PKL form steps, Status tracker |
-| **components/layouts/** | Layout wrappers | Dashboard layout, Sidebar |
-| **services/** | API calls ke backend | `letterService.getMyLetters()` |
-| **hooks/** | Custom React hooks | `useAuth()`, `useLetters()` |
-| **stores/** | Global state management | Auth state, Form state |
-| **types/** | TypeScript type definitions | User, Letter, Approval types |
-| **lib/** | Helper functions | API client, utils, constants |
-
-### Arsitektur Clean Architecture
-
-```
-📄 Pages (app/)              → Routing & layouts
-    ↓
-🎨 Components                 → UI presentation
-    ↓
-🪝 Hooks                      → Business logic
-    ↓
-🔧 Services                   → API integration
-    ↓
-🌐 API Client (lib/api.ts)   → HTTP requests
-```
-
-**Prinsip:**
-- **Separation of Concerns** - Setiap layer punya tanggung jawab jelas
-- **Unidirectional Flow** - Data mengalir 1 arah (Pages → Components → Hooks → Services → API)
-- **Testability** - Setiap layer bisa ditest terpisah
-- **Reusability** - Components & hooks bisa dipakai di banyak tempat
-
-### State Management (Zustand)
-
-**1. Auth Store (Persistent)**
-- Menyimpan: User, token, roles
-- Fungsi: login(), logout(), hasRole()
-- Persistent: Disimpan di localStorage (tetap login setelah refresh)
-
-**2. PKL Form Store (Session)**
-- Menyimpan: Data form multi-step (identitas, detail PKL, lampiran)
-- Fungsi: updateIdentitas(), updateDetailPKL(), addLampiran(), reset()
-- Session-based: Hilang setelah submit atau close tab
-
-### Routing & Navigation
-
-**Public Routes (tanpa auth):**
-- `/login` - Login page
-
-**Protected Routes (harus login):**
-- `/` - Dashboard home
-- `/pengajuan/pkl/*` - Multi-step form (5 steps)
-- `/surat/:id` - Detail surat & approval history
-
-**Protection Mechanism:**
-- Route group `(dashboard)` otomatis check auth
-- Jika belum login → redirect ke `/login`
-- Implemented di `app/(dashboard)/layout.tsx`
-
-### Form Handling
-
-**React Hook Form + Zod Validation**
-- React Hook Form: Handle form state & submission
-- Zod: Schema validation (NIM harus 10 digit, email valid, dll)
-- Automatic error messages
-- Type-safe form data
-
-### API Client (Eden Treaty)
-
-**Type-Safe API Calls**
-- Import types langsung dari backend
-- Auto-complete API endpoints
-- Runtime type checking
-- No manual API typing needed
+### 10.4 Data Privacy
+- Mahasiswa hanya lihat surat sendiri
+- Approver hanya lihat surat di unit-nya
+- Admin lihat semua (dengan audit log)
+- GDPR-compliant (data deletion pada request)
 
 ---
 
-## 📋 Alur Pengajuan Surat
+## 11. GLOSSARY
 
-### User Journey - Mahasiswa
-
-**1. Login**
-- Mahasiswa buka website → Login dengan SSO/email
-- Redirect ke Dashboard
-
-**2. Mulai Pengajuan**
-- Dashboard → Menu "Pengajuan Surat" → Pilih "PKL"
-- Masuk ke Multi-Step Form
-
-**3. Isi Form (5 Steps)**
-
-| Step | Isi Apa | Validasi |
-|------|---------|----------|
-| **Step 1: Identitas** | NIM, Nama, Email, Prodi, Semester, IPK | Semua field wajib |
-| **Step 2: Detail PKL** | Perusahaan, Alamat, Periode, Dosen Pembimbing, Tujuan | Tanggal mulai < selesai |
-| **Step 3: Lampiran** | Upload Proposal, Surat Balasan, Transkrip (PDF) | Min 1 file, max 5MB |
-| **Step 4: Review** | Preview semua data (read-only) | Cek ulang sebelum submit |
-| **Step 5: Submit** | Kirim ke backend | Validasi final di server |
-
-**4. Status Tracking**
-- Setelah submit → Lihat progress approval real-time
-- Notifikasi setiap ada action (approve/reject/revise)
-- Download surat final jika sudah COMPLETED
-
-### Approval Workflow (8 Langkah)
-
-Setelah mahasiswa submit, surat akan melalui 8 level approval:
-
-```
-Mahasiswa Submit
-    ↓
-Step 1: Dosen Pembimbing       → Approve/Reject/Revise
-    ↓
-Step 2: Dosen Koordinator      → Approve/Reject/Revise
-    ↓
-Step 3: Ketua Prodi            → Approve/Reject/Revise
-    ↓
-Step 4: Admin                  → Approve/Reject/Revise
-    ↓
-Step 5: Supervisor Akademik    → Approve/Reject/Revise
-    ↓
-Step 6: Manajer TU             → Approve/Reject/Revise
-    ↓
-Step 7: Wakil Dekan            → Approve/Reject/Revise + TTD
-    ↓
-Step 8: Penomoran (UPA)        → Assign nomor surat
-    ↓
-✅ COMPLETED (Surat bisa didownload)
-```
-
-**Setiap Approver Bisa:**
-- **Approve** → Lanjut ke step berikutnya
-- **Reject** → Status = REJECTED (permanent, tidak bisa lanjut)
-- **Revise** → Kembali ke mahasiswa untuk perbaikan
-
-### Aturan Bisnis (18 Rules)
-
-| # | Rule | Penjelasan |
-|---|------|-----------|
-| 1 | **1 mahasiswa = 1 pengajuan aktif** | Tidak bisa submit baru jika masih ada surat PENDING/IN_PROGRESS |
-| 2 | **Approval sequence strict** | Harus berurutan 1→2→3→...→8, tidak bisa skip |
-| 3 | **Revise reset workflow** | Jika ada revise → back to Step 1, semua approval sebelumnya invalid |
-| 4 | **Reject is final** | Status REJECTED = permanent, harus buat pengajuan baru |
-| 5 | **Draft editable** | Surat DRAFT bisa edit/delete kapan saja |
-| 6 | **Auto-notification** | Setiap action → notif ke mahasiswa + approver berikutnya |
-| 7 | **File immutable after submit** | Setelah submit, file tidak bisa diganti (kecuali revise) |
-| 8 | **IPK minimum 2.5** | Validasi server: IPK < 2.5 → reject otomatis |
-| 9 | **Periode PKL min 1 bulan** | Tanggal mulai - selesai harus ≥ 30 hari |
-| 10 | **Dosen pembimbing = dosen prodi** | Tidak bisa pilih dosen dari prodi lain |
-| 11 | **1 dosen max 10 bimbingan** | Jika dosen sudah full → error "Dosen penuh" |
-| 12 | **Nomor surat unique** | Format: `001/UN7.5.10/PP/2025` (auto-increment) |
-| 13 | **TTD digital required** | Wakil Dekan harus sign dengan digital signature |
-| 14 | **History immutable** | ApprovalHistory tidak bisa diedit/delete (audit trail) |
-| 15 | **Role-based queue** | Approver hanya lihat surat yang current step = role mereka |
-| 16 | **Timeout 7 hari** | Jika tidak ada action dalam 7 hari → auto-reminder |
-| 17 | **Cancel hanya PENDING** | Mahasiswa hanya bisa cancel surat yang status PENDING |
-| 18 | **Resubmit inherit data** | Resubmit after revise → data lama pre-filled |
-
-### Role & Permission
-
-| Role | Bisa Lihat | Bisa Approve | Bisa Edit Master Data |
-|------|-----------|--------------|----------------------|
-| **Mahasiswa** | Surat sendiri | ❌ | ❌ |
-| **Dosen Pembimbing** | Surat bimbingannya | ✅ Step 1 | ❌ |
-| **Dosen Koordinator** | Surat prodi | ✅ Step 2 | ❌ |
-| **Ketua Prodi** | Semua surat prodi | ✅ Step 3 | ✅ (Mahasiswa, Dosen) |
-| **Admin** | Semua surat | ✅ Step 4 | ✅ (Semua) |
-| **Supervisor Akademik** | Semua surat | ✅ Step 5 | ❌ |
-| **Manajer TU** | Semua surat | ✅ Step 6 | ❌ |
-| **Wakil Dekan** | Semua surat | ✅ Step 7 + TTD | ✅ (Read-only) |
-| **UPA** | Semua surat | ✅ Step 8 (penomoran) | ❌ |
+| Term | Definisi |
+|------|----------|
+| **Workflow** | Template proses approval multi-step |
+| **Workflow Instance** | Running instance dari workflow untuk surat tertentu |
+| **Step Execution** | Record approval di satu step workflow |
+| **Disposisi** | Delegasi tugas dari approver ke user lain |
+| **Self-Revision** | Mahasiswa mengajukan revisi sendiri saat workflow berjalan |
+| **Override** | Admin melakukan action atas nama user lain |
+| **TTD** | Tanda tangan digital yang tertempel di PDF |
+| **Penomoran** | Proses input nomor surat manual |
+| **Blocking Disposisi** | Disposisi yang harus selesai dulu sebelum bisa approve |
+| **Timeline** | History linear dari semua action di workflow |
+| **Message** | Pesan/notes yang ditulis saat approve/reject/revise |
 
 ---
 
-## 🛠️ Teknologi yang Digunakan
+## 12. APPENDIX
 
-### Backend
+### 12.1 Diagram ER Database
+(See: `docs/database-erd.png`)
 
-| Teknologi | Versi | Untuk Apa |
-|-----------|-------|-----------|
-| **Bun** | v1.2.x | Runtime (pengganti Node.js, lebih cepat) |
-| **Elysia.js** | v1.4.x | Web framework (seperti Express, tapi modern) |
-| **Prisma ORM** | v6.19.x | Database ORM (interact dengan PostgreSQL) |
-| **PostgreSQL** | v16 | Database relational |
-| **Better-Auth** | v1.4.x | Authentication (login, JWT) |
-| **Casbin** | v5.45.x | Authorization (RBAC - role-based access) |
-| **MinIO** | Latest | File storage (S3-compatible) |
-| **Biome** | Latest | Linter & formatter |
+### 12.2 API Documentation
+(See: `docs/api-documentation.md`)
 
-### Frontend
+### 12.3 UI/UX Mockups
+(See: `docs/ui-mockups/`)
 
-| Teknologi | Versi | Untuk Apa |
-|-----------|-------|-----------|
-| **Next.js** | v16.0.x | React framework (routing, SSR, SSG) |
-| **React** | v19.2.x | UI library |
-| **TypeScript** | v5.x | Type-safe JavaScript |
-| **Tailwind CSS** | v4.x | Utility-first CSS framework |
-| **shadcn/ui** | Latest | UI component library |
-| **Zustand** | v5.0.x | State management (lebih simple dari Redux) |
-| **React Hook Form** | Latest | Form handling |
-| **Zod** | Latest | Schema validation |
-| **Eden Treaty** | Latest | Type-safe API client (import types dari BE) |
-
-### DevOps
-
-| Teknologi | Untuk Apa |
-|-----------|-----------|
-| **Docker** | Containerization (database, storage, app) |
-| **Docker Compose** | Orchestration (jalankan multiple containers) |
-| **NGINX/Caddy** | Reverse proxy & load balancer |
-| **Let's Encrypt** | Free SSL certificate (HTTPS) |
+### 12.4 Change Log
+| Version | Date | Changes | Author |
+|---------|------|---------|--------|
+| 1.0 | 20 Jan 2026 | Initial documentation | AI Assistant |
 
 ---
 
-## 🚀 Cara Install
+**END OF DOCUMENT**
 
-### Prerequisites
-
-Install tools berikut di komputer:
-
-**Windows:**
-```
-1. Bun         → https://bun.sh (Backend runtime)
-2. Node.js 20+ → https://nodejs.org (Frontend build)
-3. Docker      → https://docker.com (Database & storage)
-4. Git         → https://git-scm.com (Version control)
-```
-
-**Linux/Mac:** Same tools, install via terminal/package manager
-
-### Setup Development
-
-**1. Clone Repository**
-```
-git clone <repository-url>
-cd eoffice-PKL-monorepo
-```
-
-**2. Setup Backend**
-```
-cd e-office-api-v2
-bun install                          # Install dependencies
-docker compose -f docker-compose.dev.yml up -d  # Start DB & MinIO
-bunx prisma generate                 # Generate Prisma Client
-bunx prisma migrate dev              # Run migrations
-bun run src/db/seed.ts               # Seed data
-bun run dev                          # Start API server (port 3000)
-```
-
-**3. Setup Frontend**
-```
-cd ../e-office-webapp-v2
-npm install                          # Install dependencies
-npm run dev                          # Start dev server (port 3001)
-```
-
-**4. Test Login**
-- Buka: http://localhost:3001
-- Login dengan:
-  - Email: `admin@undip.ac.id`
-  - Password: `admin123`
-
-### Database Management
-
-**Prisma Commands:**
-- `bunx prisma generate` - Generate Prisma Client (setelah ubah schema)
-- `bunx prisma migrate dev` - Create & apply migration (development)
-- `bunx prisma migrate deploy` - Apply migrations (production)
-- `bunx prisma studio` - Open Prisma Studio (GUI database) → port 5555
-- `bunx prisma migrate reset` - Reset database (⚠️ hapus semua data)
-
-### Troubleshooting
-
-| Problem | Solution |
-|---------|----------|
-| **Database connection failed** | Check Docker: `docker ps`, restart: `docker compose restart` |
-| **Prisma Client not generated** | Run: `bunx prisma generate` |
-| **Port already in use** | Kill process: Windows `netstat -ano \| findstr :3000`, Linux `lsof -i :3000` |
-| **Module not found (Frontend)** | Run: `npm install` di folder frontend |
-| **API calls fail (CORS)** | Check `NEXT_PUBLIC_API_URL` di `.env.local` |
-| **Zustand state not persisting** | Check localStorage di DevTools → Application tab |
-
----
-
-## 🚢 Production Deployment
-
-### Option 1: Docker Compose (Recommended)
-
-**Setup:**
-1. Clone repository di server
-2. Setup `.env` dengan production values (strong passwords, JWT secrets)
-3. Run: `docker compose up -d`
-4. Run migrations: `docker exec -it eoffice-api bunx prisma migrate deploy`
-5. Setup NGINX reverse proxy untuk domain
-6. Setup Let's Encrypt SSL
-
-**NGINX Config:**
-- Frontend (Next.js) → `localhost:3001`
-- Backend API → `localhost:3000`
-- MinIO (files) → `localhost:9000`
-
-### Option 2: VPS Manual
-
-**Backend:**
-- Install Bun
-- Install PM2: `npm install -g pm2`
-- Start: `pm2 start bun --name eoffice-api -- run src/index.ts`
-
-**Frontend:**
-- Build: `npm run build`
-- Start: `pm2 start npm --name eoffice-web -- start`
-
-### Server Requirements
-
-| Resource | Minimum | Recommended |
-|----------|---------|-------------|
-| **CPU** | 2 cores | 4 cores |
-| **RAM** | 4 GB | 8 GB |
-| **Storage** | 20 GB SSD | 50 GB SSD |
-| **OS** | Ubuntu 22.04 | Ubuntu 24.04 LTS |
-
-### Security Checklist
-
-- [ ] Change all default passwords
-- [ ] Use HTTPS (Let's Encrypt)
-- [ ] Enable firewall (only ports 80, 443, 22)
-- [ ] SSH key authentication (disable password)
-- [ ] Strong JWT secrets (min 32 characters)
-- [ ] Enable rate limiting
-- [ ] Regular database backups
-- [ ] Setup Cloudflare for DDoS protection
-
----
-
-## ❓ FAQ
-
-### Umum
-
-**Q: Apa fungsi utama sistem ini?**  
-A: Digitalisasi proses pengajuan dan approval surat akademik mahasiswa dengan workflow otomatis 8 level.
-
-**Q: Siapa saja yang menggunakan sistem ini?**  
-A: Mahasiswa (mengajukan surat), Dosen (approval level 1-2), Ketua Prodi (approval level 3), Admin (approval level 4), Supervisor Akademik (level 5), Manajer TU (level 6), Wakil Dekan (level 7 + TTD), UPA (penomoran level 8).
-
-**Q: Apa itu monorepo?**  
-A: 1 repository untuk backend + frontend. Keuntungan: sharing types, atomic deployment, easier collaboration.
-
-**Q: Kenapa pakai Bun, bukan Node.js?**  
-A: Bun 3x lebih cepat dalam runtime & package installation, built-in TypeScript support, kompatibel dengan Node.js packages.
-
-**Q: Apakah wajib pakai Docker?**  
-A: Tidak wajib untuk development, tapi recommended untuk production (consistency & easy deployment).
-
-**Q: Berapa lama proses approval rata-rata?**  
-A: Tergantung responsiveness approver, rata-rata 2-3 hari kerja untuk semua 8 level.
-
-### Development
-
-**Q: Bagaimana cara add new approval step?**  
-A: Update database schema (Prisma), update workflow logic di services, update frontend stepper, run migration.
-
-**Q: Cara menambah jenis surat baru?**  
-A: Tambah data di tabel `LetterType`, buat template JSON schema, clone folder PKL dan sesuaikan.
-
-**Q: Zustand vs Redux?**  
-A: Zustand untuk project kecil-menengah (lebih simple). Redux untuk project besar dengan complex state.
-
-### Database
-
-**Q: Cara reset database development?**  
-A: `bunx prisma migrate reset` → hapus semua data & re-run migrations
-
-**Q: Cara backup database production?**  
-A: `docker exec eoffice-postgres pg_dump -U postgres eoffice_prod > backup.sql`
-
-**Q: Apa itu migration?**  
-A: SQL script untuk change database schema. Buat migration setiap ubah `schema.prisma`.
-
-### Troubleshooting
-
-**Q: Error "Prisma Client is not generated"**  
-A: Run `bunx prisma generate` di folder backend.
-
-**Q: Frontend tidak bisa connect ke backend (CORS error)**  
-A: Check `NEXT_PUBLIC_API_URL` di `.env.local`, tambah CORS origin di backend.
-
-**Q: Port already in use**  
-A: Kill process: Windows `taskkill /PID <PID> /F`, Linux `kill -9 <PID>`
-
-**Q: File upload gagal (413 Payload Too Large)**  
-A: Increase limit di NGINX (`client_max_body_size 50M;`) dan Elysia (`bodyLimit`).
-
----
-
-## 📞 Kontak Support
-
-**Project Lead:** [Your Name]  
-**Email:** eoffice@undip.ac.id  
-**GitHub:** <repository-url>  
-**Issues:** <repository-url>/issues
-
----
-
-## 📄 License
-
-MIT License
-
----
-
-**Last Updated:** January 19, 2026  
-**Version:** 1.0.0
+*Dokumentasi ini adalah living document dan akan diupdate seiring perkembangan project.*
