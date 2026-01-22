@@ -1,4 +1,3 @@
-// Endpoint: Get approval queue (berdasarkan role user)
 import { authGuardPlugin } from "@backend/middlewares/auth.ts";
 import { Prisma } from "@backend/db/index.ts";
 import { STEP_TO_ROLE } from "@backend/services/workflow/pkl.workflow.service.ts";
@@ -15,7 +14,6 @@ export default new Elysia()
 				throw new Error("Header X-Active-Role atau query activeRole diperlukan");
 			}
 
-			// 1. Cari step mana yang sesuai dengan role ini
 			const stepNumber = Object.keys(STEP_TO_ROLE).find(
 				(step) =>
 					STEP_TO_ROLE[Number(step) as keyof typeof STEP_TO_ROLE] ===
@@ -23,7 +21,6 @@ export default new Elysia()
 			);
 
 			if (!stepNumber) {
-				// Role ini bukan approver workflow
 				return {
 					success: true,
 					data: [],
@@ -31,7 +28,6 @@ export default new Elysia()
 				};
 			}
 
-			// 2. Query letters yang currentStep = stepNumber DAN user adalah assignee
 			const allLettersAtThisStep = await Prisma.letterInstance.findMany({
 				where: {
 					currentStep: Number(stepNumber),
@@ -49,12 +45,10 @@ export default new Elysia()
 					},
 				},
 				orderBy: {
-					createdAt: "asc",  // FIFO
+					createdAt: "asc",
 				},
 			});
 
-			// 3. Filter: hanya yang user ini adalah assignee
-			// Map role ke key di assignedApprovers
 			const roleToKey: Record<string, string> = {
 				dosen_pembimbing: "dospem",
 				dosen_koordinator: "koordinator",

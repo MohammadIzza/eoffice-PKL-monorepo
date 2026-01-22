@@ -1,4 +1,3 @@
-// Endpoint: Preview latest document version
 import { authGuardPlugin } from "@backend/middlewares/auth.ts";
 import { Prisma } from "@backend/db/index.ts";
 import { MinioService } from "@backend/services/minio.service.ts";
@@ -9,7 +8,6 @@ export default new Elysia()
 	.get(
 		"/",
 		async ({ params: { id }, user }) => {
-			// 1. Get letter dengan documentVersions
 			const letter = await Prisma.letterInstance.findUnique({
 				where: { id },
 				include: {
@@ -21,7 +19,6 @@ export default new Elysia()
 				throw new Error("Surat tidak ditemukan");
 			}
 
-			// 2. Validate: user punya akses (creator atau assignee atau sudah pernah approve)
 			const isCreator = letter.createdById === user.id;
 			const userRoles = await Prisma.userRole.findMany({
 				where: { userId: user.id },
@@ -29,7 +26,6 @@ export default new Elysia()
 			});
 			const userRoleNames = userRoles.map((ur) => ur.role.name);
 
-			// Check jika user adalah assignee atau sudah pernah approve
 			const hasApproved = await Prisma.letterStepHistory.findFirst({
 				where: {
 					letterId: letter.id,
@@ -39,7 +35,6 @@ export default new Elysia()
 			});
 
 			if (!isCreator && !hasApproved) {
-				// Check assignee
 				const assignedApprovers = letter.assignedApprovers as Record<string, string> | null;
 				const isAssignee = assignedApprovers
 					? Object.values(assignedApprovers).includes(user.id)
@@ -50,7 +45,6 @@ export default new Elysia()
 				}
 			}
 
-			// 3. Get latest document version (prioritas: PDF > Editable)
 			const documentVersions = letter.documentVersions as Array<{
 				version: number;
 				storageKey: string | null;
@@ -97,11 +91,10 @@ export default new Elysia()
 				};
 			}
 
-			// 4. Generate presigned URL untuk preview
 			const previewUrl = await MinioService.getPresignedUrl(
-				"",  // No specific folder
+				"",
 				latestVersion.storageKey,
-				1 * 60 * 60,  // 1 hour expiry
+				1 * 60 * 60,
 			);
 
 			return {
@@ -118,7 +111,7 @@ export default new Elysia()
 						reason: latestVersion.reason,
 						timestamp: latestVersion.timestamp,
 						previewUrl: previewUrl,
-						expiresIn: 3600,  // seconds
+						expiresIn: 3600,
 					},
 				},
 			};

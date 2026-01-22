@@ -52,4 +52,3 @@ export default new Elysia()
 			}),
 		},
 	);
-// no update for template, create new

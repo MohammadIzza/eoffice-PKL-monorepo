@@ -1,4 +1,3 @@
-// Endpoint: Upload/add/replace attachments untuk surat
 import { authGuardPlugin } from "@backend/middlewares/auth.ts";
 import { Prisma } from "@backend/db/index.ts";
 import { MinioService } from "@backend/services/minio.service.ts";
@@ -11,7 +10,6 @@ export default new Elysia()
 		async ({ params: { id }, body, user }) => {
 			const { files, category, replaceExisting } = body;
 
-			// 1. Get letter
 			const letter = await Prisma.letterInstance.findUnique({
 				where: { id },
 			});
@@ -32,12 +30,10 @@ export default new Elysia()
 				throw new Error("Anda tidak berhak mengunggah lampiran untuk surat ini");
 			}
 
-			// 3. Validate: status PROCESSING
 			if (letter.status !== "PROCESSING") {
 				throw new Error("Lampiran hanya bisa diunggah untuk surat dalam status PROCESSING");
 			}
 
-			// 4. Handle replace existing (soft delete attachments dengan category yang sama)
 			if (replaceExisting && category) {
 				await Prisma.attachment.updateMany({
 					where: {
@@ -52,21 +48,18 @@ export default new Elysia()
 				});
 			}
 
-			// 5. Upload files ke MinIO dan simpan ke DB
 			const uploadedAttachments = [];
 
 			for (const file of files) {
-				// Upload ke MinIO
 				const { url, nameReplace } = await MinioService.uploadFile(
 					file,
 					`attachments/${letter.id}/`,
 					file.type || "application/octet-stream",
 				);
 
-				// Simpan ke DB
 				const attachment = await Prisma.attachment.create({
 					data: {
-						domain: "letter",  // Domain untuk attachment surat
+						domain: "letter",
 						filename: nameReplace,
 						letterId: letter.id,
 						category: category || null,
@@ -100,9 +93,9 @@ export default new Elysia()
 				id: t.String(),
 			}),
 			body: t.Object({
-				files: t.Array(t.File()),  // Array of files
-				category: t.Optional(t.String()),  // "PROPOSAL", "KTM", "LAMPIRAN_TAMBAHAN", dll
-				replaceExisting: t.Optional(t.Boolean()),  // Jika true, replace attachments dengan category yang sama
+				files: t.Array(t.File()),
+				category: t.Optional(t.String()),
+				replaceExisting: t.Optional(t.Boolean()),
 			}),
 		},
 	);

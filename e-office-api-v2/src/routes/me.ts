@@ -5,7 +5,6 @@ import { Elysia } from "elysia";
 export default new Elysia().use(authGuardPlugin).get(
 	"/",
 	async ({ user }) => {
-		// Query user dengan semua relations yang diperlukan
 		const userWithRelations = await Prisma.user.findUnique({
 			where: { id: user.id },
 			include: {
@@ -33,7 +32,6 @@ export default new Elysia().use(authGuardPlugin).get(
 			return { error: "User not found" };
 		}
 
-		// Transform data untuk response
 		return {
 			id: userWithRelations.id,
 			name: userWithRelations.name,

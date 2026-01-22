@@ -6,27 +6,6 @@ import { auth } from "@backend/lib/auth.ts";
 async function main() {
 	console.log("Starting database seed...");
 
-	// "pemohon"
-	// "supervisor akademik"
-	// "supervisor kemahasiswaan"
-	// "petugas tu"
-	// "dekan"
-	// "wakil dekan 1"
-	// "wakil dekan 2"
-	// "manajer tu"
-	// "petugas akademik"
-	// "upa"
-	// "supervisor sumberdaya"
-	// "prodi"
-	// "dosen pembimbing"
-	// "dosen koordinator"
-	// "ketua prodi"
-	// "admin departemen"
-	// "ketua departemen"
-	// "pegawai ukt"
-	// "supervisor sumberdaya"
-	// "superadmin"
-	// Roles
 	const superAdminRole = await Prisma.role.upsert({
 		create: {
 			name: "superadmin",
@@ -231,7 +210,6 @@ async function main() {
 
 	// 2. Create Permissions
 	const permissions = await Promise.all([
-		// Departemen permission
 		Prisma.permission.create({
 			data: { resource: "departemen", action: "create" },
 		}),
@@ -245,7 +223,6 @@ async function main() {
 			data: { resource: "departemen", action: "delete" },
 		}),
 
-		// prodi
 		Prisma.permission.create({
 			data: { resource: "prodi", action: "create" },
 		}),
@@ -259,7 +236,6 @@ async function main() {
 			data: { resource: "prodi", action: "delete" },
 		}),
 
-		// role
 		Prisma.permission.create({
 			data: { resource: "role", action: "create" },
 		}),
@@ -273,7 +249,6 @@ async function main() {
 			data: { resource: "role", action: "delete" },
 		}),
 
-		// user include mahasiswa and pegawai
 		Prisma.permission.create({
 			data: { resource: "user", action: "create" },
 		}),
@@ -287,7 +262,6 @@ async function main() {
 			data: { resource: "user", action: "delete" },
 		}),
 
-		// lettertype
 		Prisma.permission.create({
 			data: { resource: "letterType", action: "create" },
 		}),
@@ -301,7 +275,6 @@ async function main() {
 			data: { resource: "letterType", action: "delete" },
 		}),
 
-		// letter template
 		Prisma.permission.create({
 			data: { resource: "letterTemplate", action: "create" },
 		}),
@@ -315,7 +288,6 @@ async function main() {
 			data: { resource: "letterTemplate", action: "delete" },
 		}),
 
-		// letter (main transaction)
 		Prisma.permission.create({
 			data: { resource: "letter", action: "create" },
 		}),
@@ -359,8 +331,6 @@ async function main() {
 
 	console.log("Permissions upserted");
 
-	// 3. Assign Permissions to Roles
-	// Admin gets all permissions
 	await Promise.all(
 		permissions.map((permission) =>
 			Prisma.rolePermission.create({
@@ -408,7 +378,6 @@ async function main() {
 
 	console.log("Assigned permissions to roles");
 
-	// Create Departemen
 	const departemenMatematika = await Prisma.departemen.upsert({
 		where: {
 			code: "fsm_math",
@@ -486,7 +455,6 @@ async function main() {
 		},
 	});
 
-	// Program Studi
 	const prodiInformatika = await Prisma.programStudi.upsert({
 		where: {
 			code: "240601",
@@ -630,7 +598,6 @@ async function main() {
 		},
 	});
 
-	// Create Account
 
 	const response = await auth.api.signUpEmail({
 		body: {
@@ -676,7 +643,6 @@ async function main() {
 		},
 	});
 
-	// 2. Dosen Pembimbing (Informatika)
 	const dospemUser = await auth.api.signUpEmail({
 		body: {
 			email: "dospem.test@lecturer.undip.ac.id",
@@ -698,7 +664,6 @@ async function main() {
 		},
 	});
 
-	// 3. Dosen Koordinator (Informatika)
 	const koordinatorUser = await auth.api.signUpEmail({
 		body: {
 			email: "koordinator.test@lecturer.undip.ac.id",
@@ -720,7 +685,6 @@ async function main() {
 		},
 	});
 
-	// 4. Ketua Program Studi (Informatika)
 	const kaprodiUser = await auth.api.signUpEmail({
 		body: {
 			email: "kaprodi.test@lecturer.undip.ac.id",
@@ -742,7 +706,6 @@ async function main() {
 		},
 	});
 
-	// 5. Admin Fakultas (FSM)
 	const adminFakultasUser = await auth.api.signUpEmail({
 		body: {
 			email: "admin.fakultas@fsm.undip.ac.id",
@@ -764,7 +727,6 @@ async function main() {
 		},
 	});
 
-	// 6. Supervisor Akademik (FSM)
 	const supervisorUser = await auth.api.signUpEmail({
 		body: {
 			email: "supervisor.test@fsm.undip.ac.id",
@@ -786,7 +748,6 @@ async function main() {
 		},
 	});
 
-	// 7. Manajer TU (FSM)
 	const manajerTuUser = await auth.api.signUpEmail({
 		body: {
 			email: "manajer.tu@fsm.undip.ac.id",
@@ -808,7 +769,6 @@ async function main() {
 		},
 	});
 
-	// 8. Wakil Dekan 1 (FSM)
 	const wakilDekanUser = await auth.api.signUpEmail({
 		body: {
 			email: "wakil.dekan1@fsm.undip.ac.id",
@@ -830,7 +790,6 @@ async function main() {
 		},
 	});
 
-	// 9. UPA (FSM)
 	const upaUser = await auth.api.signUpEmail({
 		body: {
 			email: "upa@fsm.undip.ac.id",

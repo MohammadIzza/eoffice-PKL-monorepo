@@ -110,7 +110,6 @@ export abstract class MinioService {
 		contentType?: string,
 	): Promise<{ url: string; nameReplace: string }> {
 		try {
-			// Buat upload directory
 			const uploadDir = "./uploads";
 
 			if (!fs.existsSync(uploadDir)) {
@@ -121,14 +120,11 @@ export abstract class MinioService {
 				file.name,
 			);
 
-			// Simpan file ke lokal
 			const tempFilePath = path.join(uploadDir, file.name);
 
 			const fileBuffer = Buffer.from(await file.arrayBuffer());
 
 			fs.writeFileSync(tempFilePath, fileBuffer);
-
-			// Upload ke MinIO
 
 			await MinioService.client.fPutObject(
 				MinioService.bucketName,
@@ -137,10 +133,8 @@ export abstract class MinioService {
 				{ "Content-Type": contentType || "application/octet-stream" },
 			);
 
-			// Hapus file temp
 			fs.unlinkSync(tempFilePath);
 
-			// Generate presigned URL
 			const url = await MinioService.client.presignedUrl(
 				"GET",
 				MinioService.bucketName,
@@ -247,6 +241,3 @@ export abstract class MinioService {
 		return { stat, stream };
 	}
 }
-
-// Lazy initialization - only call when needed
-// await MinioService.ensureBucket();

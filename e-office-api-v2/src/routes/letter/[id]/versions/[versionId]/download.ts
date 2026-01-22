@@ -1,4 +1,3 @@
-// Endpoint: Download specific document version
 import { authGuardPlugin } from "@backend/middlewares/auth.ts";
 import { Prisma } from "@backend/db/index.ts";
 import { MinioService } from "@backend/services/minio.service.ts";
@@ -11,7 +10,6 @@ export default new Elysia()
 		async ({ params: { id, versionId }, user }) => {
 			const version = parseInt(versionId);
 
-			// 1. Get letter
 			const letter = await Prisma.letterInstance.findUnique({
 				where: { id },
 				include: {
@@ -23,7 +21,6 @@ export default new Elysia()
 				throw new Error("Surat tidak ditemukan");
 			}
 
-			// 2. Validate: user punya akses (sama seperti preview)
 			const isCreator = letter.createdById === user.id;
 			const hasApproved = await Prisma.letterStepHistory.findFirst({
 				where: {
@@ -44,7 +41,6 @@ export default new Elysia()
 				}
 			}
 
-			// 3. Get document version
 			const documentVersions = letter.documentVersions as Array<{
 				version: number;
 				storageKey: string | null;
@@ -70,11 +66,10 @@ export default new Elysia()
 				throw new Error("Dokumen versi ini belum tersedia");
 			}
 
-			// 4. Generate presigned URL untuk download
 			const downloadUrl = await MinioService.getPresignedUrl(
-				"",  // No specific folder
+				"",
 				targetVersion.storageKey,
-				1 * 60 * 60,  // 1 hour expiry
+				1 * 60 * 60,
 			);
 
 			return {
@@ -90,14 +85,14 @@ export default new Elysia()
 					reason: targetVersion.reason,
 					timestamp: targetVersion.timestamp,
 					downloadUrl: downloadUrl,
-					expiresIn: 3600,  // seconds
+					expiresIn: 3600,
 				},
 			};
 		},
 		{
 			params: t.Object({
 				id: t.String(),
-				versionId: t.String(),  // Version number as string
+				versionId: t.String(),
 			}),
 		},
 	);

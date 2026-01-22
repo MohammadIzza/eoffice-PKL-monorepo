@@ -1,4 +1,3 @@
-// Endpoint: Penomoran surat oleh UPA (dengan unique constraint)
 import { authGuardPlugin } from "@backend/middlewares/auth.ts";
 import { Prisma } from "@backend/db/index.ts";
 import {
@@ -15,10 +14,9 @@ export default new Elysia()
 			const { date } = query;
 			const targetDate = date ? new Date(date) : new Date();
 
-			// Get counter terakhir untuk tanggal ini
 			const lastNumbering = await Prisma.letterNumbering.findFirst({
 				where: {
-					letterTypeCode: "AK15",  // PKL
+					letterTypeCode: "AK15",
 					date: {
 						gte: new Date(targetDate.setHours(0, 0, 0, 0)),
 						lt: new Date(targetDate.setHours(23, 59, 59, 999)),
@@ -50,7 +48,7 @@ export default new Elysia()
 				id: t.String(),
 			}),
 			query: t.Object({
-				date: t.Optional(t.String()),  // Format: YYYY-MM-DD
+				date: t.Optional(t.String()),
 			}),
 		},
 	)
@@ -59,7 +57,6 @@ export default new Elysia()
 		async ({ params: { id }, body, user }) => {
 			const { numberString, date } = body;
 
-			// 1. Get letter
 			const letter = await Prisma.letterInstance.findUnique({
 				where: { id },
 			});
@@ -68,26 +65,20 @@ export default new Elysia()
 				throw new Error("Surat tidak ditemukan");
 			}
 
-			// 2. Validate: currentStep = UPA
 			if (letter.currentStep !== PKL_WORKFLOW_STEPS.UPA) {
 				throw new Error("Penomoran hanya bisa dilakukan di step UPA");
 			}
 
-			// 3. Validate: user adalah UPA yang di-assign
 			validateUserIsAssignee(letter, user.id, PKL_WORKFLOW_STEPS.UPA);
 
-			// 4. Validate: surat sudah ditandatangani
 			if (!letter.signedAt) {
 				throw new Error("Surat belum ditandatangani, tidak bisa diberi nomor");
 			}
 
-			// 5. Parse nomor dan extract counter (untuk insert ke LetterNumbering)
 			const targetDate = date ? new Date(date) : new Date();
-			// Format: AK15-{counter}/{DD}/{MM}/{YYYY}
 			const match = numberString.match(/^AK15-(\d+)\//);
 			const counter = match ? Number.parseInt(match[1], 10) : 1;
 
-			// 6. Insert LetterNumbering (unique constraint akan throw error jika duplikat)
 			try {
 				await Prisma.letterNumbering.create({
 					data: {
@@ -101,7 +92,6 @@ export default new Elysia()
 				});
 			} catch (error: any) {
 				if (error.code === "P2002") {
-					// Unique constraint violation
 					throw new Error(
 						`Nomor surat ${numberString} sudah digunakan. Silakan gunakan nomor lain.`,
 					);
@@ -109,7 +99,6 @@ export default new Elysia()
 				throw error;
 			}
 
-			// 7. Update letter: status = COMPLETED (terminal)
 			await Prisma.letterInstance.update({
 				where: { id },
 				data: {
@@ -117,7 +106,6 @@ export default new Elysia()
 				},
 			});
 
-			// 8. Record NUMBERED action
 			await Prisma.letterStepHistory.create({
 				data: {
 					letterId: letter.id,
@@ -148,8 +136,8 @@ export default new Elysia()
 				id: t.String(),
 			}),
 			body: t.Object({
-				numberString: t.String(),  // "AK15-01/22/01/2026"
-				date: t.Optional(t.String()),  // YYYY-MM-DD
+				numberString: t.String(),
+				date: t.Optional(t.String()),
 			}),
 		},
 	);

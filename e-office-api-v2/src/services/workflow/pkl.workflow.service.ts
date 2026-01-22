@@ -1,10 +1,6 @@
-// PKL Workflow Service - Business logic untuk proses workflow PKL
 import { Prisma } from "@backend/db/index.ts";
 import type { LetterInstance, LetterStepHistory } from "@backend/db/index.ts";
 
-/**
- * Step mapping untuk workflow PKL (fix sequence)
- */
 export const PKL_WORKFLOW_STEPS = {
 	DOSEN_PEMBIMBING: 1,
 	DOSEN_KOORDINATOR: 2,
@@ -27,9 +23,6 @@ export const STEP_TO_ROLE = {
 	8: "upa",
 } as const;
 
-/**
- * Determine assigned approvers untuk workflow PKL berdasarkan prodi mahasiswa
- */
 export async function determineApproversForPKL(
 	prodiId: string,
 	selectedDosenPembimbingUserId: string,
@@ -51,7 +44,6 @@ export async function determineApproversForPKL(
 		throw new Error("Dosen pembimbing yang dipilih tidak valid");
 	}
 
-	// 2. Get koordinator & kaprodi dari prodi yang sama
 	const prodiStaff = await Prisma.pegawai.findMany({
 		where: {
 			programStudiId: prodiId,
@@ -85,7 +77,6 @@ export async function determineApproversForPKL(
 		);
 	}
 
-	// 3. Get approver fix (admin fakultas, supervisor, manajer TU, WD1, UPA)
 	const fixRoles = [
 		"admin_fakultas",
 		"supervisor_akademik",
@@ -112,7 +103,6 @@ export async function determineApproversForPKL(
 		fixApprovers[roleName] = userWithRole.userId;
 	}
 
-	// 4. Build assignedApprovers object
 	const assignedApprovers: Record<string, string> = {
 		dospem: dospem.id,
 		koordinator: koordinator.user.id,
@@ -127,9 +117,6 @@ export async function determineApproversForPKL(
 	return assignedApprovers;
 }
 
-/**
- * Validate mahasiswa belum punya surat PKL aktif
- */
 export async function validateOnlyOneActiveLetter(
 	mahasiswaUserId: string,
 ): Promise<void> {
@@ -149,9 +136,6 @@ export async function validateOnlyOneActiveLetter(
 	}
 }
 
-/**
- * Get current assignee untuk step tertentu
- */
 export function getAssigneeForStep(
 	assignedApprovers: Record<string, string>,
 	step: number,
@@ -159,7 +143,6 @@ export function getAssigneeForStep(
 	const roleKey = STEP_TO_ROLE[step as keyof typeof STEP_TO_ROLE];
 	if (!roleKey) return null;
 
-	// Map role ke key di assignedApprovers
 	const keyMap: Record<string, string> = {
 		dosen_pembimbing: "dospem",
 		dosen_koordinator: "koordinator",
@@ -176,9 +159,6 @@ export function getAssigneeForStep(
 	return assignedApprovers[key] || null;
 }
 
-/**
- * Validate apakah user berhak melakukan action pada step ini
- */
 export function validateUserIsAssignee(
 	letter: LetterInstance,
 	userId: string,
@@ -192,9 +172,6 @@ export function validateUserIsAssignee(
 	}
 }
 
-/**
- * Calculate rollback target (1 step mundur dari current pending)
- */
 export function calculateRollbackStep(currentStep: number): number {
 	return Math.max(1, currentStep - 1);
 }

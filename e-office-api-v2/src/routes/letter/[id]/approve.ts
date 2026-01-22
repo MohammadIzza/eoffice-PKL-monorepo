@@ -1,4 +1,3 @@
-// Endpoint: Approve surat
 import { authGuardPlugin } from "@backend/middlewares/auth.ts";
 import { Prisma } from "@backend/db/index.ts";
 import {
@@ -15,7 +14,6 @@ export default new Elysia()
 		async ({ params: { id }, body, user }) => {
 			const { comment, signatureData } = body;
 
-			// 1. Get letter dengan lock (untuk prevent race condition)
 			const letter = await Prisma.letterInstance.findUnique({
 				where: { id },
 			});
@@ -30,10 +28,8 @@ export default new Elysia()
 
 			const currentStep = letter.currentStep!;
 
-			// 2. Validate user adalah assignee untuk step ini
 			validateUserIsAssignee(letter, user.id, currentStep);
 
-			// 3. Get user role untuk history
 			const userRoles = await Prisma.userRole.findFirst({
 				where: { userId: user.id },
 				include: { role: true },
@@ -41,16 +37,13 @@ export default new Elysia()
 
 			const actorRole = userRoles?.role.name || "unknown";
 
-			// 4. Handle special case: WD1 (TTD otomatis saat approve)
 			if (currentStep === PKL_WORKFLOW_STEPS.WAKIL_DEKAN_1) {
 				if (!signatureData) {
 					throw new Error("Tanda tangan diperlukan untuk Wakil Dekan");
 				}
 
-				// TODO: Upload signature ke MinIO
-				const signatureUrl = "minio://signatures/temp.png";  // Placeholder
+				const signatureUrl = "minio://signatures/temp.png";
 
-				// Update letter dengan TTD
 				await Prisma.letterInstance.update({
 					where: { id },
 					data: {
@@ -59,7 +52,6 @@ export default new Elysia()
 					},
 				});
 
-				// Record SIGNED action
 				await Prisma.letterStepHistory.create({
 					data: {
 						letterId: letter.id,
@@ -76,11 +68,9 @@ export default new Elysia()
 				});
 			}
 
-			// 5. Determine next step
 			const nextStep =
 				currentStep < PKL_WORKFLOW_STEPS.UPA ? currentStep + 1 : null;
 
-			// 6. Update letter: pindah ke step berikutnya
 			await Prisma.letterInstance.update({
 				where: { id },
 				data: {
@@ -88,7 +78,6 @@ export default new Elysia()
 				},
 			});
 
-			// 7. Record APPROVED action
 			await Prisma.letterStepHistory.create({
 				data: {
 					letterId: letter.id,
@@ -120,8 +109,8 @@ export default new Elysia()
 				comment: t.Optional(t.String()),
 				signatureData: t.Optional(
 					t.Object({
-						method: t.String(),  // "UPLOAD" | "PAD"
-						data: t.String(),  // Base64 atau file
+						method: t.String(),
+						data: t.String(),
 					}),
 				),
 			}),

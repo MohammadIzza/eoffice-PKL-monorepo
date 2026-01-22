@@ -1,4 +1,3 @@
-// Endpoint: Reject surat (terminal)
 import { authGuardPlugin } from "@backend/middlewares/auth.ts";
 import { Prisma } from "@backend/db/index.ts";
 import { validateUserIsAssignee } from "@backend/services/workflow/pkl.workflow.service.ts";
@@ -15,7 +14,6 @@ export default new Elysia()
 				throw new Error("Komentar wajib diisi minimal 10 karakter untuk penolakan");
 			}
 
-			// 1. Get letter
 			const letter = await Prisma.letterInstance.findUnique({
 				where: { id },
 			});
@@ -30,17 +28,14 @@ export default new Elysia()
 
 			const currentStep = letter.currentStep!;
 
-			// 2. Validate user adalah assignee
 			validateUserIsAssignee(letter, user.id, currentStep);
 
-			// 3. Get user role
 			const userRoles = await Prisma.userRole.findFirst({
 				where: { userId: user.id },
 				include: { role: true },
 			});
 			const actorRole = userRoles?.role.name || "unknown";
 
-			// 4. Update letter: status = REJECTED (terminal)
 			await Prisma.letterInstance.update({
 				where: { id },
 				data: {
@@ -48,7 +43,6 @@ export default new Elysia()
 				},
 			});
 
-			// 5. Record REJECTED action
 			await Prisma.letterStepHistory.create({
 				data: {
 					letterId: letter.id,
@@ -58,7 +52,7 @@ export default new Elysia()
 					actorRole: actorRole,
 					comment: comment,
 					fromStep: currentStep,
-					toStep: null,  // Terminal
+					toStep: null,
 				},
 			});
 

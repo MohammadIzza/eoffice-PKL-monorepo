@@ -1,4 +1,3 @@
-// Endpoint: Submit surat PKL oleh mahasiswa
 import { authGuardPlugin, requirePermission } from "@backend/middlewares/auth.ts";
 import { Prisma } from "@backend/db/index.ts";
 import {
@@ -19,22 +18,18 @@ export default new Elysia()
 				formData,
 			} = body;
 
-			// 1. Validasi: mahasiswa belum punya surat PKL aktif
 			await validateOnlyOneActiveLetter(user.id);
 
-			// 2. Determine assigned approvers untuk workflow
 			const assignedApprovers = await determineApproversForPKL(
 				prodiId,
 				dosenPembimbingUserId,
 			);
 
-			// 3. Get LetterType PKL (hardcode untuk fase ini)
 			let letterTypePKL = await Prisma.letterType.findFirst({
 				where: { name: "PKL" },
 			});
 
 			if (!letterTypePKL) {
-				// Create if not exists (first time)
 				letterTypePKL = await Prisma.letterType.create({
 					data: {
 						name: "PKL",
@@ -43,20 +38,19 @@ export default new Elysia()
 				});
 			}
 
-			// 4. Create LetterInstance
 			const letter = await Prisma.letterInstance.create({
 				data: {
 					letterTypeId: letterTypePKL.id,
 					createdById: user.id,
-					schema: {},  // TODO: get from template
+					schema: {},
 					values: formData,
 					status: "PROCESSING",
-					currentStep: PKL_WORKFLOW_STEPS.DOSEN_PEMBIMBING,  // Start di step 1
+					currentStep: PKL_WORKFLOW_STEPS.DOSEN_PEMBIMBING,
 					assignedApprovers: assignedApprovers,
 					documentVersions: [
 						{
 							version: 1,
-							storageKey: null,  // TODO: generate document
+							storageKey: null,
 							format: "HTML",
 							createdBy: "system",
 							reason: "SUBMIT",
@@ -69,12 +63,11 @@ export default new Elysia()
 				},
 			});
 
-			// 5. Create step history (SUBMITTED)
 			await Prisma.letterStepHistory.create({
 				data: {
 					letterId: letter.id,
 					action: "SUBMITTED",
-					step: null,  // Mahasiswa submit bukan step approval
+					step: null,
 					actorUserId: user.id,
 					actorRole: "mahasiswa",
 					comment: null,
@@ -98,11 +91,11 @@ export default new Elysia()
 			};
 		},
 		{
-			...requirePermission("letter", "create"),  // Sesuai permission di seed
+			...requirePermission("letter", "create"),
 			body: t.Object({
 				prodiId: t.String(),
 				dosenPembimbingUserId: t.String(),
-				formData: t.Any(),  // Form data PKL (dynamic)
+				formData: t.Any(),
 			}),
 		},
 	);

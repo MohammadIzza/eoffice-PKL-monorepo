@@ -6,8 +6,6 @@ import { Elysia } from "elysia";
 import { autoload } from "elysia-autoload";
 import env from "env-var";
 
-
-// CORS configuration - must specify origin (not wildcard) when credentials: true
 const FE_URL = env.get("FE_URL").asString() || "http://localhost:3000";
 const allowedOrigins = [FE_URL, "http://localhost:3000", "http://127.0.0.1:3000"];
 
@@ -16,11 +14,8 @@ export const app = new Elysia()
 	.use(
 		cors({
 			origin: (request) => {
-				// Get origin from request header
 				const origin = request.headers.get("origin");
-				// Allow requests with no origin (like mobile apps or curl requests)
 				if (!origin) return true;
-				// Check if origin is in allowed list
 				return allowedOrigins.includes(origin);
 			},
 			methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],

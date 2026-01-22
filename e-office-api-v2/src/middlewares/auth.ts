@@ -11,7 +11,6 @@ export interface RequiredRoleProps {
 	requiredRole: string;
 }
 
-/* ---------- authGuardPlugin ---------- */
 export const authGuardPlugin = new Elysia({
 	name: "auth",
 })
@@ -182,7 +181,6 @@ export const authGuardPlugin = new Elysia({
 	})
 	.as("scoped");
 
-/* ---------- helper functions ---------- */
 export const requirePermission = (resource: string, action: string) => ({
 	permission: { resource, action },
 });

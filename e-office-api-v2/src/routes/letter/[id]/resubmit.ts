@@ -1,4 +1,3 @@
-// Endpoint: Resubmit surat setelah revise (update values)
 import { authGuardPlugin } from "@backend/middlewares/auth.ts";
 import { Prisma } from "@backend/db/index.ts";
 import { Elysia, t } from "elysia";
@@ -10,7 +9,6 @@ export default new Elysia()
 		async ({ params: { id }, body, user }) => {
 			const { formData } = body;
 
-			// 1. Get letter
 			const letter = await Prisma.letterInstance.findUnique({
 				where: { id },
 			});
@@ -19,17 +17,14 @@ export default new Elysia()
 				throw new Error("Surat tidak ditemukan");
 			}
 
-			// 2. Validate: hanya pembuat surat
 			if (letter.createdById !== user.id) {
 				throw new Error("Anda tidak berhak mengubah surat ini");
 			}
 
-			// 3. Validate: status PROCESSING
 			if (letter.status !== "PROCESSING") {
 				throw new Error("Surat tidak dalam status PROCESSING");
 			}
 
-			// 4. Validate: surat sudah pernah di-revise (ada action REVISED atau SELF_REVISED)
 			const hasRevisedHistory = await Prisma.letterStepHistory.findFirst({
 				where: {
 					letterId: letter.id,
@@ -43,16 +38,13 @@ export default new Elysia()
 				);
 			}
 
-			// 5. Update values (sync dengan dokumen terakhir jika ada)
 			await Prisma.letterInstance.update({
 				where: { id },
 				data: {
-					values: formData,  // Update values dengan data baru
-					// Note: documentVersions tetap pakai versi terakhir (jika sudah ada edit supervisor)
+					values: formData,
 				},
 			});
 
-			// 6. Record RESUBMITTED action (optional, untuk tracking)
 			await Prisma.letterStepHistory.create({
 				data: {
 					letterId: letter.id,
@@ -62,7 +54,7 @@ export default new Elysia()
 					actorRole: "mahasiswa",
 					comment: "Mahasiswa mengirim ulang surat setelah revisi",
 					fromStep: letter.currentStep,
-					toStep: letter.currentStep,  // Tetap di step yang sama, menunggu approve ulang
+					toStep: letter.currentStep,
 				},
 			});
 
@@ -81,7 +73,7 @@ export default new Elysia()
 				id: t.String(),
 			}),
 			body: t.Object({
-				formData: t.Any(),  // Form data PKL (dynamic, sama seperti submit)
+				formData: t.Any(),
 			}),
 		},
 	);

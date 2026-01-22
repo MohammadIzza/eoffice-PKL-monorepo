@@ -1,4 +1,3 @@
-// Endpoint: Revise surat (rollback 1 step)
 import { authGuardPlugin } from "@backend/middlewares/auth.ts";
 import { Prisma } from "@backend/db/index.ts";
 import {
@@ -35,20 +34,16 @@ export default new Elysia()
 
 			const currentStep = letter.currentStep!;
 
-			// 2. Validate user adalah assignee
 			validateUserIsAssignee(letter, user.id, currentStep);
 
-			// 3. Calculate rollback target (mundur 1 step dari current pending)
 			const rollbackToStep = calculateRollbackStep(currentStep);
 
-			// 4. Get user role
 			const userRoles = await Prisma.userRole.findFirst({
 				where: { userId: user.id },
 				include: { role: true },
 			});
 			const actorRole = userRoles?.role.name || "unknown";
 
-			// 5. Update letter: rollback currentStep
 			await Prisma.letterInstance.update({
 				where: { id },
 				data: {
@@ -56,7 +51,6 @@ export default new Elysia()
 				},
 			});
 
-			// 6. Record REVISED action
 			await Prisma.letterStepHistory.create({
 				data: {
 					letterId: letter.id,

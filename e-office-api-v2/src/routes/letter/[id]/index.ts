@@ -1,4 +1,3 @@
-// Endpoint: Get letter detail + history + versions
 import { authGuardPlugin } from "@backend/middlewares/auth.ts";
 import { Prisma } from "@backend/db/index.ts";
 import { Elysia, t } from "elysia";
@@ -8,7 +7,6 @@ export default new Elysia()
 	.get(
 		"/",
 		async ({ params: { id }, user }) => {
-			// Get letter dengan relasi lengkap
 			const letter = await Prisma.letterInstance.findUnique({
 				where: { id },
 				include: {
@@ -36,7 +34,7 @@ export default new Elysia()
 					},
 					attachments: {
 						where: {
-							isActive: true,  // Hanya yang aktif
+							isActive: true,
 						},
 					},
 					numbering: true,
@@ -46,8 +44,6 @@ export default new Elysia()
 			if (!letter) {
 				throw new Error("Surat tidak ditemukan");
 			}
-
-			// TODO: Authorization check (mahasiswa hanya bisa lihat miliknya, approver hanya yang di-assign)
 
 			return {
 				success: true,
