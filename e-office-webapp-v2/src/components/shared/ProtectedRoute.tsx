@@ -28,14 +28,14 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
 
     verifyAuth();
   }, [user, checkSession]);
-
+  
   useEffect(() => {
     // Redirect ke login jika tidak ada user setelah check
     if (!isChecking && !isLoading && !user) {
       router.push('/login');
     }
   }, [isChecking, isLoading, user, router]);
-
+  
   // Loading state
   if (isChecking || isLoading) {
     return (
@@ -69,6 +69,6 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
       );
     }
   }
-
+  
   return <>{children}</>;
 }

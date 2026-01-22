@@ -139,17 +139,42 @@ async function testE2EAll() {
 	let prodiId = "";
 	let dospemUserId = "";
 
-	await test("Get program studi", async () => {
-		const prodi = await Prisma.programStudi.findFirst({
-			where: { code: "IF" },
+	await test("Get program studi with koordinator", async () => {
+		// Find program studi that has a koordinator PKL assigned
+		// Koordinator is a pegawai with role dosen_koordinator and programStudiId
+		const prodiWithKoordinator = await Prisma.programStudi.findFirst({
+			where: {
+				pegawai: {
+					some: {
+						user: {
+							userRole: {
+								some: {
+									role: { name: "dosen_koordinator" },
+								},
+							},
+						},
+					},
+				},
+			},
+			orderBy: { name: "asc" },
 		});
 
-		if (!prodi) {
-			throw new Error("Program studi tidak ditemukan");
+		if (!prodiWithKoordinator) {
+			// Fallback: just get any prodi
+			const anyProdi = await Prisma.programStudi.findFirst({
+				orderBy: { name: "asc" },
+			});
+			if (!anyProdi) {
+				throw new Error("Program studi tidak ditemukan di database");
+			}
+			prodiId = anyProdi.id;
+			console.log(`    ⚠️  Found: ${anyProdi.name} (${anyProdi.code}) - but no koordinator assigned`);
+			return anyProdi;
 		}
 
-		prodiId = prodi.id;
-		return prodi;
+		prodiId = prodiWithKoordinator.id;
+		console.log(`    ✓ Found: ${prodiWithKoordinator.name} (${prodiWithKoordinator.code}) with koordinator`);
+		return prodiWithKoordinator;
 	});
 
 	await test("Get dosen pembimbing", async () => {
@@ -173,15 +198,24 @@ async function testE2EAll() {
 
 	// Cleanup existing letters
 	await test("Cleanup existing letters", async () => {
+		const mahasiswaUser = await Prisma.user.findFirst({
+			where: { email: "mahasiswa.test@students.undip.ac.id" },
+		});
+
+		if (!mahasiswaUser) {
+			throw new Error("Mahasiswa user tidak ditemukan");
+		}
+
+		// Fix: Use valid enum values (PROCESSING, not PENDING)
 		await Prisma.letterInstance.updateMany({
 			where: {
-				createdById: (await Prisma.user.findFirst({
-					where: { email: "mahasiswa.test@students.undip.ac.id" },
-				}))?.id,
-				status: { in: ["PROCESSING", "PENDING"] },
+				createdById: mahasiswaUser.id,
+				status: "PROCESSING", // Only PROCESSING, not PENDING (invalid enum)
 			},
 			data: { status: "CANCELLED" },
 		});
+		
+		console.log(`    ✓ Cleaned existing PROCESSING letters`);
 		return { cleaned: true };
 	});
 
