@@ -315,7 +315,31 @@ async function main() {
 			data: { resource: "letterTemplate", action: "delete" },
 		}),
 
-		// main transaction
+		// letter (main transaction)
+		Prisma.permission.create({
+			data: { resource: "letter", action: "create" },
+		}),
+		Prisma.permission.create({
+			data: { resource: "letter", action: "read" },
+		}),
+		Prisma.permission.create({
+			data: { resource: "letter", action: "update" },
+		}),
+		Prisma.permission.create({
+			data: { resource: "letter", action: "delete" },
+		}),
+		Prisma.permission.create({
+			data: { resource: "letter", action: "approve" },
+		}),
+		Prisma.permission.create({
+			data: { resource: "letter", action: "reject" },
+		}),
+		Prisma.permission.create({
+			data: { resource: "letter", action: "revise" },
+		}),
+		Prisma.permission.create({
+			data: { resource: "letter", action: "cancel" },
+		}),
 		Prisma.permission.create({
 			data: { resource: "letter", action: "file" },
 		}),

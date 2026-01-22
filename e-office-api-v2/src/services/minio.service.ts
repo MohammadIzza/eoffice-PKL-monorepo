@@ -4,19 +4,32 @@ import path from "node:path";
 import env from "env-var";
 
 export abstract class MinioService {
-	private static client: Client = new Client({
-		endPoint: env.get("MINIO_ENDPOINT").required().asString(),
-		port: env.get("MINIO_PORT").required().asPortNumber(),
-		useSSL: env.get("MINIO_USE_SSL").required().asBoolStrict(),
-		accessKey: env.get("MINIO_ACCESS_KEY").required().asString(),
-		secretKey: env.get("MINIO_SECRET_KEY").required().asString(),
-		region: env.get("MINIO_REGION").required().asString(),
-	});
+	private static _client: Client | null = null;
+	private static _bucketName: string | null = null;
 
-	private static bucketName: string = env
-		.get("MINIO_BUCKET_NAME")
-		.required()
-		.asString();
+	private static get client(): Client {
+		if (!MinioService._client) {
+			MinioService._client = new Client({
+				endPoint: env.get("MINIO_ENDPOINT").default("localhost").asString(),
+				port: env.get("MINIO_PORT").default(9000).asPortNumber(),
+				useSSL: env.get("MINIO_USE_SSL").default("false").asBoolStrict(),
+				accessKey: env.get("MINIO_ACCESS_KEY").default("minioadmin").asString(),
+				secretKey: env.get("MINIO_SECRET_KEY").default("minioadmin").asString(),
+				region: env.get("MINIO_REGION").default("us-east-1").asString(),
+			});
+		}
+		return MinioService._client;
+	}
+
+	private static get bucketName(): string {
+		if (!MinioService._bucketName) {
+			MinioService._bucketName = env
+				.get("MINIO_BUCKET_NAME")
+				.default("e-office")
+				.asString();
+		}
+		return MinioService._bucketName;
+	}
 
 	private static generateUniqueFileNameWithTimestamp(
 		originalName: string,
@@ -36,7 +49,7 @@ export abstract class MinioService {
 		if (!exists) {
 			await MinioService.client.makeBucket(
 				MinioService.bucketName,
-				MinioService.client.region,
+				env.get("MINIO_REGION").default("us-east-1").asString(),
 			);
 		}
 	}
@@ -235,4 +248,5 @@ export abstract class MinioService {
 	}
 }
 
-await MinioService.ensureBucket();
+// Lazy initialization - only call when needed
+// await MinioService.ensureBucket();
