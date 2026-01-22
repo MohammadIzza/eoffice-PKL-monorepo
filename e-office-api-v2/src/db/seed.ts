@@ -109,11 +109,11 @@ async function main() {
 
 	const managerTURole = await Prisma.role.upsert({
 		create: {
-			name: "manager_tu",
+			name: "manajer_tu",  // Konsistensi dengan kontrak teknis
 		},
 		update: {},
 		where: {
-			name: "manager_tu",
+			name: "manajer_tu",
 		},
 	});
 
@@ -179,11 +179,21 @@ async function main() {
 
 	const ketuaProdiRole = await Prisma.role.upsert({
 		create: {
-			name: "ketua_prodi",
+			name: "ketua_program_studi",  // Konsistensi dengan kontrak teknis
 		},
 		update: {},
 		where: {
-			name: "ketua_prodi",
+			name: "ketua_program_studi",
+		},
+	});
+
+	const adminFakultasRole = await Prisma.role.upsert({
+		create: {
+			name: "admin_fakultas",
+		},
+		update: {},
+		where: {
+			name: "admin_fakultas",
 		},
 	});
 
@@ -613,6 +623,212 @@ async function main() {
 		},
 	});
 
+	console.log("Created superadmin user");
+
+	// ========== CREATE SAMPLE USERS FOR PKL WORKFLOW TESTING ==========
+
+	// 1. Mahasiswa (S1 Informatika)
+	const mahasiswaUser = await auth.api.signUpEmail({
+		body: {
+			email: "mahasiswa.test@students.undip.ac.id",
+			password: "password1234",
+			name: "Budi Santoso",
+		},
+	});
+	await Prisma.userRole.create({
+		data: { userId: mahasiswaUser.user.id, roleId: mahasiswaRole.id },
+	});
+	await Prisma.mahasiswa.create({
+		data: {
+			userId: mahasiswaUser.user.id,
+			nim: "24060122140123",
+			tahunMasuk: "2022",
+			noHp: "08123456789",
+			alamat: "Semarang",
+			tempatLahir: "Semarang",
+			tanggalLahir: new Date("2004-05-15"),
+			departemenId: departemenInformatika.id,
+			programStudiId: prodiInformatika.id,
+		},
+	});
+
+	// 2. Dosen Pembimbing (Informatika)
+	const dospemUser = await auth.api.signUpEmail({
+		body: {
+			email: "dospem.test@lecturer.undip.ac.id",
+			password: "password1234",
+			name: "Dr. Ahmad Dospem",
+		},
+	});
+	await Prisma.userRole.create({
+		data: { userId: dospemUser.user.id, roleId: dosenPembimbingRole.id },
+	});
+	await Prisma.pegawai.create({
+		data: {
+			userId: dospemUser.user.id,
+			nip: "198701012015011001",
+			jabatan: "Dosen Pembimbing",
+			noHp: "08123456788",
+			departemenId: departemenInformatika.id,
+			programStudiId: prodiInformatika.id,
+		},
+	});
+
+	// 3. Dosen Koordinator (Informatika)
+	const koordinatorUser = await auth.api.signUpEmail({
+		body: {
+			email: "koordinator.test@lecturer.undip.ac.id",
+			password: "password1234",
+			name: "Prof. Siti Koordinator",
+		},
+	});
+	await Prisma.userRole.create({
+		data: { userId: koordinatorUser.user.id, roleId: dosenKoordinatorRole.id },
+	});
+	await Prisma.pegawai.create({
+		data: {
+			userId: koordinatorUser.user.id,
+			nip: "198005052010012002",
+			jabatan: "Koordinator PKL",
+			noHp: "08123456787",
+			departemenId: departemenInformatika.id,
+			programStudiId: prodiInformatika.id,
+		},
+	});
+
+	// 4. Ketua Program Studi (Informatika)
+	const kaprodiUser = await auth.api.signUpEmail({
+		body: {
+			email: "kaprodi.test@lecturer.undip.ac.id",
+			password: "password1234",
+			name: "Dr. Aris Kaprodi",
+		},
+	});
+	await Prisma.userRole.create({
+		data: { userId: kaprodiUser.user.id, roleId: ketuaProdiRole.id },
+	});
+	await Prisma.pegawai.create({
+		data: {
+			userId: kaprodiUser.user.id,
+			nip: "197509092005011003",
+			jabatan: "Ketua Program Studi",
+			noHp: "08123456786",
+			departemenId: departemenInformatika.id,
+			programStudiId: prodiInformatika.id,
+		},
+	});
+
+	// 5. Admin Fakultas (FSM)
+	const adminFakultasUser = await auth.api.signUpEmail({
+		body: {
+			email: "admin.fakultas@fsm.undip.ac.id",
+			password: "password1234",
+			name: "Budi Admin Fakultas",
+		},
+	});
+	await Prisma.userRole.create({
+		data: { userId: adminFakultasUser.user.id, roleId: adminFakultasRole.id },
+	});
+	await Prisma.pegawai.create({
+		data: {
+			userId: adminFakultasUser.user.id,
+			nip: "199001012020011004",
+			jabatan: "Admin Fakultas",
+			noHp: "08123456785",
+			departemenId: departemenFsm.id,
+			programStudiId: prodiFSM.id,
+		},
+	});
+
+	// 6. Supervisor Akademik (FSM)
+	const supervisorUser = await auth.api.signUpEmail({
+		body: {
+			email: "supervisor.test@fsm.undip.ac.id",
+			password: "password1234",
+			name: "Dr. Retno Supervisor",
+		},
+	});
+	await Prisma.userRole.create({
+		data: { userId: supervisorUser.user.id, roleId: supervisorAkademikRole.id },
+	});
+	await Prisma.pegawai.create({
+		data: {
+			userId: supervisorUser.user.id,
+			nip: "198505052015012005",
+			jabatan: "Supervisor Akademik",
+			noHp: "08123456784",
+			departemenId: departemenFsm.id,
+			programStudiId: prodiFSM.id,
+		},
+	});
+
+	// 7. Manajer TU (FSM)
+	const manajerTuUser = await auth.api.signUpEmail({
+		body: {
+			email: "manajer.tu@fsm.undip.ac.id",
+			password: "password1234",
+			name: "Siti Manajer TU",
+		},
+	});
+	await Prisma.userRole.create({
+		data: { userId: manajerTuUser.user.id, roleId: managerTURole.id },
+	});
+	await Prisma.pegawai.create({
+		data: {
+			userId: manajerTuUser.user.id,
+			nip: "199202022020012006",
+			jabatan: "Manajer Tata Usaha",
+			noHp: "08123456783",
+			departemenId: departemenFsm.id,
+			programStudiId: prodiFSM.id,
+		},
+	});
+
+	// 8. Wakil Dekan 1 (FSM)
+	const wakilDekanUser = await auth.api.signUpEmail({
+		body: {
+			email: "wakil.dekan1@fsm.undip.ac.id",
+			password: "password1234",
+			name: "Prof. Dr. Bambang Wakil Dekan",
+		},
+	});
+	await Prisma.userRole.create({
+		data: { userId: wakilDekanUser.user.id, roleId: wakilDekan1Role.id },
+	});
+	await Prisma.pegawai.create({
+		data: {
+			userId: wakilDekanUser.user.id,
+			nip: "197001012000011007",
+			jabatan: "Wakil Dekan 1",
+			noHp: "08123456782",
+			departemenId: departemenFsm.id,
+			programStudiId: prodiFSM.id,
+		},
+	});
+
+	// 9. UPA (FSM)
+	const upaUser = await auth.api.signUpEmail({
+		body: {
+			email: "upa@fsm.undip.ac.id",
+			password: "password1234",
+			name: "Dewi UPA",
+		},
+	});
+	await Prisma.userRole.create({
+		data: { userId: upaUser.user.id, roleId: upaRole.id },
+	});
+	await Prisma.pegawai.create({
+		data: {
+			userId: upaUser.user.id,
+			nip: "199505052022012008",
+			jabatan: "Unit Pengelola Administrasi",
+			noHp: "08123456781",
+			departemenId: departemenFsm.id,
+			programStudiId: prodiFSM.id,
+		},
+	});
+
+	console.log("Created sample users for PKL workflow testing");
 	console.log("Assigned roles to users");
 }
 

@@ -153,10 +153,13 @@ model User {
   mahasiswa Mahasiswa?
   pegawai   Pegawai?
 
-  userRole       UserRole[]
-  sessions       Session[]
-  accounts       Account[]
-  LetterInstance LetterInstance[]
+  userRole            UserRole[]
+  sessions            Session[]
+  accounts            Account[]
+  LetterInstance      LetterInstance[]
+  uploadedAttachments Attachment[]
+  stepHistoryActions  LetterStepHistory[]
+  assignedNumbering   LetterNumbering[]
 
   createdAt DateTime? @default(now())
   updatedAt DateTime? @updatedAt
@@ -252,10 +255,21 @@ model Attachment {
   domain   String
   filename String
 
+  // Relasi ke surat
+  letterId String?
+  letter   LetterInstance? @relation(fields: [letterId], references: [id], onDelete: Cascade)
+
+  // Metadata
+  category         String?  // "PROPOSAL", "KTM", "LAMPIRAN_TAMBAHAN", dll
+  uploadedByUserId String?
+  uploadedBy       User?    @relation(fields: [uploadedByUserId], references: [id])
+  isActive         Boolean  @default(true)
+
   createdAt DateTime? @default(now())
   updatedAt DateTime? @updatedAt
   deletedAt DateTime?
 
+  @@index([letterId])
   @@map("attachment")
 }
 
@@ -303,24 +317,103 @@ model LetterInstance {
 
   schema      Json
   values      Json
-  status      LetterStatus @default(PENDING)
+  status      LetterStatus @default(DRAFT)
   currentStep Int?
+
+  // Metadata workflow (JSON untuk flexibility)
+  assignedApprovers     Json?  // { dospem: userId, koordinator: userId, ... }
+  documentVersions      Json   @default("[]")  // [{ version, storageKey, format, ... }, ...]
+  latestEditableVersion Int    @default(1)
+  latestPDFVersion      Int?
+
+  // Milestone (denormalisasi untuk query cepat)
+  signedAt     DateTime?
+  signatureUrl String?
 
   letterTypeId String
   letterType   LetterType @relation(fields: [letterTypeId], references: [id])
   createdById  String
   createdBy    User       @relation(fields: [createdById], references: [id])
 
-  createdAt DateTime @default(now())
+  // Relasi (1-to-many)
+  attachments   Attachment[]
+  stepHistory   LetterStepHistory[]
+  numbering     LetterNumbering?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   @@map("letter_instance")
 }
 
+model LetterStepHistory {
+  id String @id @default(cuid())
+
+  letterId String
+  letter   LetterInstance @relation(fields: [letterId], references: [id], onDelete: Cascade)
+
+  // Aksi yang dilakukan
+  action String  // "SUBMITTED", "APPROVED", "REJECTED", "REVISED", "SELF_REVISED", "CANCELLED", "EDITED", "SIGNED", "NUMBERED"
+
+  // Step workflow (nullable untuk aksi mahasiswa: submit/cancel/self-revise)
+  step Int?  // 1=Dospem, 2=Koordinator, ..., 9=UPA
+
+  // Actor
+  actorUserId String
+  actor       User   @relation(fields: [actorUserId], references: [id])
+  actorRole   String  // "mahasiswa", "dosen_pembimbing", dll
+
+  // Detail aksi
+  comment String?  // Komentar (wajib untuk reject/revise)
+
+  // Transisi step (untuk tracking rollback)
+  fromStep Int?
+  toStep   Int?
+
+  // Metadata tambahan (untuk aksi khusus)
+  metadata Json?  // { documentVersion, signatureUrl, letterNumber, dll }
+
+  createdAt DateTime @default(now())
+
+  @@index([letterId])
+  @@index([actorUserId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("letter_step_history")
+}
+
+model LetterNumbering {
+  id String @id @default(cuid())
+
+  letterId String         @unique
+  letter   LetterInstance @relation(fields: [letterId], references: [id], onDelete: Cascade)
+
+  // Komponen nomor
+  letterTypeCode String   // "AK15" untuk PKL
+  date           DateTime  // Tanggal penomoran (untuk grouping counter)
+  counter        Int      // Counter per tanggal (1, 2, 3, ...)
+
+  // Nomor final (untuk display + search)
+  numberString String @unique  // "AK15-01/22/01/2026" (UNIQUE CONSTRAINT!)
+
+  // Metadata
+  assignedByUserId String
+  assignedBy       User   @relation(fields: [assignedByUserId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([letterTypeCode, date, counter])
+  @@index([numberString])
+  @@index([date])
+  @@map("letter_numbering")
+}
+
 enum LetterStatus {
-  PENDING
-  IN_PROGRESS
-  COMPLETED
-  REJECTED
+  DRAFT       // Surat belum di-submit
+  PROCESSING  // Surat sedang dalam workflow approval
+  COMPLETED   // Terminal: surat selesai (sudah dinomori)
+  REJECTED    // Terminal: surat ditolak
+  CANCELLED   // Terminal: surat dibatalkan mahasiswa
 
   @@map("letter_status")
 }
