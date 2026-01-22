@@ -1,23 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/api';
-import { useAuthStore } from '@/stores';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
-  const { setUser, setToken } = useAuthStore();
+  const { login, user, isLoading: authLoading, error: authError } = useAuth();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Redirect jika sudah logged in
+  useEffect(() => {
+    if (user) {
+      router.push('/dashboard');
+    }
+  }, [user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,20 +30,32 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await login(email, password);
+      // useAuth.login() sudah handle setUser di store
+      await login(email, password);
       
-      // TODO: Sesuaikan dengan response API backend
-      // setUser(response.user);
-      // setToken(response.token);
-      
+      // Redirect setelah login success
+      // User akan di-set di store oleh useAuth hook
       router.push('/dashboard');
     } catch (err) {
-      setError('Login gagal. Periksa email dan password Anda.');
-      console.error(err);
+      // Error sudah di-handle di useAuth, tapi kita bisa override message
+      const errorMessage = err instanceof Error ? err.message : 'Login gagal. Periksa email dan password Anda.';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Show loading jika check session
+  if (authLoading && !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-2 text-sm text-gray-600">Memeriksa sesi...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Card>
@@ -76,8 +93,8 @@ export default function LoginPage() {
             />
           </div>
 
-          {error && (
-            <p className="text-sm text-red-600">{error}</p>
+          {(error || authError) && (
+            <p className="text-sm text-red-600">{error || authError}</p>
           )}
 
           <Button type="submit" className="w-full" disabled={isLoading}>

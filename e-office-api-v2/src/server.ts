@@ -8,24 +8,24 @@ import env from "env-var";
 
 
 export const app = new Elysia()
-	.use(swagger())
-	.use(
-		cors({
-			origin: "*", // env.get("FE_URL").asString(),
-			methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-			credentials: true,
-			allowedHeaders: ["Content-Type", "Authorization"],
-		}),
-	)
-	.use(serverTiming())
-	.use(
-		await autoload({
-			types: {
-				output: "./autogen.routes.ts",
-				typeName: "App",
-				useExport: true,
-			},
-		}),
-	)
+    .use(swagger())
+    .use(
+        cors({
+            origin: "*", // env.get("FE_URL").asString(),
+            methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            credentials: true,
+            allowedHeaders: ["Content-Type", "Authorization"],
+        }),
+    )
+    .use(serverTiming())
+    .use(
+        await autoload({
+            types: {
+                output: "./autogen.routes.ts",
+                typeName: "App",
+                useExport: true,
+            },
+        }),
+    )
 
 export type App = typeof app;
