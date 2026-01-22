@@ -1,4 +1,3 @@
-// User related types
 export interface Role {
   id: string;
   name: string;
@@ -48,7 +47,6 @@ export interface User {
   pegawai: Pegawai | null;
 }
 
-// Role name constants (for type checking)
 export type UserRoleName = 
   | 'mahasiswa'
   | 'dosen_pembimbing'

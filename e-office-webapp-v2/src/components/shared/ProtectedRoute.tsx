@@ -13,33 +13,37 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
   const router = useRouter();
   const { user, isLoading, checkSession } = useAuthStore();
   const [isChecking, setIsChecking] = useState(true);
+  const [hasChecked, setHasChecked] = useState(false);
 
   useEffect(() => {
-    const verifyAuth = async () => {
-      // Check session jika user belum ada di store
-      if (!user) {
-        setIsChecking(true);
-        await checkSession();
-        setIsChecking(false);
-      } else {
-        setIsChecking(false);
-      }
-    };
-
-    verifyAuth();
-  }, [user, checkSession]);
-  
-  useEffect(() => {
-    // Redirect ke login jika tidak ada user setelah check
-    if (!isChecking && !isLoading && !user) {
-      router.push('/login');
+    if (!user && !hasChecked) {
+      setIsChecking(true);
+      checkSession()
+        .then(() => {
+          setIsChecking(false);
+          setHasChecked(true);
+        })
+        .catch((error) => {
+          console.error('Session check failed:', error);
+          setIsChecking(false);
+          setHasChecked(true);
+        });
+    } else if (user) {
+      setIsChecking(false);
+      setHasChecked(true      );
     }
-  }, [isChecking, isLoading, user, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
-  // Loading state
-  if (isChecking || isLoading) {
+  useEffect(() => {
+    if (hasChecked && !isChecking && !isLoading && !user) {
+      router.replace('/login');
+    }
+  }, [hasChecked, isChecking, isLoading, user, router]);
+  
+  if (isChecking || (isLoading && !hasChecked)) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-[#F2F2F2]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
           <p className="mt-2 text-sm text-gray-600">Memeriksa sesi...</p>
@@ -48,17 +52,15 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
     );
   }
 
-  // Not authenticated
   if (!user) {
     return null;
   }
 
-  // Check role if required
   if (requiredRole) {
-    const userRoles = user.roles.map((r) => r.name);
+    const userRoles = user.roles?.map((r) => r.name) || [];
     if (!userRoles.includes(requiredRole)) {
       return (
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center min-h-screen bg-[#F2F2F2]">
           <div className="text-center">
             <h2 className="text-xl font-semibold text-gray-900">Akses Ditolak</h2>
             <p className="mt-2 text-sm text-gray-600">

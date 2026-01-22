@@ -1,4 +1,3 @@
-// PKL Form store - Multi-step form state
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { LetterFormData } from '@/types';

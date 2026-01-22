@@ -1,7 +1,7 @@
-// Auth store - User and session state (cookie-based, no token)
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User } from '@/types';
+import { authService } from '@/services';
 
 interface AuthState {
   user: User | null;
@@ -14,8 +14,6 @@ interface AuthState {
   logout: () => void;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
@@ -25,38 +23,23 @@ export const useAuthStore = create<AuthState>()(
       setUser: (user) => set({ user, error: null }),
       setLoading: (isLoading) => set({ isLoading }),
       setError: (error) => set({ error }),
-      checkSession: async () => {
-        set({ isLoading: true, error: null });
-        try {
-          const response = await fetch(`${API_URL}/me`, {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-              'Content-Type': 'application/json',
+            checkSession: async () => {
+              set({ isLoading: true, error: null });
+              try {
+                const user = await authService.getMe();
+                set({ user, isLoading: false, error: null });
+              } catch (error) {
+                console.error('Session check failed:', error);
+                set({ user: null, isLoading: false, error: null });
+              }
             },
-          });
-
-          if (response.ok) {
-            const user = await response.json();
-            set({ user, isLoading: false, error: null });
-          } else {
-            // Session invalid or expired
-            set({ user: null, isLoading: false, error: null });
-          }
-        } catch (error) {
-          console.error('Session check failed:', error);
-          set({ user: null, isLoading: false, error: 'Failed to check session' });
-        }
-      },
-      logout: () => {
-        set({ user: null, isLoading: false, error: null });
-        // Cookies will be cleared by backend on sign-out
-      },
+            logout: () => {
+              set({ user: null, isLoading: false, error: null });
+            },
     }),
-    {
-      name: 'auth-storage',
-      // Only persist user, not loading/error states
-      partialize: (state) => ({ user: state.user }),
-    }
+          {
+            name: 'auth-storage',
+            partialize: (state) => ({ user: state.user }),
+          }
   )
 );

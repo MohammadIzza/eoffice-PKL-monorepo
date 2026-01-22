@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
-import Navbar from "@/components/features/pkl/Navbar"; // Pakai Navbar yang sudah ada
+import { useState } from "react";
 import { 
   LayoutDashboard, 
   Mail, 
@@ -16,11 +15,11 @@ import {
   File
 } from "lucide-react";
 
-export default function Step5Status() {
+interface Step5StatusProps {
+  id?: string;
+}
 
-  // --- HELPER COMPONENTS ---
-
-  // 1. Row Data (Tabel Identitas & Detail)
+export default function Step5Status({ id }: Step5StatusProps = {}) {
   const DetailRow = ({ label, value }: { label: string, value: string }) => (
     <div className="flex justify-between items-start py-[12px] px-[24px] border-b border-[#F1F5F9] last:border-0 hover:bg-gray-50 transition-colors">
       <div className="w-[35%] font-inter font-normal text-[14px] leading-[21px] text-[#64748B]">
@@ -32,7 +31,6 @@ export default function Step5Status() {
     </div>
   );
 
-  // 2. Timeline Item (Riwayat Surat)
   const TimelineItem = ({ 
     role, 
     time, 
@@ -41,32 +39,22 @@ export default function Step5Status() {
     isLast = false 
   }: { role: string, time: string, status: string, note?: string, isLast?: boolean }) => (
     <div className="flex w-full relative">
-      {/* Garis Vertikal (Absolute biar rapi) */}
       {!isLast && (
         <div className="absolute left-[5px] top-[18px] w-[2px] h-full bg-[#E2E8F0] -z-10" />
       )}
-      
-      {/* Dot & Content */}
       <div className="flex gap-[16px] w-full pb-[32px]">
-        {/* Dot Icon */}
         <div className="w-[12px] h-[12px] rounded-full bg-[#CBD5E1] mt-[6px] shrink-0 border-[2px] border-white ring-1 ring-[#E2E8F0]" />
-        
-        {/* Text Content */}
         <div className="flex flex-col gap-[4px]">
-           {/* Role */}
            <span className="font-inter font-semibold text-[14px] text-[#0F172A]">{role}</span>
-           {/* Time */}
            <div className="flex items-center gap-1 text-[#64748B] text-[12px]">
               <Clock className="w-3 h-3" />
               <span>{time}</span>
            </div>
-           {/* Status Badge */}
            <div className="mt-1">
              <span className="bg-[#F1F5F9] text-[#1E293B] px-2 py-1 rounded-[4px] text-[12px] font-medium border border-[#E2E8F0]">
                Status: {status}
              </span>
            </div>
-           {/* Catatan */}
            <p className="text-[12px] text-[#64748B] mt-1">
              Catatan: <span className="text-[#334155]">{note || "Tidak ada catatan"}</span>
            </p>
@@ -75,7 +63,6 @@ export default function Step5Status() {
     </div>
   );
 
-  // 3. Lampiran Accordion Item
   const LampiranItem = ({ title, filename }: { title: string, filename: string }) => {
     const [isOpen, setIsOpen] = useState(true);
     return (
@@ -90,7 +77,6 @@ export default function Step5Status() {
         
         {isOpen && (
            <div className="w-full h-[500px] bg-[#6FA586] rounded-[8px] flex items-center justify-center p-8 shadow-inner">
-              {/* Mockup Kertas Putih di dalam Hijau */}
               <div className="w-[300px] h-[400px] bg-white shadow-2xl rounded-[2px] p-6 flex flex-col gap-3">
                  <div className="h-3 w-1/3 bg-gray-200 mb-4" />
                  <div className="h-2 w-full bg-gray-100" />
@@ -109,24 +95,13 @@ export default function Step5Status() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      
-      {/* 1. NAVBAR FIXED (Sesuai Gambar Disposisi ada Navbar Biru) */}
-      <Navbar />
-
-      <div className="flex w-full max-w-[1920px] mx-auto pt-[0px]"> 
-        {/* Padding top 0 karena Navbar komponen kita relative/static, kalau fixed butuh pt */}
-
-        {/* === SIDEBAR KIRI (Width ~260px) === */}
+      <div className="flex w-full max-w-[1920px] mx-auto pt-[0px]">
         <aside className="w-[260px] bg-white border-r border-[#E2E8F0] min-h-[calc(100vh-64px)] hidden lg:flex flex-col py-6 sticky top-0">
-           
-           {/* Menu Items */}
            <div className="flex flex-col gap-1 px-3">
               <div className="flex items-center gap-3 px-3 py-2 text-[#64748B] hover:bg-[#F1F5F9] rounded-[6px] cursor-pointer">
                  <LayoutDashboard className="w-5 h-5" />
                  <span className="font-inter font-medium text-[14px]">Dasbor</span>
               </div>
-
-              {/* Surat Masuk (Expanded) */}
               <div className="flex flex-col">
                  <div className="flex items-center justify-between px-3 py-2 text-[#0F172A] bg-[#F1F5F9] rounded-[6px] cursor-pointer font-medium">
                     <div className="flex items-center gap-3">
@@ -135,7 +110,6 @@ export default function Step5Status() {
                     </div>
                     <ChevronDown className="w-4 h-4" />
                  </div>
-                 {/* Submenu */}
                  <div className="flex flex-col pl-[44px] mt-1 gap-1">
                     <span className="py-2 text-[14px] text-[#64748B] cursor-pointer hover:text-[#0F172A]">Penerima</span>
                     <span className="py-2 text-[14px] text-[#0079BD] font-medium cursor-pointer border-r-2 border-[#0079BD]">Disposisi</span>
@@ -145,24 +119,14 @@ export default function Step5Status() {
               </div>
            </div>
         </aside>
-
-        {/* === MAIN CONTENT KANAN === */}
         <main className="flex-1 p-[32px] bg-[#F8FAFC]">
-           
-           {/* Breadcrumbs */}
            <div className="flex items-center gap-2 text-[14px] mb-6">
               <span className="text-[#64748B]">Persuratan</span>
               <span className="text-[#CBD5E1]">/</span>
               <span className="font-medium text-[#0F172A]">Detail Surat</span>
            </div>
-
-           {/* Grid Layout (2 Kolom) */}
            <div className="flex flex-col xl:flex-row gap-[24px]">
-              
-              {/* KOLOM KIRI (DATA & LAMPIRAN) */}
               <div className="flex-1 flex flex-col gap-[24px]">
-                 
-                 {/* CARD 1: IDENTITAS PENGAJU */}
                  <div className="bg-white rounded-[8px] border border-[#E2E8F0] shadow-sm">
                     <div className="px-6 py-4 border-b border-[#E2E8F0]">
                        <h3 className="font-inter font-semibold text-[16px] text-[#0F172A]">Identitas Pengaju</h3>
@@ -181,8 +145,6 @@ export default function Step5Status() {
                        <DetailRow label="SKS" value="105" />
                     </div>
                  </div>
-
-                 {/* CARD 2: DETAIL SURAT */}
                  <div className="bg-white rounded-[8px] border border-[#E2E8F0] shadow-sm">
                     <div className="px-6 py-4 border-b border-[#E2E8F0]">
                        <h3 className="font-inter font-semibold text-[16px] text-[#0F172A]">Detail Surat Pengajuan</h3>
@@ -204,26 +166,19 @@ export default function Step5Status() {
                        <DetailRow label="NIP Kaprodi" value="1975090912345678" />
                     </div>
                  </div>
-
-                 {/* CARD 3: LAMPIRAN (ACCORDION) */}
                  <div className="bg-white rounded-[8px] border border-[#E2E8F0] shadow-sm p-6">
                     <h3 className="font-inter font-semibold text-[16px] text-[#0F172A] mb-6">Lampiran</h3>
                     <LampiranItem title="Lampiran 1" filename="File Proposal.pdf" />
                     <LampiranItem title="Lampiran 2" filename="KTM.jpg" />
                  </div>
-
               </div>
-
-              {/* KOLOM KANAN (RIWAYAT SURAT - TIMELINE) */}
               <div className="w-full xl:w-[400px]">
                  <div className="bg-white rounded-[8px] border border-[#E2E8F0] shadow-sm sticky top-[80px]">
                     <div className="px-6 py-4 border-b border-[#E2E8F0] flex items-center gap-2">
                        <FileText className="w-4 h-4 text-[#64748B]" />
                        <h3 className="font-inter font-semibold text-[16px] text-[#0F172A]">Riwayat Surat (2)</h3>
                     </div>
-                    
                     <div className="p-6">
-                       {/* Timeline List */}
                        <div className="flex flex-col">
                           <TimelineItem 
                             role="Admin Surat" 

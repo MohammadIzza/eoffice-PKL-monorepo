@@ -1,4 +1,3 @@
-// Letter related types
 export interface Letter {
   id: string;
   letterTypeId: string;
@@ -22,20 +21,15 @@ export type LetterStatus =
   | 'CANCELLED';
 
 export interface LetterFormData {
-  // Identitas
   nim: string;
   nama: string;
   email: string;
   departemen: string;
   programStudi: string;
   dosenPembimbingId: string;
-  
-  // Detail PKL
   tempatPKL: string;
   alamatPKL: string;
   durasiPKL: string;
-  
-  // Lampiran
   proposalUrl?: string;
   ktmUrl?: string;
 }

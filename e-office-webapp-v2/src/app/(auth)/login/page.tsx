@@ -17,10 +17,9 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Redirect jika sudah logged in
   useEffect(() => {
     if (user) {
-      router.push('/dashboard');
+      router.replace('/dashboard');
     }
   }, [user, router]);
 
@@ -30,14 +29,9 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // useAuth.login() sudah handle setUser di store
       await login(email, password);
-      
-      // Redirect setelah login success
-      // User akan di-set di store oleh useAuth hook
-      router.push('/dashboard');
+      router.replace('/dashboard');
     } catch (err) {
-      // Error sudah di-handle di useAuth, tapi kita bisa override message
       const errorMessage = err instanceof Error ? err.message : 'Login gagal. Periksa email dan password Anda.';
       setError(errorMessage);
     } finally {
@@ -45,7 +39,6 @@ export default function LoginPage() {
     }
   };
 
-  // Show loading jika check session
   if (authLoading && !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">

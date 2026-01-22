@@ -1,14 +1,9 @@
 "use client";
-
-import React from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Calendar } from "lucide-react";
-
-
-
 import Stepper from "@/components/features/pkl/Stepper";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,7 +17,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-// --- SCHEMA VALIDASI KETAT (AC COMPLIANT) ---
 const formSchema = z.object({
   namaLengkap: z.string().min(1, "Nama Lengkap wajib diisi"),
   role: z.string().default("Mahasiswa"),
@@ -60,9 +54,8 @@ export default function Step1identitas() {
   
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    // 2. Set Default Values dari Store (Biar data muncul lagi pas kembali)
     defaultValues: {
-      namaLengkap: "Ahmad Syaifullah", // Dummy Default
+      namaLengkap: "Ahmad Syaifullah",
       role: "Mahasiswa", 
       nim: "24060121130089",
       email: "ahmadsyaifullah@students.undip.ac.id",
@@ -78,13 +71,9 @@ export default function Step1identitas() {
   });
 
   const onSubmit = (data: FormData) => {
-    console.log("Data Step 1 Submit:", data);
-    
-    // Redirect ke dashboard route
     router.push("/dashboard/pengajuan/pkl/detail-pengajuan");
   };
 
-  // --- STYLES ---
   const inputBaseClass = "h-[42px] px-[12px] py-[8px] rounded-[8px] text-sm shadow-none focus-visible:ring-1 transition-all";
   const readOnlyClass = `${inputBaseClass} bg-[#F6F7F8] border border-[#F6F7F8] text-[#111418] cursor-default`;
   const editableClass = `${inputBaseClass} bg-white border border-[#D1D5D8] text-[#111418] placeholder:text-gray-400`;
@@ -109,8 +98,6 @@ export default function Step1identitas() {
           <Card className="w-full max-w-[1073px] bg-white rounded-xl border-none shadow-sm">
             <CardContent className="p-[44px] px-[56px]">
               <div className="grid grid-cols-2 gap-x-[24px] gap-y-[24px]">
-                
-                {/* READ ONLY FIELDS */}
                 <FormField control={form.control} name="namaLengkap" render={({ field }) => (
                   <FormItem><FormLabel className={labelClass}>Nama Lengkap</FormLabel><FormControl><Input {...field} readOnly className={readOnlyClass} /></FormControl><FormMessage /></FormItem>
                 )} />
@@ -138,11 +125,8 @@ export default function Step1identitas() {
                       <FormControl><Input {...field} readOnly className={`${readOnlyClass} pr-10`} /></FormControl>
                       <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     </div>
-                  <FormMessage /></FormItem>
+                  <FormMessage />                  </FormItem>
                 )} />
-
-                {/* EDITABLE FIELDS WITH RESTRICTIONS & STORE */}
-                
                 <FormField control={form.control} name="noHp" render={({ field }) => (
                   <FormItem>
                     <FormLabel className={labelClass}>No. HP</FormLabel>
@@ -177,7 +161,6 @@ export default function Step1identitas() {
                         className={editableClass} 
                         placeholder="Contoh: 3.85" 
                         onChange={(e) => {
-                            // Hanya izinkan angka dan titik (blokir koma)
                             if (/^[0-9.]*$/.test(e.target.value)) field.onChange(e.target.value);
                         }}
                       />

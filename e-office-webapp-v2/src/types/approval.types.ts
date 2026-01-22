@@ -1,4 +1,3 @@
-// Approval related types
 export interface ApprovalHistory {
   id: string;
   letterId: string;

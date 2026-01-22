@@ -99,9 +99,7 @@ export default function LetterTable() {
            {/* Status */}
            <Select>
               <SelectTrigger className="w-[101px] h-[46px] px-[14px] py-[8px] border border-[#CBD5E1] rounded-[12px] flex items-center gap-[8px] bg-white text-[#334155] focus:ring-0">
-                 {/* Hacky icon placement since SelectTrigger usually puts icon on right */}
                  <div className="flex items-center gap-2">
-                    {/* Assuming icon is needed, using a generic one or simple square */}
                     <div className="w-[18px] h-[18px] border-2 border-[#334155] rounded-[3px] flex items-center justify-center">
                         <div className="w-2 h-2 bg-[#334155]"></div>
                     </div>

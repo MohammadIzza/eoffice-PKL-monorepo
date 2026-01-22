@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import Link from "next/link"; // Import Link untuk navigasi
+import { useState } from "react";
+import Link from "next/link";
 import Stepper from "@/components/features/pkl/Stepper";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,27 +11,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-// Import Icon dari Lucide React
 import { UploadCloud, FileText, Image as ImageIcon, Eye, Trash2 } from "lucide-react";
 
 export default function Step3Lampiran() {
-  
-  // --- STYLE VARIABLES (SESUAI SPEK FIGMA) ---
-  
-  // 1. CARD CONTAINER
   const cardClass = "w-full bg-white rounded-[12px] border border-[#E5E7EB] p-[24px] flex flex-col items-center gap-[24px]";
-
-  // 2. UPLOAD AREA (DASHED BOX)
   const uploadAreaClass = "w-full max-w-[846px] h-[156px] flex flex-col items-center justify-center border-[2px] border-dashed border-[#E5E7EB] rounded-[8px] bg-[#FAFAFA] cursor-pointer hover:bg-gray-50 transition-colors";
-
-  // 3. FILE ITEM ROW (LIST FILE)
   const fileItemClass = "w-full max-w-[846px] h-[70px] flex items-center justify-between p-[12px] border border-[#E5E7EB] rounded-[8px] bg-white";
 
   return (
-    // MAIN WRAPPER: Width 1085px, Padding Top 48px, Bottom 122px
     <div className="w-full max-w-[1085px] mx-auto flex flex-col items-center gap-[28px] pt-[48px] pb-[122px] px-[16px]">
-      
-      {/* === HEADER TEXT === */}
       <div className="w-full flex flex-col gap-[8px] items-start">
          <h1 className="text-[30px] leading-[37.5px] font-black tracking-[-0.99px] text-[#111418] font-inter">
             Lampiran
@@ -40,16 +28,10 @@ export default function Step3Lampiran() {
             Lampirkan dokumen pendukung yang diperlukan.
          </p>
       </div>
-
-      {/* === STEPPER (Active Step 3) === */}
       <div className="w-full py-[1px] px-[27px]">
          <Stepper currentStep={3} />
       </div>
-
-      {/* === CARD 1: LAMPIRAN UTAMA === */}
       <div className={cardClass}>
-        
-        {/* Header Section */}
         <div className="w-full max-w-[846px] flex flex-col gap-[4px]">
            <h3 className="font-inter font-semibold text-[18px] leading-[22.5px] text-[#111418]">
               Lampiran Utama<span className="text-[#EF4444]">*</span>
@@ -75,11 +57,7 @@ export default function Step3Lampiran() {
               untuk diunggah
            </span>
         </div>
-
-        {/* LIST FILE YANG SUDAH DIUPLOAD (Dummy Data Sesuai Gambar) */}
         <div className="w-full max-w-[846px] flex flex-col gap-[12px]">
-           
-           {/* File 1: Proposal PDF */}
            <div className={fileItemClass}>
               <div className="flex items-center gap-[16px]">
                  <div className="w-[40px] h-[40px] rounded-[8px] bg-[#FEE2E2] flex items-center justify-center">
@@ -95,8 +73,6 @@ export default function Step3Lampiran() {
                     </span>
                  </div>
               </div>
-
-              {/* Action Buttons */}
               <div className="flex items-center gap-[8px]">
                  <Select defaultValue="file">
                     <SelectTrigger className="w-[128px] h-[36px] rounded-[6px] border border-[#E5E7EB] text-[14px]">
@@ -117,8 +93,6 @@ export default function Step3Lampiran() {
                  </button>
               </div>
            </div>
-
-           {/* File 2: KTM JPG */}
            <div className={fileItemClass}>
               <div className="flex items-center gap-[16px]">
                  <div className="w-[40px] h-[40px] rounded-[8px] bg-[#DBEAFE] flex items-center justify-center">
@@ -158,10 +132,7 @@ export default function Step3Lampiran() {
 
         </div>
       </div>
-
-      {/* === CARD 2: LAMPIRAN TAMBAHAN (OPSIONAL) === */}
       <div className={cardClass}>
-         
          <div className="w-full max-w-[846px] flex flex-col gap-[4px]">
            <h3 className="font-inter font-semibold text-[18px] leading-[22.5px] text-[#111418]">
               Lampiran Tambahan
@@ -188,8 +159,6 @@ export default function Step3Lampiran() {
            </span>
         </div>
       </div>
-
-      {/* === BUTTONS (Navigasi) === */}
       <div className="w-full max-w-[1085px] flex justify-between items-center mt-2">
         <Button variant="outline" className="h-11 px-6 border-gray-300 text-gray-700 font-bold hover:bg-gray-50 rounded-[8px]">
           Kembali
@@ -198,8 +167,6 @@ export default function Step3Lampiran() {
           <Button variant="outline" className="h-11 px-6 border-[#137fec] text-[#137fec] font-bold hover:bg-blue-50 rounded-[8px]">
             Simpan Draft
           </Button>
-          
-          {/* TOMBOL LANJUT YANG SUDAH DIAKTIFKAN & DILINK KE REVIEW */}
           <Button asChild className="h-11 px-6 bg-[#0079BD] text-white font-bold hover:bg-blue-700 cursor-pointer rounded-[8px]">
             <Link href="/dashboard/pengajuan/pkl/review">
               Lanjut
