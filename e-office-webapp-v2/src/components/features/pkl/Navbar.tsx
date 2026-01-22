@@ -4,7 +4,7 @@ import { Bell } from "lucide-react";
 
 export default function Navbar() {
   return (
-    <header className="w-full h-[75px] bg-[#0079BD] flex items-center justify-between px-[60px] py-[10px]">
+    <header className="w-full h-[75px] bg-[#0079BD] flex items-center justify-between px-[60px] py-[10px] sticky top-0 z-50 shadow-sm">
       
       {/* KIRI: Logo Image */}
       <div className="w-[235px] h-[55px] flex items-center">
