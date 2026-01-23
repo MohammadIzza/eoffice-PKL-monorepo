@@ -158,59 +158,59 @@ export default function PKLSidebar() {
     <>
       <aside 
         className={cn(
-          "hidden lg:flex bg-card border-r border-border h-[calc(100vh-75px)] flex-col sticky top-[75px] shadow-sm z-40",
+          "hidden lg:flex bg-white/95 backdrop-blur-xl border-r border-[rgba(0,0,0,0.08)] h-[calc(100vh-64px)] flex-col sticky top-[64px] shadow-sm z-40",
           "transition-[width] duration-500 ease-in-out",
-          isCollapsed ? "w-[70px]" : "w-[240px]"
+          isCollapsed ? "w-[70px]" : "w-[270px]"
         )}
       >
         {/* Header with Toggle */}
-        <div className="flex items-center justify-between px-3 py-3 border-b border-border overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-4 border-b border-[rgba(0,0,0,0.08)] overflow-hidden">
           <div 
             className={cn(
-              "flex items-center gap-1.5 transition-all duration-500 ease-in-out",
+              "flex items-center gap-2 transition-all duration-500 ease-in-out",
               isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
             )}
           >
-            <div className="p-1.5 rounded-md bg-primary/10 shrink-0">
-              <FileText className="w-4 h-4 text-primary" />
+            <div className="p-2 rounded-xl bg-[#0071E3]/10 shrink-0">
+              <FileText className="w-4 h-4 text-[#0071E3]" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-xs font-bold text-foreground whitespace-nowrap">E-Office</h2>
-              <p className="text-[10px] text-muted-foreground whitespace-nowrap">PKL System</p>
+              <h2 className="text-sm font-bold text-[#1D1D1F] whitespace-nowrap tracking-tight">E-Office</h2>
+              <p className="text-[10px] text-[#86868B] whitespace-nowrap">PKL System</p>
             </div>
           </div>
-          <Button
+            <Button
             variant="ghost"
             size="icon"
             onClick={() => setIsCollapsed(!isCollapsed)}
             className={cn(
-              "h-7 w-7 hover:bg-muted shrink-0 transition-transform duration-300",
+              "h-8 w-8 hover:bg-[rgba(0,0,0,0.04)] shrink-0 transition-transform duration-300 rounded-full",
               isCollapsed && "mx-auto"
             )}
           >
             {isCollapsed ? (
-              <ChevronRight className="h-3.5 w-3.5 transition-transform duration-300" />
+              <ChevronRight className="h-4 w-4 transition-transform duration-300 text-[#86868B]" />
             ) : (
-              <ChevronLeft className="h-3.5 w-3.5 transition-transform duration-300" />
+              <ChevronLeft className="h-4 w-4 transition-transform duration-300 text-[#86868B]" />
             )}
           </Button>
         </div>
 
         {/* Menu Items */}
-        <div className="flex-1 overflow-y-auto py-3">
+        <div className="flex-1 overflow-y-auto py-4">
           {menuItems.map((section, sectionIndex) => (
-            <div key={sectionIndex} className={cn("mb-4", isCollapsed ? "px-1.5" : "px-2")}>
+            <div key={sectionIndex} className={cn("mb-6", isCollapsed ? "px-2" : "px-3")}>
               <div 
                 className={cn(
-                  "px-2 mb-2 transition-all duration-500 ease-in-out overflow-hidden",
+                  "px-3 mb-3 transition-all duration-500 ease-in-out overflow-hidden",
                   isCollapsed ? "opacity-0 h-0 mb-0" : "opacity-100 h-auto"
                 )}
               >
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+                <p className="text-[10px] font-bold text-[#86868B] uppercase tracking-wider whitespace-nowrap">
                   {section.title}
                 </p>
               </div>
-              <div className={cn("flex flex-col gap-0.5", isCollapsed && "items-center")}>
+              <div className={cn("flex flex-col gap-1", isCollapsed && "items-center")}>
                 {section.items.map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.href);
@@ -220,30 +220,27 @@ export default function PKLSidebar() {
                       key={item.href}
                       href={item.href}
                       className={cn(
-                        "flex items-center gap-2 px-2 py-2 text-xs font-medium rounded-md transition-all duration-200 relative group overflow-hidden",
-                        isCollapsed ? "justify-center w-10 h-10" : "",
+                        "flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 relative group overflow-hidden",
+                        isCollapsed ? "justify-center w-12 h-12" : "",
                         active
-                          ? "bg-primary text-primary-foreground shadow-sm font-semibold"
-                          : "text-muted-foreground hover:bg-primary/5 hover:text-foreground hover:font-semibold"
+                          ? "bg-[#0071E3] text-white shadow-sm font-semibold"
+                          : "text-[#86868B] hover:bg-[rgba(0,0,0,0.04)] hover:text-[#1D1D1F] hover:font-semibold"
                       )}
                     >
                       <Icon className={cn(
                         "shrink-0 transition-all duration-200",
-                        active ? "w-4 h-4" : "w-4 h-4",
-                        !active && "group-hover:scale-110 group-hover:text-primary"
+                        active ? "w-5 h-5" : "w-5 h-5",
+                        !active && "group-hover:scale-110 group-hover:text-[#0071E3]"
                       )} />
                       <span 
                         className={cn(
-                          "flex-1 transition-all duration-500 ease-in-out whitespace-nowrap",
-                          !active && "group-hover:text-foreground",
+                          "flex-1 transition-all duration-500 ease-in-out whitespace-nowrap tracking-tight",
+                          !active && "group-hover:text-[#1D1D1F]",
                           isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
                         )}
                       >
                         {item.label}
                       </span>
-                      {active && !isCollapsed && (
-                        <div className="absolute right-0 w-1 h-5 bg-primary-foreground rounded-l-full transition-opacity duration-500" />
-                      )}
                     </Link>
                   );
 
@@ -272,13 +269,13 @@ export default function PKLSidebar() {
         {/* Footer */}
         <div 
           className={cn(
-            "px-3 py-3 border-t border-border overflow-hidden transition-all duration-500 ease-in-out",
+            "px-4 py-4 border-t border-[rgba(0,0,0,0.08)] overflow-hidden transition-all duration-500 ease-in-out",
             isCollapsed ? "opacity-0 h-0 py-0" : "opacity-100 h-auto"
           )}
         >
-          <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/50">
-            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-              <span className="text-primary text-[10px] font-bold">
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[rgba(0,0,0,0.02)]">
+            <div className="w-10 h-10 rounded-full bg-[#0071E3]/10 flex items-center justify-center shrink-0">
+              <span className="text-[#0071E3] text-xs font-bold">
                 {user?.name?.charAt(0).toUpperCase() || 'U'}
               </span>
             </div>
@@ -288,10 +285,10 @@ export default function PKLSidebar() {
                 isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
               )}
             >
-              <p className="text-xs font-semibold text-foreground truncate whitespace-nowrap">
+              <p className="text-sm font-semibold text-[#1D1D1F] truncate whitespace-nowrap tracking-tight">
                 {user?.name || 'User'}
               </p>
-              <p className="text-[10px] text-muted-foreground truncate whitespace-nowrap">
+              <p className="text-[11px] text-[#86868B] truncate whitespace-nowrap">
                 {user?.email || ''}
               </p>
             </div>

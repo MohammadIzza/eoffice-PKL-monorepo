@@ -4,7 +4,7 @@ import { id } from "date-fns/locale";
 
 export const step1IdentitasSchema = z.object({
   namaLengkap: z.string().min(1, "Nama Lengkap wajib diisi"),
-  role: z.string().default("Mahasiswa"),
+  role: z.string().min(1, "Role wajib diisi"),
   nim: z
     .string()
     .min(12, "NIM minimal 12 digit")

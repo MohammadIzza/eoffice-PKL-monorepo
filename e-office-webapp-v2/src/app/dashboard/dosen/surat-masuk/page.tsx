@@ -1,7 +1,7 @@
 'use client';
 
-import FilterSurat from "@/components/features/dashboard/dosen/surat-masuk/FilterSurat";
-import TabelSuratMasuk from "@/components/features/dashboard/dosen/surat-masuk/TabelSuratMasuk";
+import InboxFilter from "@/components/features/dashboard/dosen/inbox/InboxFilter";
+import InboxTable from "@/components/features/dashboard/dosen/inbox/InboxTable";
 
 export default function SuratMasukPage() {
   return (
@@ -25,10 +25,10 @@ export default function SuratMasukPage() {
 
       <div className="space-y-[24px]">
         {/* Filter Section */}
-        <FilterSurat />
+        <InboxFilter />
 
         {/* Table Section */}
-        <TabelSuratMasuk />
+        <InboxTable />
       </div>
     </div>
   );

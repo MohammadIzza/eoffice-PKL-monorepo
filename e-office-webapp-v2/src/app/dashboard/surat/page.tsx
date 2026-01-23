@@ -50,19 +50,19 @@ import { useAuthStore } from '@/stores';
 const getStatusColor = (status: string): string => {
   switch (status) {
     case 'DRAFT':
-      return 'text-muted-foreground';
+      return 'text-[#86868B]';
     case 'PENDING':
     case 'PROCESSING':
-      return 'text-primary';
+      return 'text-[#0071E3]';
     case 'REVISION':
-      return 'text-orange-600';
+      return 'text-[#FF9500]';
     case 'COMPLETED':
-      return 'text-green-600';
+      return 'text-[#34C759]';
     case 'REJECTED':
     case 'CANCELLED':
-      return 'text-destructive';
+      return 'text-[#FF3B30]';
     default:
-      return 'text-foreground';
+      return 'text-[#1D1D1F]';
   }
 };
 
@@ -191,15 +191,15 @@ export default function SuratListPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto px-8 py-10 space-y-8 bg-white min-h-screen">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div className="space-y-0.5">
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <FileText className="w-6 h-6 text-primary" />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-semibold text-[#1D1D1F] tracking-tight flex items-center gap-3">
+            <FileText className="w-7 h-7 text-[#0071E3]" />
             Daftar Surat
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-[#86868B]">
             {isMahasiswa ? 'Kelola pengajuan surat Anda' : 'Kelola semua surat'}
           </p>
         </div>
@@ -212,8 +212,6 @@ export default function SuratListPage() {
           </Link>
         )}
       </div>
-
-      <Separator />
 
       {/* Content */}
       {letters.length === 0 ? (
@@ -239,35 +237,35 @@ export default function SuratListPage() {
           />
         </Card>
       ) : (
-        <Card className="shadow-sm">
-          <CardHeader className="bg-muted/30 border-b py-3">
+        <Card className="border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden">
+          <CardHeader className="bg-white border-b border-[rgba(0,0,0,0.08)] py-5 px-6">
             {/* Filters */}
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#86868B]" />
                 <Input
                   placeholder={isMahasiswa ? "Cari surat atau nomor..." : "Cari surat, nomor, atau pemohon..."}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 h-9 text-sm"
+                  className="pl-10 h-11 text-sm rounded-xl border-[rgba(0,0,0,0.1)] bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3]/20"
                 />
                 {searchQuery && (
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 hover:bg-destructive/10 hover:text-destructive"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 w-7 hover:bg-[rgba(0,0,0,0.04)] rounded-full"
                     onClick={() => setSearchQuery('')}
                   >
-                    <X className="h-3.5 w-3.5" />
+                    <X className="h-4 w-4 text-[#86868B]" />
                   </Button>
                 )}
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm">
-                  <Filter className="w-3.5 h-3.5 mr-2" />
+                <SelectTrigger className="w-full sm:w-[180px] h-11 text-sm rounded-xl border-[rgba(0,0,0,0.1)] bg-white">
+                  <Filter className="w-4 h-4 mr-2 text-[#86868B]" />
                   <SelectValue placeholder="Filter Status" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-2xl border-[rgba(0,0,0,0.08)] shadow-apple-lg">
                   <SelectItem value="all">Semua Status</SelectItem>
                   <SelectItem value="DRAFT">Draft</SelectItem>
                   <SelectItem value="PENDING">Menunggu</SelectItem>
@@ -280,42 +278,44 @@ export default function SuratListPage() {
               </Select>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {filteredLetters.length === 0 ? (
-              <Empty
-                icon={<FileText className="w-10 h-10 text-muted-foreground/50" />}
-                title="Tidak ada surat ditemukan"
-                description="Coba ubah filter atau kata kunci pencarian Anda."
-                action={
-                  (searchQuery || statusFilter !== 'all') && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-xs h-8"
-                      onClick={() => {
-                        setSearchQuery('');
-                        setStatusFilter('all');
-                      }}
-                    >
-                      Reset Filter
-                    </Button>
-                  )
-                }
-              />
+              <div className="p-12">
+                <Empty
+                  icon={<FileText className="w-10 h-10 text-[#86868B]/50" />}
+                  title="Tidak ada surat ditemukan"
+                  description="Coba ubah filter atau kata kunci pencarian Anda."
+                  action={
+                    (searchQuery || statusFilter !== 'all') && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs h-8 rounded-full"
+                        onClick={() => {
+                          setSearchQuery('');
+                          setStatusFilter('all');
+                        }}
+                      >
+                        Reset Filter
+                      </Button>
+                    )
+                  }
+                />
+              </div>
             ) : (
-              <div className="rounded-lg border border-border overflow-hidden">
+              <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-muted/50 hover:bg-muted/50 border-b border-border">
-                      <TableHead className="font-semibold text-foreground text-center w-[180px] text-xs py-2.5">Jenis Surat</TableHead>
-                      <TableHead className="font-semibold text-foreground text-center w-[160px] text-xs py-2.5">Nomor Surat</TableHead>
+                    <TableRow className="bg-[rgba(0,0,0,0.02)] hover:bg-[rgba(0,0,0,0.02)] border-b border-[rgba(0,0,0,0.08)]">
+                      <TableHead className="font-semibold text-[#1D1D1F] text-center w-[140px] text-xs py-4 tracking-tight">Jenis Surat</TableHead>
+                      <TableHead className="font-semibold text-[#1D1D1F] text-center w-[160px] text-xs py-4 tracking-tight">Nomor Surat</TableHead>
                       {!isMahasiswa && (
-                        <TableHead className="font-semibold text-foreground text-center w-[200px] text-xs py-2.5">Pemohon</TableHead>
+                        <TableHead className="font-semibold text-[#1D1D1F] text-center w-[200px] text-xs py-4 tracking-tight">Pemohon</TableHead>
                       )}
-                      <TableHead className="font-semibold text-foreground text-center w-[140px] text-xs py-2.5">Tanggal</TableHead>
-                      <TableHead className="font-semibold text-foreground text-center w-[180px] text-xs py-2.5">Progress</TableHead>
-                      <TableHead className="font-semibold text-foreground text-center w-[130px] text-xs py-2.5">Status</TableHead>
-                      <TableHead className="font-semibold text-foreground text-center w-[100px] text-xs py-2.5">Aksi</TableHead>
+                      <TableHead className="font-semibold text-[#1D1D1F] text-center w-[140px] text-xs py-4 tracking-tight">Tanggal</TableHead>
+                      <TableHead className="font-semibold text-[#1D1D1F] text-center w-[220px] text-xs py-4 tracking-tight">Progress</TableHead>
+                      <TableHead className="font-semibold text-[#1D1D1F] text-center w-[130px] text-xs py-4 tracking-tight">Status</TableHead>
+                      <TableHead className="font-semibold text-[#1D1D1F] text-center w-[100px] text-xs py-4 tracking-tight">Aksi</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -333,74 +333,74 @@ export default function SuratListPage() {
                       return (
                         <TableRow 
                           key={letter.id} 
-                          className="hover:bg-muted/50 transition-colors duration-150 border-b border-border/50"
+                          className="hover:bg-[rgba(0,0,0,0.02)] transition-colors duration-200 border-b border-[rgba(0,0,0,0.06)]"
                         >
-                          <TableCell className="py-3 w-[180px]">
-                            <div className="flex items-center justify-center gap-1.5">
-                              <FileText className="w-3.5 h-3.5 text-primary shrink-0" />
-                              <span className="font-medium text-foreground text-xs">Surat {letterTypeName}</span>
+                          <TableCell className="py-4 w-[140px]">
+                            <div className="flex items-center justify-center gap-2">
+                              <FileText className="w-4 h-4 text-[#0071E3] shrink-0" />
+                              <span className="font-medium text-[#1D1D1F] text-xs tracking-tight">Surat {letterTypeName}</span>
                             </div>
                           </TableCell>
-                          <TableCell className="py-3 w-[160px]">
+                          <TableCell className="py-4 w-[160px]">
                             <div className="flex items-center justify-center">
                               {letterNumber !== '-' ? (
-                                <span className="text-foreground font-mono text-xs whitespace-nowrap">
+                                <span className="text-[#1D1D1F] font-mono text-xs whitespace-nowrap tracking-tight">
                                   {letterNumber}
                                 </span>
                               ) : (
-                                <span className="text-muted-foreground italic text-xs">-</span>
+                                <span className="text-[#86868B] italic text-xs">-</span>
                               )}
                             </div>
                           </TableCell>
                           {!isMahasiswa && (
-                            <TableCell className="py-3 w-[200px]">
-                              <div className="flex items-center justify-center gap-1.5 min-w-0">
-                                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                                  <span className="text-primary text-[10px] font-semibold">
+                            <TableCell className="py-4 w-[200px]">
+                              <div className="flex items-center justify-center gap-2 min-w-0">
+                                <div className="w-8 h-8 rounded-full bg-[#0071E3]/10 flex items-center justify-center shrink-0">
+                                  <span className="text-[#0071E3] text-[11px] font-semibold">
                                     {applicantName.charAt(0).toUpperCase()}
                                   </span>
                                 </div>
-                                <span className="text-foreground font-medium text-xs truncate">{applicantName}</span>
+                                <span className="text-[#1D1D1F] font-medium text-xs truncate tracking-tight">{applicantName}</span>
                               </div>
                             </TableCell>
                           )}
-                          <TableCell className="py-3 w-[140px]">
+                          <TableCell className="py-4 w-[140px]">
                             <div className="flex flex-col items-center gap-0.5">
-                              <span className="text-foreground font-medium text-xs">{createdAt}</span>
-                              <span className="text-[10px] text-muted-foreground">
+                              <span className="text-[#1D1D1F] font-medium text-xs tracking-tight">{createdAt}</span>
+                              <span className="text-[10px] text-[#86868B]">
                                 {letter.createdAt && format(new Date(letter.createdAt), 'HH:mm', { locale: id })}
                               </span>
                             </div>
                           </TableCell>
-                          <TableCell className="py-3 w-[180px]">
-                            <div className="flex flex-col items-center gap-1.5">
+                          <TableCell className="py-4 w-[220px]">
+                            <div className="flex flex-col items-center gap-2">
                               <div className="flex items-center justify-between text-[10px] w-full">
-                                <span className="text-muted-foreground font-medium">Step</span>
-                                <span className="text-foreground font-bold">
+                                <span className="text-[#86868B] font-medium">Step</span>
+                                <span className="text-[#1D1D1F] font-bold tracking-tight">
                                   {currentStep}/{totalSteps}
                                 </span>
                               </div>
-                              <div className="relative h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                              <div className="relative h-2 w-full rounded-full bg-[rgba(0,0,0,0.06)] overflow-hidden">
                                 <div 
-                                  className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-300"
+                                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#0071E3] to-[#0A84FF] rounded-full transition-all duration-500"
                                   style={{ width: `${progressPercentage}%` }}
                                 />
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell className="py-3 w-[130px]">
-                            <div className={`flex items-center justify-center gap-1 font-medium text-xs ${getStatusColor(letter.status)}`}>
+                          <TableCell className="py-4 w-[130px]">
+                            <div className={`flex items-center justify-center gap-1.5 font-medium text-xs ${getStatusColor(letter.status)}`}>
                               {getStatusIcon(letter.status)}
-                              <span className="whitespace-nowrap">{getStatusLabel(letter.status)}</span>
+                              <span className="whitespace-nowrap tracking-tight">{getStatusLabel(letter.status)}</span>
                             </div>
                           </TableCell>
-                          <TableCell className="py-3 w-[100px]">
+                          <TableCell className="py-4 w-[100px]">
                             <div className="flex items-center justify-center">
                               <Link href={`/dashboard/surat/${letter.id}`}>
                                 <Button 
                                   variant="ghost" 
                                   size="sm" 
-                                  className="gap-1.5 h-8 hover:bg-primary hover:text-primary-foreground transition-colors text-xs"
+                                  className="gap-1.5 h-8 hover:bg-[#0071E3] hover:text-white transition-all duration-200 text-xs rounded-full"
                                 >
                                   <Eye className="w-3.5 h-3.5" />
                                   <span className="hidden sm:inline">Detail</span>
@@ -417,14 +417,14 @@ export default function SuratListPage() {
             )}
             {/* Pagination */}
             {filteredLetters.length > itemsPerPage && (
-              <div className="mt-4 pt-3 border-t border-border">
+              <div className="mt-6 pt-4 border-t border-[rgba(0,0,0,0.08)] px-6 pb-6">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <div className="text-xs text-muted-foreground">
-                    Menampilkan <span className="font-semibold text-foreground">{startIndex + 1}</span>-
-                    <span className="font-semibold text-foreground">{Math.min(endIndex, filteredLetters.length)}</span> dari{' '}
-                    <span className="font-semibold text-foreground">{filteredLetters.length}</span> surat
+                  <div className="text-xs text-[#86868B]">
+                    Menampilkan <span className="font-semibold text-[#1D1D1F]">{startIndex + 1}</span>-
+                    <span className="font-semibold text-[#1D1D1F]">{Math.min(endIndex, filteredLetters.length)}</span> dari{' '}
+                    <span className="font-semibold text-[#1D1D1F]">{filteredLetters.length}</span> surat
                     {(searchQuery || statusFilter !== 'all') && (
-                      <span className="text-muted-foreground"> ({letters.length} total)</span>
+                      <span className="text-[#86868B]"> ({letters.length} total)</span>
                     )}
                   </div>
                   <Pagination>
@@ -475,7 +475,7 @@ export default function SuratListPage() {
               </div>
             )}
             {filteredLetters.length <= itemsPerPage && (searchQuery || statusFilter !== 'all') && filteredLetters.length > 0 && (
-              <div className="mt-3 text-xs text-muted-foreground">
+              <div className="mt-4 px-6 pb-6 text-xs text-[#86868B]">
                 Menampilkan {filteredLetters.length} dari {letters.length} surat
               </div>
             )}

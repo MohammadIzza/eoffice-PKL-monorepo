@@ -4,7 +4,8 @@ import type { User } from '@/types';
 export const authService = {
   login: async (email: string, password: string): Promise<{ user: User }> => {
 		try {
-      const response = await client.public['sign-in'].post({
+      const api = client as any;
+      const response = await api.public['sign-in'].post({
 					username: email,
         password,
 			});
@@ -19,7 +20,8 @@ export const authService = {
 
 	logout: async (): Promise<void> => {
 		try {
-      const response = await client.public['sign-out'].post({});
+      const api = client as any;
+      const response = await api.public['sign-out'].post({});
       if (response.data && typeof response.data === 'object') {
         return;
       }
@@ -32,7 +34,8 @@ export const authService = {
 
   getMe: async (): Promise<User> => {
 		try {
-      const response = await client.me.get();
+      const api = client as any;
+      const response = await api.me.get();
 
       if (response.data && typeof response.data === 'object') {
         return response.data as User;

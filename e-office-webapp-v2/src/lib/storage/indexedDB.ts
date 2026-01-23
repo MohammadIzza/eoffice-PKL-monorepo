@@ -35,12 +35,9 @@ export const openDB = (): Promise<IDBDatabase> => {
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
       
-      // Create object store jika belum ada
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         const objectStore = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
-        // Create index untuk category untuk query yang lebih cepat
         objectStore.createIndex('category', 'category', { unique: false });
-        console.log('[IndexedDB] Database created/upgraded');
       }
     };
   });
@@ -71,7 +68,6 @@ export const storeFile = async (id: string, file: File, category: 'proposal' | '
       const request = store.put(data);
       
       request.onsuccess = () => {
-        console.log(`[IndexedDB] File stored: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
         resolve();
       };
       
@@ -101,10 +97,8 @@ export const getFile = async (id: string): Promise<File | null> => {
       request.onsuccess = () => {
         const result = request.result;
         if (result && result.file) {
-          console.log(`[IndexedDB] File retrieved: ${result.name}`);
           resolve(result.file);
         } else {
-          console.warn(`[IndexedDB] File not found: ${id}`);
           resolve(null);
         }
       };
@@ -133,7 +127,6 @@ export const deleteFile = async (id: string): Promise<void> => {
       const request = store.delete(id);
       
       request.onsuccess = () => {
-        console.log(`[IndexedDB] File deleted: ${id}`);
         resolve();
       };
       
@@ -145,69 +138,6 @@ export const deleteFile = async (id: string): Promise<void> => {
   } catch (error) {
     console.error('[IndexedDB] Error in deleteFile:', error);
     throw error;
-  }
-};
-
-/**
- * Delete all files dengan category tertentu (untuk replace logic)
- */
-export const deleteFilesByCategory = async (category: 'proposal' | 'ktm'): Promise<void> => {
-  try {
-    const db = await openDB();
-    
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([STORE_NAME], 'readwrite');
-      const store = transaction.objectStore(STORE_NAME);
-      const index = store.index('category');
-      const request = index.openCursor(IDBKeyRange.only(category));
-      
-      request.onsuccess = (event) => {
-        const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
-        if (cursor) {
-          cursor.delete();
-          cursor.continue();
-        } else {
-          console.log(`[IndexedDB] All files with category ${category} deleted`);
-          resolve();
-        }
-      };
-      
-      request.onerror = () => {
-        console.error('[IndexedDB] Error deleting files by category:', request.error);
-        reject(request.error);
-      };
-    });
-  } catch (error) {
-    console.error('[IndexedDB] Error in deleteFilesByCategory:', error);
-    throw error;
-  }
-};
-
-/**
- * Get all file IDs dari IndexedDB (untuk cleanup)
- */
-export const getAllFileIds = async (): Promise<string[]> => {
-  try {
-    const db = await openDB();
-    
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([STORE_NAME], 'readonly');
-      const store = transaction.objectStore(STORE_NAME);
-      const request = store.getAllKeys();
-      
-      request.onsuccess = () => {
-        const keys = request.result as string[];
-        resolve(keys);
-      };
-      
-      request.onerror = () => {
-        console.error('[IndexedDB] Error getting all file IDs:', request.error);
-        reject(request.error);
-      };
-    });
-  } catch (error) {
-    console.error('[IndexedDB] Error in getAllFileIds:', error);
-    return [];
   }
 };
 
@@ -224,7 +154,6 @@ export const clearAllFiles = async (): Promise<void> => {
       const request = store.clear();
       
       request.onsuccess = () => {
-        console.log('[IndexedDB] All files cleared');
         resolve();
       };
       

@@ -7,7 +7,7 @@ export const client = treaty<App>(API_URL, {
 	fetch: {
 		credentials: "include",
 	} as any,
-});
+}) as any;
 
 export function handleApiError(error: unknown): {
 	message: string;

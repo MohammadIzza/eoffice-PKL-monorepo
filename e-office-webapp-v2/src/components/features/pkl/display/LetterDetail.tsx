@@ -219,7 +219,7 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
                               onClick={() => toggleAttachment(attachment.id)}
                             >
                               <span className="font-bold text-sm text-foreground">
-                                {attachment.originalName || attachment.filename}
+                                {attachment.filename}
                               </span>
                               <div className="flex items-center gap-2">
                                 <a 
@@ -244,7 +244,7 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
                                 {isImage && (
                                   <img 
                                     src={downloadUrl} 
-                                    alt={attachment.originalName || attachment.filename} 
+                                    alt={attachment.filename} 
                                     className="max-w-full max-h-full object-contain"
                                   />
                                 )}
@@ -252,7 +252,7 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
                                   <iframe 
                                     src={downloadUrl} 
                                     className="w-full h-full border-none"
-                                    title={attachment.originalName || attachment.filename}
+                                    title={attachment.filename}
                                   />
                                 )}
                                 {!isImage && !isPdf && (

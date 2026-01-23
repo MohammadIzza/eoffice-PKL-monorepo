@@ -8,11 +8,11 @@ import PKLSidebar from '@/components/features/pkl/navigation/PKLSidebar';
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <ProtectedRoute>
-      <div className="min-h-screen w-full bg-[#F2F2F2]">
+      <div className="min-h-screen w-full bg-white">
         <DashboardNavbar />
-        <div className="flex min-h-[calc(100vh-75px)] w-full">
+        <div className="flex min-h-[calc(100vh-64px)] w-full">
           <PKLSidebar />
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto animate-fade-in bg-white">
             {children}
           </main>
         </div>

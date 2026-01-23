@@ -24,33 +24,18 @@ export default function Step4Review() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedAttachments, setExpandedAttachments] = useState<Record<number, boolean>>({});
-  
-  // Ensure attachments are restored after hydration (same as Step3Lampiran)
+
   useEffect(() => {
-    console.log('[Step4Review] useEffect check', { _hasHydrated, attachmentsCount: attachments.length });
-    
-    // Check if there's metadata in localStorage but no attachments in state
     const storedMetadata = JSON.parse(localStorage.getItem('pkl-attachments-metadata') || '[]');
     const hasMetadata = storedMetadata.length > 0;
     const hasAttachments = attachments.length > 0;
     
-    console.log('[Step4Review] Storage check', { hasMetadata, hasAttachments, metadataCount: storedMetadata.length });
-    
-    // If we have metadata but no attachments, force restore
-    if (hasMetadata && !hasAttachments) {
-      console.log('[Step4Review] Metadata exists but no attachments - forcing restore');
+    if ((hasMetadata && !hasAttachments) || (!_hasHydrated && hasMetadata)) {
       restoreAttachments().catch(error => {
         console.error('[Step4Review] Error restoring attachments:', error);
       });
-    } else if (!_hasHydrated && hasMetadata) {
-      console.log('[Step4Review] Not hydrated and has metadata - calling restore');
-      restoreAttachments().catch(error => {
-        console.error('[Step4Review] Error restoring attachments:', error);
-      });
-    } else if (_hasHydrated && hasAttachments) {
-      console.log('[Step4Review] Already hydrated with attachments:', attachments.length);
     }
-  }, []); // Only run once on mount
+  }, []);
 
   const ReviewRow = ({ label, value }: { label: string; value: string }) => (
     <div className="w-full flex justify-between items-center py-3 px-5 border-b border-border last:border-b-0">
@@ -63,9 +48,9 @@ export default function Step4Review() {
     </div>
   );
 
-  const cardBaseClass = "w-full bg-card rounded-xl border shadow-sm overflow-hidden";
-  const headerSectionClass = "w-full px-5 py-3 border-b border-border bg-card";
-  const headerTitleClass = "font-semibold text-base text-foreground";
+  const cardBaseClass = "w-full bg-white rounded-3xl border border-[rgba(0,0,0,0.08)] shadow-sm overflow-hidden";
+  const headerSectionClass = "w-full px-5 py-3 border-b border-[rgba(0,0,0,0.08)] bg-white";
+  const headerTitleClass = "font-semibold text-base text-[#1D1D1F]";
 
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return bytes + ' B';
@@ -115,16 +100,13 @@ export default function Step4Review() {
       const submitPayload = {
         prodiId: formData.programStudiId,
         dosenPembimbingUserId: formData.dosenPembimbingId,
-        formData: formData, // Attachments TIDAK termasuk di sini, akan diupload terpisah setelah surat berhasil dibuat
+        formData: formData,
       };
 
       const result = await letterService.submitLetter(submitPayload);
 
-      // Attachments diupload TERPISAH setelah surat berhasil dibuat
       if (attachments.length > 0) {
         try {
-          // Filter utama files: proposal dan ktm (cek dari nama file atau category)
-          // Filter utama files: proposal dan ktm
           const utamaFiles = attachments.filter(att => 
             att.category === 'proposal' || att.category === 'ktm'
           );
@@ -163,8 +145,6 @@ export default function Step4Review() {
           setIsSubmitting(false);
           return;
         }
-      } else {
-        console.log('⚠️ Tidak ada attachments untuk diupload');
       }
 
       resetForm();
@@ -172,39 +152,26 @@ export default function Step4Review() {
     } catch (err) {
       let errorMessage = 'Gagal mengajukan surat.';
       let errorDetail = '';
-      
-      // Try to extract error message from API response
       let apiResponseMessage = '';
       let apiStatus: number | undefined;
       
       if (typeof err === 'object' && err !== null) {
         const apiError = err as any;
-        
-        // Get status code
         apiStatus = apiError.status || apiError.statusCode || apiError.response?.status;
         
-        // Priority 1: Check responseData (from our custom error in submitLetter)
         if (apiError.responseData && typeof apiError.responseData === 'string') {
           apiResponseMessage = apiError.responseData;
-        }
-        // Priority 2: Check response.text (for plain text responses from API)
-        else if (apiError.response?.text && typeof apiError.response.text === 'string') {
+        } else if (apiError.response?.text && typeof apiError.response.text === 'string') {
           apiResponseMessage = apiError.response.text;
-        }
-        // Priority 3: Check response.body (for plain text responses from API)
-        else if (apiError.response?.body && typeof apiError.response.body === 'string') {
+        } else if (apiError.response?.body && typeof apiError.response.body === 'string') {
           apiResponseMessage = apiError.response.body;
-        }
-        // Priority 4: Check response.error (for error responses from API)
-        else if (apiError.response?.error) {
+        } else if (apiError.response?.error) {
           if (typeof apiError.response.error === 'string') {
             apiResponseMessage = apiError.response.error;
           } else if (typeof apiError.response.error === 'object') {
             apiResponseMessage = apiError.response.error.message || apiError.response.error.error || apiError.response.error.toString() || JSON.stringify(apiError.response.error);
           }
-        }
-        // Priority 5: Check response.data (string or object)
-        else if (apiError.response?.data !== undefined && apiError.response.data !== null) {
+        } else if (apiError.response?.data !== undefined && apiError.response.data !== null) {
           if (typeof apiError.response.data === 'string') {
             apiResponseMessage = apiError.response.data;
           } else if (typeof apiError.response.data === 'object') {
@@ -213,21 +180,15 @@ export default function Step4Review() {
                                 apiError.response.data.toString() ||
                                 JSON.stringify(apiError.response.data);
           }
-        }
-        // Priority 6: Check if response itself is a string
-        else if (typeof apiError.response === 'string') {
+        } else if (typeof apiError.response === 'string') {
           apiResponseMessage = apiError.response;
-        }
-        // Priority 7: Check data property directly
-        else if (apiError.data !== undefined && apiError.data !== null) {
+        } else if (apiError.data !== undefined && apiError.data !== null) {
           if (typeof apiError.data === 'string') {
             apiResponseMessage = apiError.data;
           } else if (typeof apiError.data === 'object') {
             apiResponseMessage = apiError.data.message || apiError.data.error || apiError.data.toString() || JSON.stringify(apiError.data);
           }
-        }
-        // Priority 8: Check error property
-        else if (apiError.error) {
+        } else if (apiError.error) {
           if (typeof apiError.error === 'string') {
             apiResponseMessage = apiError.error;
           } else if (typeof apiError.error === 'object') {
@@ -235,15 +196,11 @@ export default function Step4Review() {
           }
         }
         
-        // Check originalError if available (from handleApiError)
         if (apiError.originalError) {
           const original = apiError.originalError;
-          // Check responseData first
           if (original.responseData && typeof original.responseData === 'string') {
             apiResponseMessage = original.responseData;
-          }
-          // Then check response.data
-          else if (original.response?.data !== undefined) {
+          } else if (original.response?.data !== undefined) {
             if (typeof original.response.data === 'string') {
               apiResponseMessage = original.response.data;
             } else if (typeof original.response.data === 'object') {
@@ -261,19 +218,13 @@ export default function Step4Review() {
         }
       }
       
-      // Priority 1: Use API response message if available
       if (apiResponseMessage && apiResponseMessage.trim().length > 0) {
         errorMessage = apiResponseMessage.trim();
         errorDetail = '';
-      } 
-      // Priority 2: Check if err.message is user-friendly (from API response)
-      else if (err instanceof Error) {
+      } else if (err instanceof Error) {
         const rawMessage = err.message;
         
-        // Check if the error message is already user-friendly (from API)
-        // If it contains Indonesian text or is a clear message, use it directly
         if (rawMessage && rawMessage.trim().length > 0) {
-          // Check for user-friendly indicators (Indonesian text, clear instructions)
           const isUserFriendly = (
             rawMessage.includes('masih memiliki') || 
             rawMessage.includes('sedang diproses') ||
@@ -284,14 +235,11 @@ export default function Step4Review() {
             rawMessage.includes('Silakan') ||
             rawMessage.includes('Periksa') ||
             rawMessage.includes('pastikan') ||
-            rawMessage.length > 50 // Likely a user-friendly message
+            rawMessage.length > 50
           );
           
-          // For status 500, prioritize user-friendly messages from API
-          // If status is 500 and message looks user-friendly, use it directly
           if (apiStatus === 500) {
             if (isUserFriendly || rawMessage.length > 30) {
-              // Likely a message from API, use it directly
               errorMessage = rawMessage.trim();
               errorDetail = '';
             } else {
@@ -302,7 +250,6 @@ export default function Step4Review() {
             errorMessage = rawMessage.trim();
             errorDetail = '';
           } else {
-            // Convert technical messages to user-friendly ones
             if (rawMessage.includes('Invalid response from /letter/pkl/submit endpoint')) {
               errorMessage = 'Server tidak merespons dengan benar.';
               errorDetail = 'Silakan periksa kembali data yang Anda masukkan atau coba lagi beberapa saat.';
@@ -319,8 +266,6 @@ export default function Step4Review() {
               errorMessage = 'Layanan tidak ditemukan.';
               errorDetail = 'Silakan hubungi administrator atau coba lagi nanti.';
             } else if (rawMessage.includes('500') || rawMessage.includes('Internal Server Error') || apiStatus === 500) {
-              // For 500 errors, if message is already user-friendly, use it
-              // Otherwise use generic message
               if (isUserFriendly) {
                 errorMessage = rawMessage.trim();
                 errorDetail = '';
@@ -342,7 +287,6 @@ export default function Step4Review() {
         }
       }
       
-      // Set error message - if detail exists, show both, otherwise just the main message
       const finalError = errorDetail 
         ? `${errorMessage}\n\n${errorDetail}` 
         : errorMessage;
@@ -357,12 +301,12 @@ export default function Step4Review() {
   const tambahanFiles = attachments.filter(att => att.category === 'tambahan');
 
   return (
-    <div className="w-full max-w-7xl mx-auto flex flex-col items-center gap-6 pt-8 pb-20 px-4">
+    <div className="w-full max-w-7xl mx-auto flex flex-col items-center gap-4 pt-8 pb-20 px-4 bg-white min-h-screen">
       <div className="w-full max-w-5xl flex flex-col gap-1.5 items-start">
-         <h1 className="text-2xl font-bold tracking-tight text-foreground">
+         <h1 className="text-2xl font-bold tracking-tight text-[#1D1D1F]">
             Review Surat
          </h1>
-         <p className="text-sm font-normal text-muted-foreground">
+         <p className="text-sm font-normal text-[#86868B]">
             Mohon periksa kembali seluruh data yang telah Anda masukkan sebelum mengajukan surat.
          </p>
       </div>

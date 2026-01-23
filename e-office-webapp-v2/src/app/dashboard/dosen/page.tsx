@@ -1,12 +1,12 @@
 'use client';
 
-import StatsCards from "@/components/features/dashboard/dosen/StatsCards";
-import VolumeChart from "@/components/features/dashboard/dosen/VolumeChart";
-import LetterTable from "@/components/features/dashboard/dosen/LetterTable";
+import StatsCards from "@/components/features/dashboard/dosen/dashboard/StatsCards";
+import VolumeChart from "@/components/features/dashboard/dosen/dashboard/VolumeChart";
+import LetterTable from "@/components/features/dashboard/dosen/dashboard/LetterTable";
 
 export default function DosenDashboardPage() {
   return (
-    <div className="flex-1 px-[40px] py-[32px] overflow-y-auto bg-[#F8FAFC]">
+    <div className="flex-1 px-[40px] py-[32px] overflow-y-auto bg-white">
       {/* Breadcrumb Area */}
       <div className="flex items-center text-[16px] text-[#64748B] mb-[32px] font-lexend">
         <span className="text-[#64748B]">Dashboard</span>

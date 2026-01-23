@@ -141,15 +141,15 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-6 py-8 max-w-7xl">
-        {/* Header Section - Clean and Professional */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
+    <div className="min-h-screen bg-white">
+      <div className="container mx-auto px-8 py-10 max-w-7xl">
+        {/* Header Section - Apple Style */}
+        <div className="mb-10 animate-fade-in">
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <h1 className="text-3xl font-bold text-foreground mb-1">Dashboard</h1>
-              <p className="text-sm text-muted-foreground">
-                Selamat datang kembali, <span className="font-medium text-foreground">{user?.name || 'Pengguna'}</span>
+              <h1 className="text-4xl font-semibold text-[#1D1D1F] mb-2 tracking-tight">Dashboard</h1>
+              <p className="text-base text-[#86868B]">
+                Selamat datang kembali, <span className="font-medium text-[#1D1D1F]">{user?.name || 'Pengguna'}</span>
               </p>
             </div>
             {isMahasiswa && (
@@ -163,102 +163,114 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Integrated Stats Section - Single Card with Grid */}
-        <Card className="mb-8 border shadow-sm">
-          <CardContent className="p-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-2">
+        {/* Bento Grid Stats Section */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 animate-slide-up">
+          <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden">
+            <CardContent className="p-6">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs font-medium text-[#86868B] mb-3">
                   <FileText className="w-4 h-4" />
                   Total Surat
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-3xl font-bold text-foreground">{stats.total}</p>
-                  <span className="text-xs text-muted-foreground">surat</span>
+                  <p className="text-4xl font-bold text-[#1D1D1F] tracking-tight">{stats.total}</p>
+                  <span className="text-sm text-[#86868B]">surat</span>
                 </div>
               </div>
-              
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-2">
-                  <Clock className="w-4 h-4 text-primary" />
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden">
+            <CardContent className="p-6">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs font-medium text-[#86868B] mb-3">
+                  <Clock className="w-4 h-4 text-[#0071E3]" />
                   Menunggu
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-3xl font-bold text-primary">{stats.pending}</p>
-                  <span className="text-xs text-muted-foreground">surat</span>
+                  <p className="text-4xl font-bold text-[#0071E3] tracking-tight">{stats.pending}</p>
+                  <span className="text-sm text-[#86868B]">surat</span>
                 </div>
               </div>
-              
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden">
+            <CardContent className="p-6">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs font-medium text-[#86868B] mb-3">
+                  <CheckCircle2 className="w-4 h-4 text-[#34C759]" />
                   Selesai
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-3xl font-bold text-green-600">{stats.completed}</p>
-                  <span className="text-xs text-muted-foreground">surat</span>
+                  <p className="text-4xl font-bold text-[#34C759] tracking-tight">{stats.completed}</p>
+                  <span className="text-sm text-[#86868B]">surat</span>
                 </div>
               </div>
-              
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-2">
-                  <AlertCircle className="w-4 h-4 text-orange-600" />
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden">
+            <CardContent className="p-6">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs font-medium text-[#86868B] mb-3">
+                  <AlertCircle className="w-4 h-4 text-[#FF9500]" />
                   Revisi
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-3xl font-bold text-orange-600">{stats.revision}</p>
-                  <span className="text-xs text-muted-foreground">surat</span>
+                  <p className="text-4xl font-bold text-[#FF9500] tracking-tight">{stats.revision}</p>
+                  <span className="text-sm text-[#86868B]">surat</span>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
 
-        {/* Charts Section - Asymmetric Layout */}
-        <div className="grid lg:grid-cols-12 gap-6 mb-8">
+        {/* Bento Grid Charts Section */}
+        <div className="grid lg:grid-cols-12 gap-4 mb-8 animate-slide-up">
           {/* Bar Chart - Takes more space */}
-          <Card className="lg:col-span-8 border shadow-sm">
-            <CardHeader className="border-b pb-4">
+          <Card className="lg:col-span-8 border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden bg-white">
+            <CardHeader className="border-b border-[rgba(0,0,0,0.08)] pb-5 px-6 pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-base font-semibold flex items-center gap-2 mb-1">
-                    <TrendingUp className="w-4 h-4 text-primary" />
+                  <CardTitle className="text-lg font-semibold flex items-center gap-2 mb-1.5 tracking-tight text-[#1D1D1F]">
+                    <TrendingUp className="w-5 h-5 text-[#0071E3]" />
                     Tren Pengajuan 7 Hari Terakhir
                   </CardTitle>
-                  <CardDescription className="text-xs">
+                  <CardDescription className="text-sm text-[#86868B]">
                     Jumlah surat yang diajukan per hari
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 px-6 pb-6">
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
                   <XAxis 
                     dataKey="date" 
-                    tick={{ fontSize: 12, fill: '#64748b' }}
-                    stroke="#cbd5e1"
+                    tick={{ fontSize: 12, fill: '#86868B' }}
+                    stroke="rgba(0,0,0,0.1)"
                   />
                   <YAxis 
-                    tick={{ fontSize: 12, fill: '#64748b' }}
-                    stroke="#cbd5e1"
+                    tick={{ fontSize: 12, fill: '#86868B' }}
+                    stroke="rgba(0,0,0,0.1)"
                   />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: '#fff',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '6px',
+                      border: '1px solid rgba(0,0,0,0.1)',
+                      borderRadius: '12px',
                       fontSize: '12px',
-                      padding: '8px',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      padding: '12px',
+                      boxShadow: '0 4px 24px rgba(0,0,0,0.04)'
                     }}
-                    labelStyle={{ fontWeight: 600, marginBottom: '4px', color: '#1e293b' }}
+                    labelStyle={{ fontWeight: 600, marginBottom: '4px', color: '#1D1D1F' }}
                   />
                   <Bar 
                     dataKey="count" 
-                    fill="#3b82f6"
-                    radius={[4, 4, 0, 0]}
+                    fill="#0071E3"
+                    radius={[8, 8, 0, 0]}
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -266,17 +278,17 @@ export default function DashboardPage() {
           </Card>
 
           {/* Pie Chart - Takes less space */}
-          <Card className="lg:col-span-4 border shadow-sm">
-            <CardHeader className="border-b pb-4">
-              <CardTitle className="text-base font-semibold flex items-center gap-2 mb-1">
-                <BarChart3 className="w-4 h-4 text-primary" />
+          <Card className="lg:col-span-4 border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden bg-white">
+            <CardHeader className="border-b border-[rgba(0,0,0,0.08)] pb-5 px-6 pt-6">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2 mb-1.5 tracking-tight text-[#1D1D1F]">
+                <BarChart3 className="w-5 h-5 text-[#0071E3]" />
                 Distribusi Status
               </CardTitle>
-              <CardDescription className="text-xs">
+              <CardDescription className="text-sm text-[#86868B]">
                 Persentase surat berdasarkan status
               </CardDescription>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 px-6 pb-6">
               {pieData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
@@ -285,7 +297,7 @@ export default function DashboardPage() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                      label={({ percent }) => `${(((percent ?? 0) * 100)).toFixed(0)}%`}
                       outerRadius={100}
                       fill="#8884d8"
                       dataKey="value"
@@ -297,11 +309,11 @@ export default function DashboardPage() {
                     <Tooltip 
                       contentStyle={{ 
                         backgroundColor: '#fff',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '6px',
+                        border: '1px solid rgba(0,0,0,0.1)',
+                        borderRadius: '12px',
                         fontSize: '12px',
-                        padding: '8px',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                        padding: '12px',
+                        boxShadow: '0 4px 24px rgba(0,0,0,0.04)'
                       }}
                     />
                     <Legend 
@@ -314,7 +326,7 @@ export default function DashboardPage() {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex items-center justify-center h-[300px] text-muted-foreground text-sm">
+                <div className="flex items-center justify-center h-[300px] text-[#86868B] text-sm">
                   Belum ada data
                 </div>
               )}
@@ -322,16 +334,20 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Quick Actions - Minimalist */}
-        <div className="flex items-center gap-4">
+        {/* Quick Actions - Apple Style */}
+        <div className="flex items-center gap-4 animate-slide-up">
           <Link href="/dashboard/surat" className="flex-1">
-            <Button variant="outline" className="w-full justify-start gap-2 h-auto py-3" size="default">
-              <FileText className="w-4 h-4" />
-              <div className="text-left">
-                <div className="font-medium text-sm">Lihat Semua Surat</div>
-                <div className="text-xs text-muted-foreground font-normal">Kelola semua surat Anda</div>
-              </div>
-            </Button>
+            <Card className="border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden bg-white hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
+              <CardContent className="p-6">
+                <Button variant="ghost" className="w-full justify-start gap-3 h-auto p-0 hover:bg-transparent">
+                  <FileText className="w-5 h-5 text-[#0071E3]" />
+                  <div className="text-left">
+                    <div className="font-semibold text-base text-[#1D1D1F] tracking-tight">Lihat Semua Surat</div>
+                    <div className="text-sm text-[#86868B] font-normal">Kelola semua surat Anda</div>
+                  </div>
+                </Button>
+              </CardContent>
+            </Card>
           </Link>
         </div>
       </div>

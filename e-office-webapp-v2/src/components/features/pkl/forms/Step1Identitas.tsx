@@ -16,6 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { FormInputWithInfo } from "@/components/ui/form-input-with-info";
 import { useAuthStore } from "@/stores";
 import { usePKLFormStore } from "@/stores/pklFormStore";
 import { step1IdentitasSchema, type Step1IdentitasFormData } from "@/lib/validations";
@@ -27,7 +28,8 @@ export default function Step1Identitas() {
   const { formData, setFormData } = usePKLFormStore();
 
   const form = useForm<Step1IdentitasFormData>({
-    resolver: zodResolver(step1IdentitasSchema),
+    // NOTE: zodResolver typing currently mismatches Zod v4 types; runtime is fine.
+    resolver: zodResolver(step1IdentitasSchema as any),
     defaultValues: {
       namaLengkap: formData.namaLengkap || user?.name || "",
       role: "Mahasiswa", 
@@ -75,44 +77,85 @@ export default function Step1Identitas() {
     router.push("/dashboard/pengajuan/pkl/detail-pengajuan");
   };
 
-  // Standarisasi styling dengan shadcn
-  const readOnlyClass = "h-9 bg-muted border-muted text-foreground cursor-default text-sm";
-  const editableClass = "h-9 bg-background border-input text-foreground placeholder:text-muted-foreground text-sm";
+  const readOnlyClass = "h-9 bg-muted border-muted text-foreground cursor-default text-sm pr-10";
+  const editableClass = "h-9 bg-background border-input text-foreground placeholder:text-muted-foreground text-sm pr-10";
   const labelClass = "text-xs font-medium text-foreground mb-1.5";
 
   return (
-    <div className="w-full max-w-7xl mx-auto flex flex-col items-center gap-6 pt-8 pb-20 px-4">
+    <div className="w-full max-w-7xl mx-auto flex flex-col items-center gap-4 pt-8 pb-20 px-4 bg-white min-h-screen">
       <div className="w-full max-w-5xl flex flex-col gap-1.5 items-start">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Identitas Pemohon</h1>
-        <p className="text-sm text-muted-foreground">Data berikut diisi secara otomatis berdasarkan data Anda. Mohon periksa kembali.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-[#1D1D1F]">Identitas Pemohon</h1>
+        <p className="text-sm text-[#86868B]">Data berikut diisi secara otomatis berdasarkan data Anda. Mohon periksa kembali.</p>
       </div>
       <div className="w-full max-w-5xl"><Stepper currentStep={1} /></div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="w-full flex flex-col items-center gap-6">
-          <Card className="w-full max-w-5xl bg-card border shadow-sm">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="w-full flex flex-col items-center gap-4">
+          <Card className="w-full max-w-5xl bg-white border border-[rgba(0,0,0,0.08)] shadow-sm">
             <CardContent className="p-6">
               <div className="grid grid-cols-2 gap-x-4 gap-y-4">
                 <FormField control={form.control} name="namaLengkap" render={({ field }) => (
-                  <FormItem><FormLabel className={labelClass}>Nama Lengkap</FormLabel><FormControl><Input {...field} readOnly className={readOnlyClass} /></FormControl><FormMessage /></FormItem>
+                  <FormItem>
+                    <FormLabel className={labelClass}>Nama Lengkap</FormLabel>
+                    <FormInputWithInfo info="Nama lengkap Anda sesuai dengan data akademik yang terdaftar di sistem.">
+                      <FormControl><Input {...field} readOnly className={readOnlyClass} /></FormControl>
+                    </FormInputWithInfo>
+                    <FormMessage />
+                  </FormItem>
                 )} />
                 <FormField control={form.control} name="role" render={({ field }) => (
-                  <FormItem><FormLabel className={labelClass}>Role</FormLabel><FormControl><Input {...field} readOnly className={readOnlyClass} /></FormControl><FormMessage /></FormItem>
+                  <FormItem>
+                    <FormLabel className={labelClass}>Role</FormLabel>
+                    <FormInputWithInfo info="Peran Anda dalam sistem. Untuk pengajuan PKL, role adalah Mahasiswa.">
+                      <FormControl><Input {...field} readOnly className={readOnlyClass} /></FormControl>
+                    </FormInputWithInfo>
+                    <FormMessage />
+                  </FormItem>
                 )} />
                 <FormField control={form.control} name="nim" render={({ field }) => (
-                  <FormItem><FormLabel className={labelClass}>NIM</FormLabel><FormControl><Input {...field} readOnly className={readOnlyClass} /></FormControl><FormMessage /></FormItem>
+                  <FormItem>
+                    <FormLabel className={labelClass}>NIM</FormLabel>
+                    <FormInputWithInfo info="Nomor Induk Mahasiswa (NIM) Anda. NIM digunakan sebagai identitas resmi dalam dokumen surat.">
+                      <FormControl><Input {...field} readOnly className={readOnlyClass} /></FormControl>
+                    </FormInputWithInfo>
+                    <FormMessage />
+                  </FormItem>
                 )} />
                 <FormField control={form.control} name="email" render={({ field }) => (
-                  <FormItem><FormLabel className={labelClass}>Email</FormLabel><FormControl><Input {...field} readOnly className={readOnlyClass} /></FormControl><FormMessage /></FormItem>
+                  <FormItem>
+                    <FormLabel className={labelClass}>Email</FormLabel>
+                    <FormInputWithInfo info="Alamat email aktif Anda. Email ini digunakan untuk notifikasi terkait pengajuan surat PKL.">
+                      <FormControl><Input {...field} readOnly className={readOnlyClass} /></FormControl>
+                    </FormInputWithInfo>
+                    <FormMessage />
+                  </FormItem>
                 )} />
                 <FormField control={form.control} name="departemen" render={({ field }) => (
-                  <FormItem><FormLabel className={labelClass}>Departemen</FormLabel><FormControl><Input {...field} readOnly className={readOnlyClass} /></FormControl><FormMessage /></FormItem>
+                  <FormItem>
+                    <FormLabel className={labelClass}>Departemen</FormLabel>
+                    <FormInputWithInfo info="Departemen tempat Anda terdaftar. Data ini digunakan untuk routing approval di sistem.">
+                      <FormControl><Input {...field} readOnly className={readOnlyClass} /></FormControl>
+                    </FormInputWithInfo>
+                    <FormMessage />
+                  </FormItem>
                 )} />
                 <FormField control={form.control} name="programStudi" render={({ field }) => (
-                  <FormItem><FormLabel className={labelClass}>Program Studi</FormLabel><FormControl><Input {...field} readOnly className={readOnlyClass} /></FormControl><FormMessage /></FormItem>
+                  <FormItem>
+                    <FormLabel className={labelClass}>Program Studi</FormLabel>
+                    <FormInputWithInfo info="Program studi tempat Anda terdaftar. Program studi menentukan dosen koordinator dan kaprodi yang akan meninjau pengajuan.">
+                      <FormControl><Input {...field} readOnly className={readOnlyClass} /></FormControl>
+                    </FormInputWithInfo>
+                    <FormMessage />
+                  </FormItem>
                 )} />
                 <FormField control={form.control} name="tempatLahir" render={({ field }) => (
-                  <FormItem><FormLabel className={labelClass}>Tempat Lahir</FormLabel><FormControl><Input {...field} readOnly className={readOnlyClass} /></FormControl><FormMessage /></FormItem>
+                  <FormItem>
+                    <FormLabel className={labelClass}>Tempat Lahir</FormLabel>
+                    <FormInputWithInfo info="Kota atau tempat kelahiran Anda sesuai dengan dokumen identitas resmi.">
+                      <FormControl><Input {...field} readOnly className={readOnlyClass} /></FormControl>
+                    </FormInputWithInfo>
+                    <FormMessage />
+                  </FormItem>
                 )} />
                 <FormField 
                   control={form.control} 
@@ -122,19 +165,21 @@ export default function Step1Identitas() {
                     return (
                       <FormItem>
                         <FormLabel className={labelClass}>Tanggal Lahir</FormLabel>
-                        <div className="relative">
-                          <FormControl>
-                            <Input 
-                              value={displayValue}
-                              readOnly 
-                              className={`${readOnlyClass} pr-10`}
-                              onBlur={field.onBlur}
-                              name={field.name}
-                              ref={field.ref}
-                            />
-                          </FormControl>
-                          <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        </div>
+                        <FormInputWithInfo info="Tanggal kelahiran Anda sesuai dengan dokumen identitas resmi. Format: DD Bulan YYYY." hasOtherIcon={true}>
+                          <div className="relative">
+                            <FormControl>
+                              <Input 
+                                value={displayValue}
+                                readOnly 
+                                className={`${readOnlyClass} pr-20`}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                                ref={field.ref}
+                              />
+                            </FormControl>
+                            <Calendar className="absolute right-12 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                          </div>
+                        </FormInputWithInfo>
                         <FormMessage />
                       </FormItem>
                     );
@@ -143,16 +188,18 @@ export default function Step1Identitas() {
                 <FormField control={form.control} name="noHp" render={({ field }) => (
                   <FormItem>
                     <FormLabel className={labelClass}>No. HP</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field} 
-                        className={editableClass} 
-                        placeholder="Contoh: 0812..." 
-                        onChange={(e) => {
-                            if (/^\d*$/.test(e.target.value)) field.onChange(e.target.value);
-                        }}
-                      />
-                    </FormControl>
+                    <FormInputWithInfo info="Nomor handphone aktif Anda. Pastikan nomor dapat dihubungi untuk keperluan komunikasi terkait pengajuan surat PKL.">
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          className={editableClass} 
+                          placeholder="Contoh: 0812..." 
+                          onChange={(e) => {
+                              if (/^\d*$/.test(e.target.value)) field.onChange(e.target.value);
+                          }}
+                        />
+                      </FormControl>
+                    </FormInputWithInfo>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -160,7 +207,9 @@ export default function Step1Identitas() {
                 <FormField control={form.control} name="alamat" render={({ field }) => (
                   <FormItem>
                     <FormLabel className={labelClass}>Alamat</FormLabel>
-                    <FormControl><Input {...field} className={editableClass} placeholder="Masukkan Alamat" /></FormControl>
+                    <FormInputWithInfo info="Alamat lengkap tempat tinggal Anda saat ini. Sertakan jalan, nomor, kelurahan, kecamatan, kota, dan kode pos jika ada.">
+                      <FormControl><Input {...field} className={editableClass} placeholder="Masukkan Alamat" /></FormControl>
+                    </FormInputWithInfo>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -168,16 +217,18 @@ export default function Step1Identitas() {
                 <FormField control={form.control} name="ipk" render={({ field }) => (
                   <FormItem>
                     <FormLabel className={labelClass}>IPK</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field} 
-                        className={editableClass} 
-                        placeholder="Contoh: 3.85" 
-                        onChange={(e) => {
-                            if (/^[0-9.]*$/.test(e.target.value)) field.onChange(e.target.value);
-                        }}
-                      />
-                    </FormControl>
+                    <FormInputWithInfo info="Indeks Prestasi Kumulatif (IPK) terakhir Anda. Masukkan nilai IPK dengan format angka desimal, contoh: 3.85. IPK digunakan untuk verifikasi kelayakan PKL.">
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          className={editableClass} 
+                          placeholder="Contoh: 3.85" 
+                          onChange={(e) => {
+                              if (/^[0-9.]*$/.test(e.target.value)) field.onChange(e.target.value);
+                          }}
+                        />
+                      </FormControl>
+                    </FormInputWithInfo>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -185,16 +236,18 @@ export default function Step1Identitas() {
                 <FormField control={form.control} name="sks" render={({ field }) => (
                   <FormItem>
                     <FormLabel className={labelClass}>SKS</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field} 
-                        className={editableClass} 
-                        placeholder="Masukkan SKS" 
-                        onChange={(e) => {
-                            if (/^\d*$/.test(e.target.value)) field.onChange(e.target.value);
-                        }}
-                      />
-                    </FormControl>
+                    <FormInputWithInfo info="Jumlah Satuan Kredit Semester (SKS) yang telah Anda ambil. Masukkan angka tanpa desimal. SKS digunakan untuk verifikasi kelayakan PKL.">
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          className={editableClass} 
+                          placeholder="Masukkan SKS" 
+                          onChange={(e) => {
+                              if (/^\d*$/.test(e.target.value)) field.onChange(e.target.value);
+                          }}
+                        />
+                      </FormControl>
+                    </FormInputWithInfo>
                     <FormMessage />
                   </FormItem>
                 )} />

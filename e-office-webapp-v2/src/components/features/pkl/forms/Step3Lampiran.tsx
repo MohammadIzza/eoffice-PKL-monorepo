@@ -11,7 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { UploadCloud, FileText, Image as ImageIcon, Eye, Trash2, X, ChevronDown, CheckCircle2 } from "lucide-react";
+import { UploadCloud, FileText, Image as ImageIcon, Eye, Trash2, X, ChevronDown, CheckCircle2, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePKLFormStore } from "@/stores/pklFormStore";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -21,32 +22,17 @@ export default function Step3Lampiran() {
   const router = useRouter();
   const { attachments, addAttachment, removeAttachment, updateAttachmentCategory, restoreAttachments, _hasHydrated } = usePKLFormStore();
   
-  // Ensure attachments are restored after hydration
   useEffect(() => {
-    console.log('[Step3Lampiran] useEffect check', { _hasHydrated, attachmentsCount: attachments.length });
-    
-    // Check if there's metadata in localStorage but no attachments in state
     const storedMetadata = JSON.parse(localStorage.getItem('pkl-attachments-metadata') || '[]');
     const hasMetadata = storedMetadata.length > 0;
     const hasAttachments = attachments.length > 0;
     
-    console.log('[Step3Lampiran] Storage check', { hasMetadata, hasAttachments, metadataCount: storedMetadata.length });
-    
-    // If we have metadata but no attachments, force restore
-    if (hasMetadata && !hasAttachments) {
-      console.log('[Step3Lampiran] Metadata exists but no attachments - forcing restore');
+    if ((hasMetadata && !hasAttachments) || (!_hasHydrated && hasMetadata)) {
       restoreAttachments().catch(error => {
         console.error('[Step3Lampiran] Error restoring attachments:', error);
       });
-    } else if (!_hasHydrated && hasMetadata) {
-      console.log('[Step3Lampiran] Not hydrated and has metadata - calling restore');
-      restoreAttachments().catch(error => {
-        console.error('[Step3Lampiran] Error restoring attachments:', error);
-      });
-    } else if (_hasHydrated && hasAttachments) {
-      console.log('[Step3Lampiran] Already hydrated with attachments:', attachments.length);
     }
-  }, []); // Only run once on mount
+  }, []);
   const [dragActive, setDragActive] = useState<{ proposal: boolean; ktm: boolean }>({ proposal: false, ktm: false });
   const [error, setError] = useState<string | null>(null);
   const [isTambahanOpen, setIsTambahanOpen] = useState(false);
@@ -54,7 +40,6 @@ export default function Step3Lampiran() {
   const ktmInputRef = useRef<HTMLInputElement>(null);
   const tambahanInputRef = useRef<HTMLInputElement>(null);
 
-  // Standarisasi styling dengan shadcn
   const cardClass = "w-full max-w-5xl bg-card rounded-xl border shadow-sm p-5 flex flex-col items-center gap-5";
   const uploadAreaClass = `w-full h-36 flex flex-col items-center justify-center border-2 border-dashed rounded-lg bg-muted/50 cursor-pointer hover:bg-muted transition-colors ${
     dragActive ? 'border-primary bg-primary/5' : 'border-border'
@@ -119,13 +104,11 @@ export default function Step3Lampiran() {
       return;
     }
     
-    // Remove existing file of same type
     const existingAttachment = attachments.find(att => att.category === type);
     if (existingAttachment) {
       removeAttachment(existingAttachment.id);
     }
     
-    // Add file with correct category
     addAttachment(file, type);
   };
 
@@ -149,27 +132,26 @@ export default function Step3Lampiran() {
     return 'bg-primary/10';
   };
 
-  // Get specific files by category
   const proposalFile = attachments.find(att => att.category === 'proposal');
   const ktmFile = attachments.find(att => att.category === 'ktm');
   const tambahanFiles = attachments.filter(att => att.category === 'tambahan');
 
   return (
-    <div className="w-full max-w-7xl mx-auto flex flex-col items-center gap-6 pt-8 pb-20 px-4">
-      <div className="w-full flex flex-col gap-1.5 items-start">
-         <h1 className="text-2xl font-bold tracking-tight text-foreground">
+    <div className="w-full max-w-7xl mx-auto flex flex-col items-center gap-4 pt-8 pb-20 px-4 bg-white min-h-screen">
+      <div className="w-full max-w-5xl flex flex-col gap-1.5 items-start">
+         <h1 className="text-2xl font-bold tracking-tight text-[#1D1D1F]">
             Lampiran
          </h1>
-         <p className="text-sm font-normal text-muted-foreground">
+         <p className="text-sm font-normal text-[#86868B]">
             Lampirkan dokumen pendukung yang diperlukan.
          </p>
       </div>
-      <div className="w-full">
+      <div className="w-full max-w-5xl">
          <Stepper currentStep={3} />
       </div>
 
       {error && (
-        <div className="w-full max-w-4xl bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+        <div className="w-full max-w-5xl bg-destructive/10 border border-destructive/20 rounded-lg p-4">
           <div className="flex items-start gap-2">
             <X className="w-5 h-5 text-destructive mt-0.5" />
             <div className="flex-1">
@@ -194,24 +176,26 @@ export default function Step3Lampiran() {
 
         {/* File Proposal */}
         <div className="w-full flex flex-col gap-3">
-          <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-1.5">
             <label className="text-xs font-medium text-foreground">
               File Proposal<span className="text-destructive">*</span>
             </label>
+          </div>
 
-        <input
-              ref={proposalInputRef}
-          type="file"
-          accept=".pdf,.jpg,.jpeg,.png"
-          className="hidden"
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  handleFileSelect(e.target.files[0], 'proposal');
-                }
-              }}
-            />
+        <div className="relative">
+          <input
+            ref={proposalInputRef}
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            className="hidden"
+            onChange={(e) => {
+              if (e.target.files && e.target.files[0]) {
+                handleFileSelect(e.target.files[0], 'proposal');
+              }
+            }}
+          />
 
-            {proposalFile ? (
+          {proposalFile ? (
               <div className={`${fileItemClass} border-2 border-primary/20 bg-primary/5 animate-in fade-in slide-in-from-top-2 duration-300`}>
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-lg ${getFileIconBg(proposalFile.file)} flex items-center justify-center relative`}>
@@ -244,6 +228,7 @@ export default function Step3Lampiran() {
                       onClick={() => {
                         const newWindow = window.open('', '_blank');
                         if (newWindow && proposalFile.preview) {
+                          const displayName = proposalFile.file.name.replace(/^(proposal_|ktm_)/i, '') || proposalFile.file.name;
                           const fileExtension = proposalFile.file.name.split('.').pop()?.toLowerCase() || '';
                           const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension);
                           const isPdf = fileExtension === 'pdf';
@@ -290,9 +275,10 @@ export default function Step3Lampiran() {
                 </div>
               </div>
             ) : (
-              <div
-                className={`w-full h-32 flex flex-col items-center justify-center border-2 border-dashed rounded-lg bg-muted/50 cursor-pointer transition-all duration-300 ${
-                  dragActive.proposal 
+              <div className="relative">
+                <div
+                  className={`w-full h-32 flex flex-col items-center justify-center border-2 border-dashed rounded-lg bg-muted/50 cursor-pointer transition-all duration-300 ${
+                    dragActive.proposal 
                     ? 'border-primary bg-primary/5 scale-[1.02] shadow-md' 
                     : 'border-border hover:bg-muted hover:border-primary/30'
                 }`}
@@ -304,38 +290,64 @@ export default function Step3Lampiran() {
               >
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2">
                   <UploadCloud className="w-5 h-5 text-primary" />
-           </div>
-           <div className="text-center">
+                </div>
+                <div className="text-center">
                   <span className="font-semibold text-sm text-foreground">
                     Seret & lepas atau <span className="text-primary">pilih file</span>
-              </span>
-           </div>
+                  </span>
+                </div>
                 <span className="font-normal text-[10px] text-muted-foreground mt-0.5">
-              untuk diunggah
-           </span>
+                  untuk diunggah
+                </span>
+              </div>
+              <div className="absolute right-3 top-3 pointer-events-none">
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center rounded-full hover:bg-[rgba(0,0,0,0.04)] transition-colors focus:outline-none p-0.5 pointer-events-auto"
+                        onClick={(e) => e.preventDefault()}
+                      >
+                        <Info className="w-3.5 h-3.5 text-[#86868B] hover:text-[#0071E3] transition-colors" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent 
+                      side="left" 
+                      className="max-w-xs text-xs p-3 rounded-xl shadow-lg bg-[#1D1D1F] text-white border-0"
+                      sideOffset={8}
+                    >
+                      <p className="leading-relaxed">Unggah file proposal PKL Anda. File harus berisi rencana kegiatan PKL yang akan dilaksanakan, termasuk tujuan, metode, dan timeline. Format yang diterima: PDF, JPG, atau PNG. Maksimal ukuran file: 5MB.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </div>
+          )}
         </div>
-            )}
-                   </div>
                    
           {/* File KTM */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-foreground">
-              File KTM<span className="text-destructive">*</span>
-            </label>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-1.5">
+              <label className="text-xs font-medium text-foreground">
+                File KTM<span className="text-destructive">*</span>
+              </label>
+            </div>
             
-            <input
-              ref={ktmInputRef}
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  handleFileSelect(e.target.files[0], 'ktm');
-                }
-              }}
-            />
+            <div className="relative">
+              <input
+                ref={ktmInputRef}
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    handleFileSelect(e.target.files[0], 'ktm');
+                  }
+                }}
+              />
 
-            {ktmFile ? (
+              {ktmFile ? (
               <div className={`${fileItemClass} border-2 border-primary/20 bg-primary/5 animate-in fade-in slide-in-from-top-2 duration-300`}>
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-lg ${getFileIconBg(ktmFile.file)} flex items-center justify-center relative`}>
@@ -415,50 +427,75 @@ export default function Step3Lampiran() {
                 </div>
               </div>
             ) : (
-              <div
-                className={`w-full h-32 flex flex-col items-center justify-center border-2 border-dashed rounded-lg bg-muted/50 cursor-pointer transition-all duration-300 ${
-                  dragActive.ktm 
-                    ? 'border-primary bg-primary/5 scale-[1.02] shadow-md' 
-                    : 'border-border hover:bg-muted hover:border-primary/30'
-                }`}
-                onDragEnter={(e) => handleDrag(e, 'ktm')}
-                onDragLeave={(e) => handleDrag(e, 'ktm')}
-                onDragOver={(e) => handleDrag(e, 'ktm')}
-                onDrop={(e) => handleDrop(e, 'ktm')}
-                onClick={() => ktmInputRef.current?.click()}
-              >
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-                  <UploadCloud className="w-5 h-5 text-primary" />
-                </div>
-                <div className="text-center">
-                  <span className="font-semibold text-sm text-foreground">
-                    Seret & lepas atau <span className="text-primary">pilih file</span>
+              <div className="relative">
+                <div
+                  className={`w-full h-32 flex flex-col items-center justify-center border-2 border-dashed rounded-lg bg-muted/50 cursor-pointer transition-all duration-300 ${
+                    dragActive.ktm 
+                      ? 'border-primary bg-primary/5 scale-[1.02] shadow-md' 
+                      : 'border-border hover:bg-muted hover:border-primary/30'
+                  }`}
+                  onDragEnter={(e) => handleDrag(e, 'ktm')}
+                  onDragLeave={(e) => handleDrag(e, 'ktm')}
+                  onDragOver={(e) => handleDrag(e, 'ktm')}
+                  onDrop={(e) => handleDrop(e, 'ktm')}
+                  onClick={() => ktmInputRef.current?.click()}
+                >
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                    <UploadCloud className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="text-center">
+                    <span className="font-semibold text-sm text-foreground">
+                      Seret & lepas atau <span className="text-primary">pilih file</span>
+                    </span>
+                  </div>
+                  <span className="font-normal text-[10px] text-muted-foreground mt-0.5">
+                    untuk diunggah
                   </span>
                 </div>
-                <span className="font-normal text-[10px] text-muted-foreground mt-0.5">
-                  untuk diunggah
-                </span>
+                <div className="absolute right-3 top-3 pointer-events-none">
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className="inline-flex items-center justify-center rounded-full hover:bg-[rgba(0,0,0,0.04)] transition-colors focus:outline-none p-0.5 pointer-events-auto"
+                          onClick={(e) => e.preventDefault()}
+                        >
+                          <Info className="w-3.5 h-3.5 text-[#86868B] hover:text-[#0071E3] transition-colors" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent 
+                        side="left" 
+                        className="max-w-xs text-xs p-3 rounded-xl shadow-lg bg-[#1D1D1F] text-white border-0"
+                        sideOffset={8}
+                      >
+                        <p className="leading-relaxed">Unggah foto atau scan Kartu Tanda Mahasiswa (KTM) Anda yang masih berlaku. Pastikan KTM terlihat jelas dan tidak terpotong. Format yang diterima: PDF, JPG, atau PNG. Maksimal ukuran file: 5MB.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      <div className={`${cardClass} border-primary/20 bg-primary/5`}>
+      <div className={`${cardClass} border-[rgba(0,0,0,0.1)] bg-[rgba(0,0,0,0.02)]`}>
          <div 
-           className="w-full flex items-center justify-between cursor-pointer transition-all duration-300 hover:bg-primary/5 rounded-lg p-2 -m-2"
+           className="w-full flex items-center justify-between cursor-pointer transition-all duration-300 hover:bg-[rgba(0,0,0,0.04)] rounded-lg p-2 -m-2"
            onClick={() => setIsTambahanOpen(!isTambahanOpen)}
          >
            <div className="flex flex-col gap-1">
-             <h3 className="font-semibold text-base text-primary">
+             <h3 className="font-semibold text-base text-[#86868B]">
               Lampiran Tambahan
            </h3>
-             <p className="font-normal text-xs text-muted-foreground">
+             <p className="font-normal text-xs text-[#86868B]">
               Opsional. Tambahkan dokumen pendukung lainnya jika diperlukan.
            </p>
            </div>
            <ChevronDown 
-             className={`w-5 h-5 text-primary transition-transform duration-300 ease-in-out ${isTambahanOpen ? 'rotate-180' : ''}`}
+             className={`w-5 h-5 text-[#86868B] transition-transform duration-300 ease-in-out ${isTambahanOpen ? 'rotate-180' : ''}`}
            />
         </div>
 
@@ -474,7 +511,7 @@ export default function Step3Lampiran() {
         />
 
         <div
-               className="w-full h-36 flex flex-col items-center justify-center border-2 border-dashed rounded-lg bg-primary/5 cursor-pointer transition-all duration-300 border-primary/30 hover:bg-primary/10 hover:border-primary/50 hover:scale-[1.01]"
+               className="w-full h-36 flex flex-col items-center justify-center border-2 border-dashed rounded-lg bg-[rgba(0,0,0,0.02)] cursor-pointer transition-all duration-300 border-[rgba(0,0,0,0.12)] hover:bg-[rgba(0,0,0,0.04)] hover:border-[rgba(0,0,0,0.2)] hover:scale-[1.01]"
           onDragEnter={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -496,17 +533,17 @@ export default function Step3Lampiran() {
           }}
           onClick={() => tambahanInputRef.current?.click()}
         >
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center mb-2">
-                   <UploadCloud className="w-5 h-5 text-primary" />
+                <div className="w-10 h-10 rounded-full bg-[rgba(0,0,0,0.08)] flex items-center justify-center mb-2">
+                   <UploadCloud className="w-5 h-5 text-[#86868B]" />
            </div>
            
            <div className="text-center">
-                   <span className="font-semibold text-sm text-foreground">
-                     Seret & lepas atau <span className="text-primary">pilih file</span>
+                   <span className="font-semibold text-sm text-[#1D1D1F]">
+                     Seret & lepas atau <span className="text-[#86868B]">pilih file</span>
               </span>
            </div>
            
-                <span className="font-normal text-[10px] text-muted-foreground mt-0.5">
+                <span className="font-normal text-[10px] text-[#86868B] mt-0.5">
               untuk diunggah
            </span>
         </div>
@@ -515,17 +552,21 @@ export default function Step3Lampiran() {
                <div className="w-full flex flex-col gap-3">
                  {tambahanFiles.map((attachment) => {
               return (
-                     <div key={attachment.id} className={`${fileItemClass} border-primary/20 bg-primary/5 animate-in fade-in slide-in-from-left-2 duration-300`}>
+                     <div key={attachment.id} className={`${fileItemClass} border-[rgba(0,0,0,0.1)] bg-[rgba(0,0,0,0.02)] animate-in fade-in slide-in-from-left-2 duration-300`}>
                        <div className="flex items-center gap-4">
-                          <div className={`w-10 h-10 rounded-lg ${getFileIconBg(attachment.file)} flex items-center justify-center`}>
-                        {getFileIcon(attachment.file)}
+                          <div className={`w-10 h-10 rounded-lg ${attachment.file.type === 'application/pdf' ? 'bg-[rgba(0,0,0,0.08)]' : 'bg-[rgba(0,0,0,0.08)]'} flex items-center justify-center`}>
+                        {attachment.file.type === 'application/pdf' ? (
+                          <FileText className="w-5 h-5 text-[#86868B]" />
+                        ) : (
+                          <ImageIcon className="w-5 h-5 text-[#86868B]" />
+                        )}
                      </div>
                      
                      <div className="flex flex-col">
-                             <span className="font-medium text-base text-foreground">
+                             <span className="font-medium text-base text-[#1D1D1F]">
                            {attachment.file.name}
                         </span>
-                             <span className="font-normal text-sm text-muted-foreground">
+                             <span className="font-normal text-sm text-[#86868B]">
                            {formatFileSize(attachment.file.size)}
                         </span>
                      </div>
@@ -533,10 +574,10 @@ export default function Step3Lampiran() {
                        <div className="flex items-center gap-2">
                      {attachment.preview && (
                        <button
-                              className="w-9 h-9 flex items-center justify-center rounded-md border border-transparent hover:border-primary/30 hover:bg-primary/10 transition-all"
+                              className="w-9 h-9 flex items-center justify-center rounded-md border border-transparent hover:border-[rgba(0,0,0,0.15)] hover:bg-[rgba(0,0,0,0.04)] transition-all"
                          onClick={() => window.open(attachment.preview, '_blank')}
                        >
-                               <Eye className="w-5 h-5 text-primary" />
+                               <Eye className="w-5 h-5 text-[#86868B]" />
                        </button>
                      )}
 
