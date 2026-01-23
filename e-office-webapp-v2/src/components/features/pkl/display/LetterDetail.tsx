@@ -24,7 +24,7 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
   const searchParams = useSearchParams();
   const idFromQuery = searchParams.get('id');
   const letterId = idProp || idFromQuery || null;
-  const { letter, isLoading, error } = useLetter(letterId);
+  const { letter, isLoading, error, isForbidden } = useLetter(letterId);
   const [expandedAttachments, setExpandedAttachments] = useState<Record<string, boolean>>({});
 
   const DetailRow = ({ label, value }: { label: string, value: string | null | undefined }) => (
@@ -132,6 +132,23 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
         <div className="text-center">
           <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">Memuat data surat...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isForbidden) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-md px-4">
+          <div className="mb-4">
+            <FileText className="w-12 h-12 text-destructive mx-auto mb-3" />
+            <h2 className="text-lg font-semibold text-foreground mb-2">Akses Ditolak</h2>
+            <p className="text-destructive mb-3 text-sm">{error || 'Anda tidak berhak mengakses surat ini'}</p>
+          </div>
+          <p className="text-muted-foreground text-xs">
+            Hanya pembuat surat, assignee, atau user yang pernah approve/reject/revisi surat ini yang dapat mengakses.
+          </p>
         </div>
       </div>
     );

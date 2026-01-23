@@ -4,6 +4,7 @@ import { Elysia, t } from "elysia";
 
 export default new Elysia()
 	.use(authGuardPlugin)
+	// GET /all - Public untuk authenticated users (data tidak sensitif, diperlukan untuk form)
 	.get(
 		"/all",
 		async () => {

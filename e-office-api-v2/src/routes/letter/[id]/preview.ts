@@ -19,14 +19,9 @@ export default new Elysia()
 				throw new Error("Surat tidak ditemukan");
 			}
 
-			const isCreator = letter.createdById === user.id;
-			const userRoles = await Prisma.userRole.findMany({
-				where: { userId: user.id },
-				include: { role: true },
-			});
-			const userRoleNames = userRoles.map((ur) => ur.role.name);
+		const isCreator = letter.createdById === user.id;
 
-			const hasApproved = await Prisma.letterStepHistory.findFirst({
+		const hasApproved = await Prisma.letterStepHistory.findFirst({
 				where: {
 					letterId: letter.id,
 					actorUserId: user.id,

@@ -4,6 +4,7 @@ import { Elysia, t } from "elysia";
 
 export default new Elysia()
 	.use(authGuardPlugin)
+	// GET endpoints - Public untuk authenticated users (diperlukan untuk form pemilihan dosen)
 	.get(
 		"/by-prodi/:prodiId",
 		async ({ params: { prodiId } }) => {
