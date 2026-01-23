@@ -5,3 +5,4 @@ export * from './useKoordinatorKaprodi';
 export * from './useDepartemen';
 export * from './useLetter';
 export * from './useMyLetters';
+export * from './useApprovalQueue';

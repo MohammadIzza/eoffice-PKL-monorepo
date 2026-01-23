@@ -350,6 +350,7 @@ export const letterService = {
 		reason: string;
 		timestamp: string;
 		previewUrl: string;
+		htmlContent?: string;
 		expiresIn: number;
 	}> => {
 		try {

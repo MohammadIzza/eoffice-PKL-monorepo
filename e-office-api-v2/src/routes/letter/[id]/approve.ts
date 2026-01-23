@@ -68,15 +68,22 @@ export default new Elysia()
 				});
 			}
 
-			const nextStep =
-				currentStep < PKL_WORKFLOW_STEPS.UPA ? currentStep + 1 : null;
+		const nextStep =
+			currentStep < PKL_WORKFLOW_STEPS.UPA ? currentStep + 1 : null;
 
-			await Prisma.letterInstance.update({
-				where: { id },
-				data: {
-					currentStep: nextStep,
-				},
-			});
+		// Jika step terakhir (UPA), set status ke COMPLETED
+		const updateData: any = {
+			currentStep: nextStep,
+		};
+
+		if (currentStep === PKL_WORKFLOW_STEPS.UPA) {
+			updateData.status = "COMPLETED";
+		}
+
+		await Prisma.letterInstance.update({
+			where: { id },
+			data: updateData,
+		});
 
 			await Prisma.letterStepHistory.create({
 				data: {
