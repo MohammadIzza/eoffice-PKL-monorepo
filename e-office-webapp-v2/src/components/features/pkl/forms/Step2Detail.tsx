@@ -82,31 +82,28 @@ export default function Step2Detail() {
     router.push("/dashboard/pengajuan/pkl/lampiran");
   };
 
-  const cardClass = "w-[945px] bg-white rounded-[12px] flex flex-col p-[32px] pt-[24px] shadow-sm mb-[32px]";
-  const headerClass = "text-[14px] font-bold text-[#111418] uppercase tracking-wide mb-[24px] font-roboto"; 
-  const labelClass = "text-[14px] font-medium text-[#111418] mb-[6px] block font-inter";
+  // Standarisasi styling dengan shadcn
+  const cardClass = "w-full max-w-5xl bg-card rounded-xl border shadow-sm flex flex-col p-8 pt-6 mb-8";
+  const headerClass = "text-sm font-bold text-foreground uppercase tracking-wide mb-6"; 
+  const labelClass = "text-sm font-medium text-foreground mb-1.5 block";
   
-  const inputBase = "h-[42px] px-[12px] rounded-[8px] text-sm focus-visible:ring-1 w-full";
-  const readOnlyInput = `${inputBase} bg-[#F6F7F8] border border-[#F6F7F8] text-[#6B7280] cursor-default`;
-  const editInput = `${inputBase} bg-white border border-[#D1D5D8] text-[#111418] placeholder:text-gray-400`;
-  const btnKembali = "h-[44px] min-w-[84px] px-[24px] rounded-[8px] border border-[#D1D5DB] bg-white text-[#374151] font-bold text-[14px] hover:bg-gray-50";
-  const btnLanjut = "h-[44px] min-w-[84px] px-[24px] rounded-[8px] bg-[#D1D5DB] text-white font-bold text-[14px] hover:bg-gray-400";
+  const readOnlyInput = "h-10 bg-muted border-muted text-muted-foreground cursor-default";
+  const editInput = "h-10 bg-background border-input text-foreground placeholder:text-muted-foreground";
 
   return (
-    <div className="w-full max-w-[1117px] mx-auto flex flex-col items-center gap-[32px] pt-[48px] pb-[122px] px-[16px]">
-      
+    <div className="w-full max-w-7xl mx-auto flex flex-col items-center gap-8 pt-12 pb-32 px-4">
       {/* HEADER & STEPPER */}
-      <div className="w-full max-w-[1085px] flex flex-col gap-[8px] items-start">
-         <h1 className="text-[36px] font-black tracking-[-1.19px] text-[#111418] font-inter">Detail Pengajuan</h1>
-         <p className="text-[16px] text-[#6B7280] font-inter">Lengkapi detail utama dari surat yang akan diajukan.</p>
+      <div className="w-full max-w-5xl flex flex-col gap-2 items-start">
+         <h1 className="text-4xl font-black tracking-tight text-foreground">Detail Pengajuan</h1>
+         <p className="text-base text-muted-foreground">Lengkapi detail utama dari surat yang akan diajukan.</p>
       </div>
-      <div className="w-full max-w-[1085px]"><Stepper currentStep={2} /></div>
+      <div className="w-full max-w-5xl"><Stepper currentStep={2} /></div>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="w-full flex flex-col items-center">
           <div className={cardClass}>
             <div className={headerClass}>KEPERLUAN</div>
-            <div className="grid grid-cols-2 gap-x-[24px] gap-y-[20px]">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
               <FormField control={form.control} name="jenisSurat" render={({ field }) => (
                 <FormItem><FormLabel className={labelClass}>Jenis Surat</FormLabel><FormControl><Input {...field} readOnly className={readOnlyInput} /></FormControl><FormMessage /></FormItem>
               )} />
@@ -129,7 +126,7 @@ export default function Step2Detail() {
           </div>
           <div className={cardClass}>
             <div className={headerClass}>DATA LANJUTAN</div>
-            <div className="grid grid-cols-2 gap-x-[24px] gap-y-[20px]">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
               <FormField control={form.control} name="judul" render={({ field }) => (
                 <FormItem className="col-span-2"><FormLabel className={labelClass}>Judul</FormLabel><FormControl><Input {...field} className={editInput} placeholder="Tuliskan judul" /></FormControl><FormMessage /></FormItem>
               )} />
@@ -162,7 +159,7 @@ export default function Step2Detail() {
                   </Select>
                   <FormMessage />
                   {selectedDosen && selectedDosen.nip && (
-                    <p className="text-xs text-gray-500 mt-1">NIP: {selectedDosen.nip}</p>
+                    <p className="text-xs text-muted-foreground mt-1">NIP: {selectedDosen.nip}</p>
                   )}
                 </FormItem>
               )} />
@@ -217,9 +214,13 @@ export default function Step2Detail() {
               )} />
             </div>
           </div>
-          <div className="w-full max-w-[1085px] flex justify-between items-center mt-2">
-            <Button type="button" variant="outline" onClick={() => router.back()} className={btnKembali}>Kembali</Button>
-            <Button type="submit" className={btnLanjut}>Lanjut</Button>
+          <div className="w-full max-w-5xl flex justify-between items-center mt-2">
+            <Button type="button" variant="outline" size="lg" onClick={() => router.back()} className="min-w-[84px]">
+              Kembali
+            </Button>
+            <Button type="submit" size="lg" className="min-w-[84px]">
+              Lanjut
+            </Button>
           </div>
 
         </form>

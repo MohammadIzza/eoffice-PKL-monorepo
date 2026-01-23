@@ -25,11 +25,12 @@ export default function Step3Lampiran() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tambahanInputRef = useRef<HTMLInputElement>(null);
 
-  const cardClass = "w-full bg-white rounded-[12px] border border-[#E5E7EB] p-[24px] flex flex-col items-center gap-[24px]";
-  const uploadAreaClass = `w-full max-w-[846px] h-[156px] flex flex-col items-center justify-center border-[2px] border-dashed rounded-[8px] bg-[#FAFAFA] cursor-pointer hover:bg-gray-50 transition-colors ${
-    dragActive ? 'border-[#137FEC] bg-blue-50' : 'border-[#E5E7EB]'
+  // Standarisasi styling dengan shadcn
+  const cardClass = "w-full bg-card rounded-xl border shadow-sm p-6 flex flex-col items-center gap-6";
+  const uploadAreaClass = `w-full max-w-4xl h-40 flex flex-col items-center justify-center border-2 border-dashed rounded-lg bg-muted/50 cursor-pointer hover:bg-muted transition-colors ${
+    dragActive ? 'border-primary bg-primary/5' : 'border-border'
   }`;
-  const fileItemClass = "w-full max-w-[846px] h-[70px] flex items-center justify-between p-[12px] border border-[#E5E7EB] rounded-[8px] bg-white";
+  const fileItemClass = "w-full max-w-4xl h-18 flex items-center justify-between p-3 border rounded-lg bg-card";
 
   const validateFile = (file: File): string | null => {
     if (file.size > MAX_FILE_SIZE) {
@@ -86,43 +87,43 @@ export default function Step3Lampiran() {
 
   const getFileIcon = (file: File) => {
     if (file.type === 'application/pdf') {
-      return <FileText className="w-[20px] h-[20px] text-[#EF4444]" />;
+      return <FileText className="w-5 h-5 text-destructive" />;
     }
-    return <ImageIcon className="w-[20px] h-[20px] text-[#3B82F6]" />;
+    return <ImageIcon className="w-5 h-5 text-primary" />;
   };
 
   const getFileIconBg = (file: File) => {
     if (file.type === 'application/pdf') {
-      return 'bg-[#FEE2E2]';
+      return 'bg-destructive/10';
     }
-    return 'bg-[#DBEAFE]';
+    return 'bg-primary/10';
   };
 
   const utamaFiles = attachments.filter(att => att.category === 'file' || att.category === 'foto');
   const tambahanFiles = attachments.filter(att => att.category === 'tambahan');
 
   return (
-    <div className="w-full max-w-[1085px] mx-auto flex flex-col items-center gap-[28px] pt-[48px] pb-[122px] px-[16px]">
-      <div className="w-full flex flex-col gap-[8px] items-start">
-         <h1 className="text-[30px] leading-[37.5px] font-black tracking-[-0.99px] text-[#111418] font-inter">
+    <div className="w-full max-w-7xl mx-auto flex flex-col items-center gap-7 pt-12 pb-32 px-4">
+      <div className="w-full flex flex-col gap-2 items-start">
+         <h1 className="text-3xl font-black tracking-tight text-foreground">
             Lampiran
          </h1>
-         <p className="text-[16px] leading-[24px] font-normal text-[#617589] font-inter">
+         <p className="text-base font-normal text-muted-foreground">
             Lampirkan dokumen pendukung yang diperlukan.
          </p>
       </div>
-      <div className="w-full py-[1px] px-[27px]">
+      <div className="w-full py-0.5 px-7">
          <Stepper currentStep={3} />
       </div>
 
       {error && (
-        <div className="w-full max-w-[846px] bg-red-50 border border-red-200 rounded-[8px] p-4">
+        <div className="w-full max-w-4xl bg-destructive/10 border border-destructive/20 rounded-lg p-4">
           <div className="flex items-start gap-2">
-            <X className="w-5 h-5 text-red-600 mt-0.5" />
+            <X className="w-5 h-5 text-destructive mt-0.5" />
             <div className="flex-1">
-              <p className="text-sm text-red-800 whitespace-pre-line">{error}</p>
+              <p className="text-sm text-destructive whitespace-pre-line">{error}</p>
             </div>
-            <button onClick={() => setError(null)} className="text-red-600 hover:text-red-800">
+            <button onClick={() => setError(null)} className="text-destructive hover:text-destructive/80">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -130,11 +131,11 @@ export default function Step3Lampiran() {
       )}
 
       <div className={cardClass}>
-        <div className="w-full max-w-[846px] flex flex-col gap-[4px]">
-           <h3 className="font-inter font-semibold text-[18px] leading-[22.5px] text-[#111418]">
-              Lampiran Utama<span className="text-[#EF4444]">*</span>
+        <div className="w-full max-w-4xl flex flex-col gap-1">
+           <h3 className="font-semibold text-lg text-foreground">
+              Lampiran Utama<span className="text-destructive">*</span>
            </h3>
-           <p className="font-inter font-normal text-[14px] leading-[21px] text-[#617589]">
+           <p className="font-normal text-sm text-muted-foreground">
               Wajib. Unggah minimal 1 dokumen pendukung utama. Format: PDF, JPG, PNG. Maks: 5MB/file.
            </p>
         </div>
@@ -156,17 +157,17 @@ export default function Step3Lampiran() {
           onDrop={(e) => handleDrop(e, 'file')}
           onClick={() => fileInputRef.current?.click()}
         >
-           <div className="w-[48px] h-[48px] rounded-full bg-[#137FEC1A] flex items-center justify-center mb-[12px]">
-              <UploadCloud className="w-[24px] h-[24px] text-[#137FEC]" />
+           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+              <UploadCloud className="w-6 h-6 text-primary" />
            </div>
            
            <div className="text-center">
-              <span className="font-inter font-semibold text-[16px] leading-[24px] text-[#111418]">
-                Seret & lepas atau <span className="text-[#137FEC]">pilih file</span>
+              <span className="font-semibold text-base text-foreground">
+                Seret & lepas atau <span className="text-primary">pilih file</span>
               </span>
            </div>
            
-           <span className="font-inter font-normal text-[12px] leading-[16px] text-[#617589] mt-[4px]">
+           <span className="font-normal text-xs text-muted-foreground mt-1">
               untuk diunggah
            </span>
         </div>
@@ -177,15 +178,15 @@ export default function Step3Lampiran() {
             return (
               <div key={actualIndex} className={fileItemClass}>
                 <div className="flex items-center gap-[16px]">
-                   <div className={`w-[40px] h-[40px] rounded-[8px] ${getFileIconBg(attachment.file)} flex items-center justify-center`}>
+                   <div className={`w-10 h-10 rounded-lg ${getFileIconBg(attachment.file)} flex items-center justify-center`}>
                       {getFileIcon(attachment.file)}
                    </div>
                    
                    <div className="flex flex-col">
-                      <span className="font-inter font-medium text-[16px] leading-[24px] text-[#111418]">
+                      <span className="font-medium text-base text-foreground">
                          {attachment.file.name}
                       </span>
-                      <span className="font-inter font-normal text-[14px] leading-[20px] text-[#617589]">
+                      <span className="font-normal text-sm text-muted-foreground">
                          {formatFileSize(attachment.file.size)}
                       </span>
                    </div>
@@ -195,7 +196,7 @@ export default function Step3Lampiran() {
                      value={attachment.category}
                      onValueChange={(value) => updateAttachmentCategory(actualIndex, value as 'file' | 'foto')}
                    >
-                      <SelectTrigger className="w-[128px] h-[36px] rounded-[6px] border border-[#E5E7EB] text-[14px]">
+                      <SelectTrigger className="w-32 h-9 rounded-md text-sm">
                          <SelectValue placeholder="Tipe" />
                       </SelectTrigger>
                       <SelectContent>
@@ -206,18 +207,18 @@ export default function Step3Lampiran() {
 
                    {attachment.preview && (
                      <button
-                       className="w-[36px] h-[36px] flex items-center justify-center rounded-[6px] border border-transparent hover:border-[#E5E7EB] hover:bg-gray-50 transition-all"
+                       className="w-9 h-9 flex items-center justify-center rounded-md border border-transparent hover:border-border hover:bg-muted transition-all"
                        onClick={() => window.open(attachment.preview, '_blank')}
                      >
-                        <Eye className="w-[20px] h-[20px] text-[#111418]" />
+                        <Eye className="w-5 h-5 text-foreground" />
                      </button>
                    )}
 
                    <button
-                     className="w-[36px] h-[36px] flex items-center justify-center rounded-[6px] border border-transparent hover:border-[#FEE2E2] hover:bg-[#FEF2F2] transition-all"
+                     className="w-9 h-9 flex items-center justify-center rounded-md border border-transparent hover:border-destructive/20 hover:bg-destructive/10 transition-all"
                      onClick={() => removeAttachment(actualIndex)}
                    >
-                      <Trash2 className="w-[20px] h-[20px] text-[#EF4444]" />
+                      <Trash2 className="w-5 h-5 text-destructive" />
                    </button>
                 </div>
               </div>
@@ -253,56 +254,56 @@ export default function Step3Lampiran() {
           onDrop={(e) => handleDrop(e, 'tambahan')}
           onClick={() => tambahanInputRef.current?.click()}
         >
-           <div className="w-[48px] h-[48px] rounded-full bg-[#137FEC1A] flex items-center justify-center mb-[12px]">
-              <UploadCloud className="w-[24px] h-[24px] text-[#137FEC]" />
+           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+              <UploadCloud className="w-6 h-6 text-primary" />
            </div>
            
            <div className="text-center">
-              <span className="font-inter font-semibold text-[16px] leading-[24px] text-[#111418]">
-                Seret & lepas atau <span className="text-[#137FEC]">pilih file</span>
+              <span className="font-semibold text-base text-foreground">
+                Seret & lepas atau <span className="text-primary">pilih file</span>
               </span>
            </div>
            
-           <span className="font-inter font-normal text-[12px] leading-[16px] text-[#617589] mt-[4px]">
+           <span className="font-normal text-xs text-muted-foreground mt-1">
               untuk diunggah
            </span>
         </div>
 
         {tambahanFiles.length > 0 && (
-          <div className="w-full max-w-[846px] flex flex-col gap-[12px]">
+          <div className="w-full max-w-4xl flex flex-col gap-3">
             {tambahanFiles.map((attachment, index) => {
               const actualIndex = attachments.findIndex(att => att === attachment);
               return (
                 <div key={actualIndex} className={fileItemClass}>
-                  <div className="flex items-center gap-[16px]">
-                     <div className={`w-[40px] h-[40px] rounded-[8px] ${getFileIconBg(attachment.file)} flex items-center justify-center`}>
+                  <div className="flex items-center gap-4">
+                     <div className={`w-10 h-10 rounded-lg ${getFileIconBg(attachment.file)} flex items-center justify-center`}>
                         {getFileIcon(attachment.file)}
                      </div>
                      
                      <div className="flex flex-col">
-                        <span className="font-inter font-medium text-[16px] leading-[24px] text-[#111418]">
+                        <span className="font-medium text-base text-foreground">
                            {attachment.file.name}
                         </span>
-                        <span className="font-inter font-normal text-[14px] leading-[20px] text-[#617589]">
+                        <span className="font-normal text-sm text-muted-foreground">
                            {formatFileSize(attachment.file.size)}
                         </span>
                      </div>
                   </div>
-                  <div className="flex items-center gap-[8px]">
+                  <div className="flex items-center gap-2">
                      {attachment.preview && (
                        <button
-                         className="w-[36px] h-[36px] flex items-center justify-center rounded-[6px] border border-transparent hover:border-[#E5E7EB] hover:bg-gray-50 transition-all"
+                         className="w-9 h-9 flex items-center justify-center rounded-md border border-transparent hover:border-border hover:bg-muted transition-all"
                          onClick={() => window.open(attachment.preview, '_blank')}
                        >
-                          <Eye className="w-[20px] h-[20px] text-[#111418]" />
+                          <Eye className="w-5 h-5 text-foreground" />
                        </button>
                      )}
 
                      <button
-                       className="w-[36px] h-[36px] flex items-center justify-center rounded-[6px] border border-transparent hover:border-[#FEE2E2] hover:bg-[#FEF2F2] transition-all"
+                       className="w-9 h-9 flex items-center justify-center rounded-md border border-transparent hover:border-destructive/20 hover:bg-destructive/10 transition-all"
                        onClick={() => removeAttachment(actualIndex)}
                      >
-                        <Trash2 className="w-[20px] h-[20px] text-[#EF4444]" />
+                        <Trash2 className="w-5 h-5 text-destructive" />
                      </button>
                   </div>
                 </div>
@@ -312,16 +313,16 @@ export default function Step3Lampiran() {
         )}
       </div>
 
-      <div className="w-full max-w-[1085px] flex justify-between items-center mt-2">
+      <div className="w-full max-w-5xl flex justify-between items-center mt-2">
         <Button
           variant="outline"
-          className="h-11 px-6 border-gray-300 text-gray-700 font-bold hover:bg-gray-50 rounded-[8px]"
+          size="lg"
           onClick={() => router.back()}
         >
           Kembali
         </Button>
         <Button
-          className="h-11 px-6 bg-[#0079BD] text-white font-bold hover:bg-blue-700 cursor-pointer rounded-[8px]"
+          size="lg"
           onClick={() => {
             if (utamaFiles.length === 0) {
               setError('Minimal 1 lampiran utama wajib diunggah');

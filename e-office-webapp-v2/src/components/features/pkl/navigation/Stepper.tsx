@@ -13,10 +13,10 @@ export default function Stepper({ currentStep = 1 }: StepperProps) {
   const progressPercentage = ((currentStep - 1) / (steps.length - 1)) * 100;
 
   return (
-    <div className="w-full max-w-[1085px] mx-auto relative mb-8 select-none">
-      <div className="absolute top-[15px] left-[42.5px] right-[42.5px] h-[2px] bg-[#D1D5DB] z-0">
+    <div className="w-full max-w-5xl mx-auto relative mb-8 select-none">
+      <div className="absolute top-[15px] left-[42.5px] right-[42.5px] h-[2px] bg-muted z-0">
         <div 
-          className="h-full bg-[#137FEC] transition-all duration-500 ease-in-out"
+          className="h-full bg-primary transition-all duration-500 ease-in-out"
           style={{ width: `${progressPercentage}%` }} 
         />
       </div>
@@ -25,25 +25,25 @@ export default function Stepper({ currentStep = 1 }: StepperProps) {
           const isActive = step.id === currentStep;
           const isCompleted = step.id < currentStep;
 
-          let circleBg = "bg-[#D1D5DB]";
-          let circleText = "text-[#6B7280]"; 
-          let labelClass = "text-[#6B7280] font-medium";
+          let circleBg = "bg-muted";
+          let circleText = "text-muted-foreground"; 
+          let labelClass = "text-muted-foreground font-medium";
 
           if (isActive || isCompleted) {
-            circleBg = "bg-[#137FEC]";
-            circleText = "text-white";
-            labelClass = "text-[#137FEC] font-semibold";
+            circleBg = "bg-primary";
+            circleText = "text-primary-foreground";
+            labelClass = "text-primary font-semibold";
           }
 
           return (
             <div key={step.id} className="flex flex-col items-center w-[85px]">
-              <div className={`flex h-[32px] w-[32px] items-center justify-center rounded-full transition-colors duration-300 border-[2px] ${isActive || isCompleted ? 'border-[#137FEC]' : 'border-[#D1D5DB]'} ${circleBg} ${circleText}`}>
-                <span className="font-inter font-bold text-[15px] leading-[24px]">
+              <div className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors duration-300 border-2 ${isActive || isCompleted ? 'border-primary' : 'border-muted'} ${circleBg} ${circleText}`}>
+                <span className="font-bold text-[15px] leading-6">
                   {step.id}
                 </span>
               </div>
-              <div className="mt-[8px] flex justify-center w-max">
-                <span className={`text-center font-inter text-[14px] leading-[20px] whitespace-nowrap ${labelClass}`}>
+              <div className="mt-2 flex justify-center w-max">
+                <span className={`text-center text-sm leading-5 whitespace-nowrap ${labelClass}`}>
                   {step.label}
                 </span>
               </div>

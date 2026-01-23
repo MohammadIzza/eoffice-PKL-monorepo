@@ -28,11 +28,11 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
   const [expandedAttachments, setExpandedAttachments] = useState<Record<string, boolean>>({});
 
   const DetailRow = ({ label, value }: { label: string, value: string | null | undefined }) => (
-    <div className="flex justify-between items-start py-[12px] px-[24px] border-b border-[#F1F5F9] last:border-0 hover:bg-gray-50 transition-colors">
-      <div className="w-[35%] font-inter font-normal text-[14px] leading-[21px] text-[#64748B]">
+    <div className="flex justify-between items-start py-3 px-6 border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
+      <div className="w-[35%] font-normal text-sm text-muted-foreground">
         {label}
       </div>
-      <div className="w-[65%] font-inter font-medium text-[14px] leading-[21px] text-[#1E293B]">
+      <div className="w-[65%] font-medium text-sm text-foreground">
         {value || '-'}
       </div>
     </div>
@@ -94,24 +94,24 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
   }: { role: string, time: string, status: string, note?: string | null, isLast?: boolean }) => (
     <div className="flex w-full relative">
       {!isLast && (
-        <div className="absolute left-[5px] top-[18px] w-[2px] h-full bg-[#E2E8F0] -z-10" />
+        <div className="absolute left-[5px] top-[18px] w-[2px] h-full bg-border -z-10" />
       )}
-      <div className="flex gap-[16px] w-full pb-[32px]">
-        <div className="w-[12px] h-[12px] rounded-full bg-[#CBD5E1] mt-[6px] shrink-0 border-[2px] border-white ring-1 ring-[#E2E8F0]" />
-        <div className="flex flex-col gap-[4px]">
-           <span className="font-inter font-semibold text-[14px] text-[#0F172A]">{role}</span>
-           <div className="flex items-center gap-1 text-[#64748B] text-[12px]">
+      <div className="flex gap-4 w-full pb-8">
+        <div className="w-3 h-3 rounded-full bg-muted mt-1.5 shrink-0 border-2 border-background ring-1 ring-border" />
+        <div className="flex flex-col gap-1">
+           <span className="font-semibold text-sm text-foreground">{role}</span>
+           <div className="flex items-center gap-1 text-muted-foreground text-xs">
               <Clock className="w-3 h-3" />
               <span>{time}</span>
            </div>
            <div className="mt-1">
-             <span className="bg-[#F1F5F9] text-[#1E293B] px-2 py-1 rounded-[4px] text-[12px] font-medium border border-[#E2E8F0]">
+             <span className="bg-muted text-foreground px-2 py-1 rounded text-xs font-medium border border-border">
                {status}
              </span>
            </div>
            {note && (
-             <p className="text-[12px] text-[#64748B] mt-1">
-               Catatan: <span className="text-[#334155]">{note}</span>
+             <p className="text-xs text-muted-foreground mt-1">
+               Catatan: <span className="text-foreground">{note}</span>
              </p>
            )}
         </div>
@@ -128,10 +128,10 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-[#137FEC] mx-auto mb-4" />
-          <p className="text-gray-600">Memuat data surat...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Memuat data surat...</p>
         </div>
       </div>
     );
@@ -139,10 +139,10 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
 
   if (error || !letter) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 mb-4">{error || 'Surat tidak ditemukan'}</p>
-          <p className="text-gray-600 text-sm">Pastikan ID surat valid atau surat masih ada.</p>
+          <p className="text-destructive mb-4">{error || 'Surat tidak ditemukan'}</p>
+          <p className="text-muted-foreground text-sm">Pastikan ID surat valid atau surat masih ada.</p>
         </div>
       </div>
     );
@@ -153,19 +153,19 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
   const attachments = letter.attachments || [];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
-      <div className="w-full max-w-[1920px] mx-auto pt-[0px]">
-        <main className="p-[32px] bg-[#F8FAFC]">
-           <div className="flex items-center gap-2 text-[14px] mb-6">
-              <span className="text-[#64748B]">Persuratan</span>
-              <span className="text-[#CBD5E1]">/</span>
-              <span className="font-medium text-[#0F172A]">Detail Surat</span>
+    <div className="min-h-screen bg-background">
+      <div className="w-full max-w-7xl mx-auto pt-0">
+        <main className="p-8 bg-background">
+           <div className="flex items-center gap-2 text-sm mb-6">
+              <span className="text-muted-foreground">Persuratan</span>
+              <span className="text-border">/</span>
+              <span className="font-medium text-foreground">Detail Surat</span>
            </div>
-           <div className="flex flex-col xl:flex-row gap-[24px]">
-              <div className="flex-1 flex flex-col gap-[24px]">
-                 <div className="bg-white rounded-[8px] border border-[#E2E8F0] shadow-sm">
-                    <div className="px-6 py-4 border-b border-[#E2E8F0]">
-                       <h3 className="font-inter font-semibold text-[16px] text-[#0F172A]">Identitas Pengaju</h3>
+           <div className="flex flex-col xl:flex-row gap-6">
+              <div className="flex-1 flex flex-col gap-6">
+                 <div className="bg-card rounded-lg border shadow-sm">
+                    <div className="px-6 py-4 border-b border-border">
+                       <h3 className="font-semibold text-base text-foreground">Identitas Pengaju</h3>
                     </div>
                     <div>
                        <DetailRow label="Nama Lengkap" value={formValues.namaLengkap || letter.createdBy?.name} />
@@ -181,9 +181,9 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
                        <DetailRow label="SKS" value={formValues.sks} />
                     </div>
                  </div>
-                 <div className="bg-white rounded-[8px] border border-[#E2E8F0] shadow-sm">
-                    <div className="px-6 py-4 border-b border-[#E2E8F0]">
-                       <h3 className="font-inter font-semibold text-[16px] text-[#0F172A]">Detail Surat Pengajuan</h3>
+                 <div className="bg-card rounded-lg border shadow-sm">
+                    <div className="px-6 py-4 border-b border-border">
+                       <h3 className="font-semibold text-base text-foreground">Detail Surat Pengajuan</h3>
                     </div>
                     <div>
                        <DetailRow label="Jenis Surat" value={letter.letterType?.name || 'PKL'} />
@@ -203,8 +203,8 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
                     </div>
                  </div>
                  {attachments.length > 0 && (
-                   <div className="bg-white rounded-[8px] border border-[#E2E8F0] shadow-sm p-6">
-                      <h3 className="font-inter font-semibold text-[16px] text-[#0F172A] mb-6">Lampiran ({attachments.length})</h3>
+                   <div className="bg-card rounded-lg border shadow-sm p-6">
+                      <h3 className="font-semibold text-base text-foreground mb-6">Lampiran ({attachments.length})</h3>
                       {attachments.map((attachment) => {
                         const isOpen = expandedAttachments[attachment.id];
                         const fileExtension = attachment.filename?.split('.').pop()?.toLowerCase() || '';
@@ -213,12 +213,12 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
                         const downloadUrl = `${API_URL}/letter/${letterId}/attachments/${attachment.id}/download`;
 
                         return (
-                          <div key={attachment.id} className="w-full border-b border-[#E2E8F0] last:border-0 pb-6 mb-6">
+                          <div key={attachment.id} className="w-full border-b border-border last:border-0 pb-6 mb-6">
                             <div 
                               className="flex justify-between items-center cursor-pointer mb-4"
                               onClick={() => toggleAttachment(attachment.id)}
                             >
-                              <span className="font-inter font-bold text-[16px] text-[#0F172A]">
+                              <span className="font-bold text-base text-foreground">
                                 {attachment.originalName || attachment.filename}
                               </span>
                               <div className="flex items-center gap-2">
@@ -227,20 +227,20 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
                                   target="_blank" 
                                   rel="noopener noreferrer"
                                   onClick={(e) => e.stopPropagation()}
-                                  className="text-[#0079BD] hover:text-blue-700"
+                                  className="text-primary hover:text-primary/80"
                                 >
                                   <Download className="w-5 h-5" />
                                 </a>
                                 {isOpen ? (
-                                  <ChevronUp className="w-5 h-5 text-gray-400" />
+                                  <ChevronUp className="w-5 h-5 text-muted-foreground" />
                                 ) : (
-                                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
                                 )}
                               </div>
                             </div>
                             
                             {isOpen && (
-                              <div className="w-full h-[500px] bg-[#F1F5F9] rounded-[8px] flex items-center justify-center p-8 shadow-inner overflow-hidden">
+                              <div className="w-full h-[500px] bg-muted rounded-lg flex items-center justify-center p-8 shadow-inner overflow-hidden">
                                 {isImage && (
                                   <img 
                                     src={downloadUrl} 
@@ -256,14 +256,14 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
                                   />
                                 )}
                                 {!isImage && !isPdf && (
-                                  <div className="text-gray-500 text-center">
-                                    <File className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                                  <div className="text-muted-foreground text-center">
+                                    <File className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
                                     <p>Preview tidak tersedia untuk tipe file ini.</p>
                                     <a 
                                       href={downloadUrl} 
                                       target="_blank" 
                                       rel="noopener noreferrer"
-                                      className="text-[#0079BD] hover:underline mt-2 block"
+                                      className="text-primary hover:underline mt-2 block"
                                     >
                                       Unduh untuk melihat
                                     </a>
@@ -278,16 +278,16 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
                  )}
               </div>
               <div className="w-full xl:w-[400px]">
-                 <div className="bg-white rounded-[8px] border border-[#E2E8F0] shadow-sm sticky top-[80px]">
-                    <div className="px-6 py-4 border-b border-[#E2E8F0] flex items-center gap-2">
-                       <FileText className="w-4 h-4 text-[#64748B]" />
-                       <h3 className="font-inter font-semibold text-[16px] text-[#0F172A]">
+                 <div className="bg-card rounded-lg border shadow-sm sticky top-20">
+                    <div className="px-6 py-4 border-b border-border flex items-center gap-2">
+                       <FileText className="w-4 h-4 text-muted-foreground" />
+                       <h3 className="font-semibold text-base text-foreground">
                          Riwayat Surat ({stepHistory.length})
                        </h3>
                     </div>
                     <div className="p-6">
                        {stepHistory.length === 0 ? (
-                         <p className="text-sm text-gray-500 text-center">Belum ada riwayat</p>
+                         <p className="text-sm text-muted-foreground text-center">Belum ada riwayat</p>
                        ) : (
                          <div className="flex flex-col">
                             {stepHistory.map((history, index) => (

@@ -18,19 +18,19 @@ export default function Step4Review() {
   const [expandedAttachments, setExpandedAttachments] = useState<Record<number, boolean>>({});
 
   const ReviewRow = ({ label, value }: { label: string; value: string }) => (
-    <div className="w-full flex justify-between items-center py-[16px] px-[24px] border-b border-[#E5E7EB] last:border-b-0">
-      <div className="w-[30%] font-inter font-normal text-[14px] leading-[21px] text-[#4B5563]">
+    <div className="w-full flex justify-between items-center py-4 px-6 border-b border-border last:border-b-0">
+      <div className="w-[30%] font-normal text-sm text-muted-foreground">
         {label}
       </div>
-      <div className="w-[70%] font-inter font-medium text-[14px] leading-[20px] text-[#1F2937] text-right sm:text-left">
+      <div className="w-[70%] font-medium text-sm text-foreground text-right sm:text-left">
         {value || '-'}
       </div>
     </div>
   );
 
-  const cardBaseClass = "w-full bg-white rounded-[12px] border border-[#E5E7EB] overflow-hidden";
-  const headerSectionClass = "w-full px-[24px] py-[16px] border-b border-[#E5E7EB] bg-white";
-  const headerTitleClass = "font-inter font-semibold text-[18px] leading-[28px] text-[#111827]";
+  const cardBaseClass = "w-full bg-card rounded-xl border shadow-sm overflow-hidden";
+  const headerSectionClass = "w-full px-6 py-4 border-b border-border bg-card";
+  const headerTitleClass = "font-semibold text-lg text-foreground";
 
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return bytes + ' B';
@@ -40,9 +40,9 @@ export default function Step4Review() {
 
   const getFileIcon = (file: File) => {
     if (file.type === 'application/pdf') {
-      return <FileText className="w-[20px] h-[20px] text-[#EF4444]" />;
+      return <FileText className="w-5 h-5 text-destructive" />;
     }
-    return <ImageIcon className="w-[20px] h-[20px] text-[#3B82F6]" />;
+    return <ImageIcon className="w-5 h-5 text-primary" />;
   };
 
   const toggleAttachment = (index: number) => {
@@ -115,26 +115,26 @@ export default function Step4Review() {
   const tambahanFiles = attachments.filter(att => att.category === 'tambahan');
 
   return (
-    <div className="w-full max-w-[1117px] mx-auto flex flex-col items-center gap-[30px] pt-[48px] pb-[122px] px-[16px]">
-      <div className="w-full max-w-[1085px] flex flex-col gap-[8px] items-start">
-         <h1 className="text-[30px] leading-[37.5px] font-black tracking-[-0.99px] text-[#111418] font-inter">
+    <div className="w-full max-w-7xl mx-auto flex flex-col items-center gap-8 pt-12 pb-32 px-4">
+      <div className="w-full max-w-5xl flex flex-col gap-2 items-start">
+         <h1 className="text-3xl font-black tracking-tight text-foreground">
             Review Surat
          </h1>
-         <p className="text-[16px] leading-[24px] font-normal text-[#4B5563] font-inter">
+         <p className="text-base font-normal text-muted-foreground">
             Mohon periksa kembali seluruh data yang telah Anda masukkan sebelum mengajukan surat.
          </p>
       </div>
-      <div className="w-full max-w-[1085px]">
+      <div className="w-full max-w-5xl">
          <Stepper currentStep={4} />
       </div>
 
       {error && (
-        <div className="w-full max-w-[1085px] bg-red-50 border border-red-200 rounded-[8px] p-4">
-          <p className="text-sm text-red-800">{error}</p>
+        <div className="w-full max-w-5xl bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+          <p className="text-sm text-destructive">{error}</p>
         </div>
       )}
 
-      <div className="w-full max-w-[1085px] flex flex-col gap-[20px]">
+      <div className="w-full max-w-5xl flex flex-col gap-5">
         <div className={cardBaseClass}>
           <div className={headerSectionClass}>
             <h3 className={headerTitleClass}>Identitas Pengaju</h3>
@@ -170,48 +170,48 @@ export default function Step4Review() {
             <ReviewRow label="NIP Kaprodi" value={formData.nipKaprodi || '-'} />
           </div>
         </div>
-        <div className="w-full bg-[#F0FDF4] border border-[#BBF7D0] rounded-[12px] p-[24px] flex flex-col gap-[14px]">
-           <h3 className="font-inter font-semibold text-[18px] leading-[28px] text-[#14532D]">
+        <div className="w-full bg-success/10 border border-success/20 rounded-xl p-6 flex flex-col gap-3.5">
+           <h3 className="font-semibold text-lg text-success">
              Checklist Kesiapan
            </h3>
-           <div className="flex flex-col gap-[12px]">
-             <div className="flex items-center gap-[12px]">
-                <CheckCircle2 className={`w-[20px] h-[20px] ${formData.namaLengkap && formData.nim && formData.email ? 'text-[#16A34A]' : 'text-gray-400'}`} />
-                <span className="font-inter font-medium text-[14px] text-[#14532D]">Data inti lengkap</span>
+           <div className="flex flex-col gap-3">
+             <div className="flex items-center gap-3">
+                <CheckCircle2 className={`w-5 h-5 ${formData.namaLengkap && formData.nim && formData.email ? 'text-success' : 'text-muted-foreground'}`} />
+                <span className="font-medium text-sm text-success">Data inti lengkap</span>
              </div>
-             <div className="flex items-center gap-[12px]">
-                <CheckCircle2 className={`w-[20px] h-[20px] ${utamaFiles.length > 0 ? 'text-[#16A34A]' : 'text-gray-400'}`} />
-                <span className="font-inter font-medium text-[14px] text-[#14532D]">Lampiran utama ada</span>
+             <div className="flex items-center gap-3">
+                <CheckCircle2 className={`w-5 h-5 ${utamaFiles.length > 0 ? 'text-success' : 'text-muted-foreground'}`} />
+                <span className="font-medium text-sm text-success">Lampiran utama ada</span>
              </div>
            </div>
         </div>
-        <div className="w-full bg-white rounded-[12px] p-[32px] border border-[#E5E7EB] shadow-sm flex flex-col gap-[24px]">
-           <h3 className="font-inter font-bold text-[20px] leading-[28px] text-[#0F172A]">
+        <div className="w-full bg-card rounded-xl p-8 border shadow-sm flex flex-col gap-6">
+           <h3 className="font-bold text-xl text-foreground">
              Lampiran ({attachments.length})
            </h3>
            {attachments.length === 0 ? (
-             <p className="text-gray-500 text-sm">Tidak ada lampiran</p>
+             <p className="text-muted-foreground text-sm">Tidak ada lampiran</p>
            ) : (
              <div className="w-full flex flex-col gap-4">
                {attachments.map((attachment, index) => (
                  <div key={index} className="w-full flex flex-col">
                    <div
-                     className="flex justify-between items-center py-2 border-b border-[#E5E7EB] mb-4 cursor-pointer"
+                     className="flex justify-between items-center py-2 border-b border-border mb-4 cursor-pointer"
                      onClick={() => toggleAttachment(index)}
                    >
                      <div className="flex items-center gap-2">
                        {getFileIcon(attachment.file)}
-                       <span className="font-inter font-bold text-[16px] text-[#0F172A]">
+                       <span className="font-bold text-base text-foreground">
                          {attachment.file.name}
                        </span>
-                       <span className="text-sm text-gray-500">
+                       <span className="text-sm text-muted-foreground">
                          ({formatFileSize(attachment.file.size)})
                        </span>
                      </div>
-                     <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${expandedAttachments[index] ? 'rotate-180' : ''}`} />
+                     <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${expandedAttachments[index] ? 'rotate-180' : ''}`} />
                    </div>
                    {expandedAttachments[index] && attachment.preview && (
-                     <div className="w-full h-auto bg-[#6FA586] rounded-[8px] p-8 flex items-center justify-center overflow-hidden">
+                     <div className="w-full h-auto bg-muted rounded-lg p-8 flex items-center justify-center overflow-hidden">
                        <img
                          src={attachment.preview}
                          alt={attachment.file.name}
@@ -225,17 +225,17 @@ export default function Step4Review() {
            )}
         </div>
       </div>
-        <div className="w-full max-w-[1085px] flex justify-between items-center mt-2">
+        <div className="w-full max-w-5xl flex justify-between items-center mt-2">
             <Button
               variant="outline"
-              className="h-11 px-6 border-gray-300 text-gray-700 font-bold hover:bg-gray-50 rounded-[8px]"
+              size="lg"
               onClick={() => router.back()}
               disabled={isSubmitting}
             >
             Kembali
             </Button>
             <Button
-              className="h-11 px-6 bg-[#0079BD] text-white font-bold hover:bg-blue-700 rounded-[8px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              size="lg"
               onClick={handleSubmit}
               disabled={isSubmitting}
             >

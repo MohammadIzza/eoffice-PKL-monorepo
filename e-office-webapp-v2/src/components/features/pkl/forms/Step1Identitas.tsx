@@ -75,27 +75,24 @@ export default function Step1Identitas() {
     router.push("/dashboard/pengajuan/pkl/detail-pengajuan");
   };
 
-  const inputBaseClass = "h-[42px] px-[12px] py-[8px] rounded-[8px] text-sm shadow-none focus-visible:ring-1 transition-all";
-  const readOnlyClass = `${inputBaseClass} bg-[#F6F7F8] border border-[#F6F7F8] text-[#111418] cursor-default`;
-  const editableClass = `${inputBaseClass} bg-white border border-[#D1D5D8] text-[#111418] placeholder:text-gray-400`;
-  const labelClass = "text-[14px] font-medium leading-[20px] text-[#111418] font-inter mb-[6px] block";
-  
-  const btnKembali = "h-[44px] min-w-[84px] px-[24px] rounded-[8px] border border-[#D1D5DB] bg-white text-[#374151] font-bold text-[14px] hover:bg-gray-50";
-  const btnLanjut = "h-[44px] min-w-[84px] px-[24px] rounded-[8px] bg-[#D1D5DB] text-white font-bold text-[14px] hover:bg-gray-400";
+  // Standarisasi styling dengan shadcn
+  const readOnlyClass = "h-10 bg-muted border-muted text-foreground cursor-default";
+  const editableClass = "h-10 bg-background border-input text-foreground placeholder:text-muted-foreground";
+  const labelClass = "text-sm font-medium text-foreground mb-1.5";
 
   return (
-    <div className="w-full max-w-[1117px] mx-auto flex flex-col items-center gap-[32px] pt-[48px] pb-[122px] px-[16px]">
-      <div className="w-full max-w-[1073px] flex flex-col gap-[8px] items-start">
-        <h1 className="text-[36px] font-black tracking-[-1.19px] text-[#111418] font-inter">Identitas Pemohon</h1>
-        <p className="text-[16px] text-[#6B7280] font-inter">Data berikut diisi secara otomatis berdasarkan data Anda. Mohon periksa kembali.</p>
+    <div className="w-full max-w-7xl mx-auto flex flex-col items-center gap-8 pt-12 pb-32 px-4">
+      <div className="w-full max-w-5xl flex flex-col gap-2 items-start">
+        <h1 className="text-4xl font-black tracking-tight text-foreground">Identitas Pemohon</h1>
+        <p className="text-base text-muted-foreground">Data berikut diisi secara otomatis berdasarkan data Anda. Mohon periksa kembali.</p>
       </div>
-      <div className="w-full max-w-[1073px]"><Stepper currentStep={1} /></div>
+      <div className="w-full max-w-5xl"><Stepper currentStep={1} /></div>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="w-full flex flex-col items-center gap-10">
-          <Card className="w-full max-w-[1073px] bg-white rounded-xl border-none shadow-sm">
-            <CardContent className="p-[44px] px-[56px]">
-              <div className="grid grid-cols-2 gap-x-[24px] gap-y-[24px]">
+          <Card className="w-full max-w-5xl bg-card border shadow-sm">
+            <CardContent className="p-11 px-14">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-6">
                 <FormField control={form.control} name="namaLengkap" render={({ field }) => (
                   <FormItem><FormLabel className={labelClass}>Nama Lengkap</FormLabel><FormControl><Input {...field} readOnly className={readOnlyClass} /></FormControl><FormMessage /></FormItem>
                 )} />
@@ -136,7 +133,7 @@ export default function Step1Identitas() {
                               ref={field.ref}
                             />
                           </FormControl>
-                          <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         </div>
                         <FormMessage />
                       </FormItem>
@@ -206,9 +203,13 @@ export default function Step1Identitas() {
             </CardContent>
           </Card>
 
-          <div className="w-full max-w-[1073px] flex justify-between items-center">
-            <Button type="button" variant="outline" className={btnKembali}>Kembali</Button>
-            <Button type="submit" className={btnLanjut}>Lanjut</Button>
+          <div className="w-full max-w-5xl flex justify-between items-center">
+            <Button type="button" variant="outline" size="lg" className="min-w-[84px]">
+              Kembali
+            </Button>
+            <Button type="submit" size="lg" className="min-w-[84px]">
+              Lanjut
+            </Button>
           </div>
 
         </form>
