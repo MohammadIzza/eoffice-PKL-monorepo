@@ -83,27 +83,27 @@ export default function Step2Detail() {
   };
 
   // Standarisasi styling dengan shadcn
-  const cardClass = "w-full max-w-5xl bg-card rounded-xl border shadow-sm flex flex-col p-8 pt-6 mb-8";
-  const headerClass = "text-sm font-bold text-foreground uppercase tracking-wide mb-6"; 
-  const labelClass = "text-sm font-medium text-foreground mb-1.5 block";
+  const cardClass = "w-full max-w-5xl bg-card rounded-xl border shadow-sm flex flex-col p-6";
+  const headerClass = "text-xs font-bold text-foreground uppercase tracking-wide mb-4"; 
+  const labelClass = "text-xs font-medium text-foreground mb-1.5 block";
   
-  const readOnlyInput = "h-10 bg-muted border-muted text-muted-foreground cursor-default";
-  const editInput = "h-10 bg-background border-input text-foreground placeholder:text-muted-foreground";
+  const readOnlyInput = "h-9 bg-muted border-muted text-muted-foreground cursor-default text-sm";
+  const editInput = "h-9 bg-background border-input text-foreground placeholder:text-muted-foreground text-sm";
 
   return (
-    <div className="w-full max-w-7xl mx-auto flex flex-col items-center gap-8 pt-12 pb-32 px-4">
+    <div className="w-full max-w-7xl mx-auto flex flex-col items-center gap-6 pt-8 pb-20 px-4">
       {/* HEADER & STEPPER */}
-      <div className="w-full max-w-5xl flex flex-col gap-2 items-start">
-         <h1 className="text-4xl font-black tracking-tight text-foreground">Detail Pengajuan</h1>
-         <p className="text-base text-muted-foreground">Lengkapi detail utama dari surat yang akan diajukan.</p>
+      <div className="w-full max-w-5xl flex flex-col gap-1.5 items-start">
+         <h1 className="text-2xl font-bold tracking-tight text-foreground">Detail Pengajuan</h1>
+         <p className="text-sm text-muted-foreground">Lengkapi detail utama dari surat yang akan diajukan.</p>
       </div>
       <div className="w-full max-w-5xl"><Stepper currentStep={2} /></div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="w-full flex flex-col items-center">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="w-full flex flex-col items-center gap-6">
           <div className={cardClass}>
             <div className={headerClass}>KEPERLUAN</div>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-4">
               <FormField control={form.control} name="jenisSurat" render={({ field }) => (
                 <FormItem><FormLabel className={labelClass}>Jenis Surat</FormLabel><FormControl><Input {...field} readOnly className={readOnlyInput} /></FormControl><FormMessage /></FormItem>
               )} />
@@ -126,7 +126,7 @@ export default function Step2Detail() {
           </div>
           <div className={cardClass}>
             <div className={headerClass}>DATA LANJUTAN</div>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-4">
               <FormField control={form.control} name="judul" render={({ field }) => (
                 <FormItem className="col-span-2"><FormLabel className={labelClass}>Judul</FormLabel><FormControl><Input {...field} className={editInput} placeholder="Tuliskan judul" /></FormControl><FormMessage /></FormItem>
               )} />
@@ -214,11 +214,11 @@ export default function Step2Detail() {
               )} />
             </div>
           </div>
-          <div className="w-full max-w-5xl flex justify-between items-center mt-2">
-            <Button type="button" variant="outline" size="lg" onClick={() => router.back()} className="min-w-[84px]">
+          <div className="w-full max-w-5xl flex justify-between items-center">
+            <Button type="button" variant="outline" size="default" onClick={() => router.back()} className="min-w-[84px]">
               Kembali
             </Button>
-            <Button type="submit" size="lg" className="min-w-[84px]">
+            <Button type="submit" size="default" className="min-w-[84px]">
               Lanjut
             </Button>
           </div>

@@ -30,7 +30,10 @@ export const usePKLFormStore = create<PKLFormState>()(
         formData: { ...state.formData, ...data } 
       })),
       addAttachment: (file, category) => {
-        const preview = file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined;
+        // Create preview for images and PDFs
+        const preview = file.type.startsWith('image/') || file.type === 'application/pdf' 
+          ? URL.createObjectURL(file) 
+          : undefined;
         set((state) => ({
           attachments: [...state.attachments, { file, category, preview }]
         }));

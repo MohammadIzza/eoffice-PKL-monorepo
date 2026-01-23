@@ -19,6 +19,12 @@
 
 ---
 
+sekrang 
+fokus ke styling saja
+sempurnakan dan buat lebih baik untuk styling di form pengajuan
+muali dari step 1 sampai 4
+buat sebaik mungkin
+
 ## 1. OVERVIEW SISTEM
 
 ### 1.1 Tujuan Sistem

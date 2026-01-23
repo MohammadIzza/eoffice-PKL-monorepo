@@ -28,11 +28,11 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
   const [expandedAttachments, setExpandedAttachments] = useState<Record<string, boolean>>({});
 
   const DetailRow = ({ label, value }: { label: string, value: string | null | undefined }) => (
-    <div className="flex justify-between items-start py-3 px-6 border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
-      <div className="w-[35%] font-normal text-sm text-muted-foreground">
+    <div className="flex justify-between items-start py-2.5 px-5 border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
+      <div className="w-[35%] font-normal text-xs text-muted-foreground">
         {label}
       </div>
-      <div className="w-[65%] font-medium text-sm text-foreground">
+      <div className="w-[65%] font-medium text-xs text-foreground">
         {value || '-'}
       </div>
     </div>
@@ -96,21 +96,21 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
       {!isLast && (
         <div className="absolute left-[5px] top-[18px] w-[2px] h-full bg-border -z-10" />
       )}
-      <div className="flex gap-4 w-full pb-8">
-        <div className="w-3 h-3 rounded-full bg-muted mt-1.5 shrink-0 border-2 border-background ring-1 ring-border" />
+      <div className="flex gap-3 w-full pb-6">
+        <div className="w-2.5 h-2.5 rounded-full bg-muted mt-1 shrink-0 border-2 border-background ring-1 ring-border" />
         <div className="flex flex-col gap-1">
-           <span className="font-semibold text-sm text-foreground">{role}</span>
-           <div className="flex items-center gap-1 text-muted-foreground text-xs">
-              <Clock className="w-3 h-3" />
+           <span className="font-semibold text-xs text-foreground">{role}</span>
+           <div className="flex items-center gap-1 text-muted-foreground text-[10px]">
+              <Clock className="w-2.5 h-2.5" />
               <span>{time}</span>
            </div>
-           <div className="mt-1">
-             <span className="bg-muted text-foreground px-2 py-1 rounded text-xs font-medium border border-border">
+           <div className="mt-0.5">
+             <span className="bg-muted text-foreground px-1.5 py-0.5 rounded text-[10px] font-medium border border-border">
                {status}
              </span>
            </div>
            {note && (
-             <p className="text-xs text-muted-foreground mt-1">
+             <p className="text-[10px] text-muted-foreground mt-0.5">
                Catatan: <span className="text-foreground">{note}</span>
              </p>
            )}
@@ -130,8 +130,8 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Memuat data surat...</p>
+          <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">Memuat data surat...</p>
         </div>
       </div>
     );
@@ -141,8 +141,8 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-destructive mb-4">{error || 'Surat tidak ditemukan'}</p>
-          <p className="text-muted-foreground text-sm">Pastikan ID surat valid atau surat masih ada.</p>
+          <p className="text-destructive mb-3 text-sm">{error || 'Surat tidak ditemukan'}</p>
+          <p className="text-muted-foreground text-xs">Pastikan ID surat valid atau surat masih ada.</p>
         </div>
       </div>
     );
@@ -155,17 +155,17 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
   return (
     <div className="min-h-screen bg-background">
       <div className="w-full max-w-7xl mx-auto pt-0">
-        <main className="p-8 bg-background">
-           <div className="flex items-center gap-2 text-sm mb-6">
+        <main className="p-6 bg-background">
+           <div className="flex items-center gap-2 text-xs mb-5">
               <span className="text-muted-foreground">Persuratan</span>
               <span className="text-border">/</span>
               <span className="font-medium text-foreground">Detail Surat</span>
            </div>
-           <div className="flex flex-col xl:flex-row gap-6">
-              <div className="flex-1 flex flex-col gap-6">
+           <div className="flex flex-col xl:flex-row gap-5">
+              <div className="flex-1 flex flex-col gap-5">
                  <div className="bg-card rounded-lg border shadow-sm">
-                    <div className="px-6 py-4 border-b border-border">
-                       <h3 className="font-semibold text-base text-foreground">Identitas Pengaju</h3>
+                    <div className="px-5 py-3 border-b border-border">
+                       <h3 className="font-semibold text-sm text-foreground">Identitas Pengaju</h3>
                     </div>
                     <div>
                        <DetailRow label="Nama Lengkap" value={formValues.namaLengkap || letter.createdBy?.name} />
@@ -182,8 +182,8 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
                     </div>
                  </div>
                  <div className="bg-card rounded-lg border shadow-sm">
-                    <div className="px-6 py-4 border-b border-border">
-                       <h3 className="font-semibold text-base text-foreground">Detail Surat Pengajuan</h3>
+                    <div className="px-5 py-3 border-b border-border">
+                       <h3 className="font-semibold text-sm text-foreground">Detail Surat Pengajuan</h3>
                     </div>
                     <div>
                        <DetailRow label="Jenis Surat" value={letter.letterType?.name || 'PKL'} />
@@ -203,8 +203,8 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
                     </div>
                  </div>
                  {attachments.length > 0 && (
-                   <div className="bg-card rounded-lg border shadow-sm p-6">
-                      <h3 className="font-semibold text-base text-foreground mb-6">Lampiran ({attachments.length})</h3>
+                   <div className="bg-card rounded-lg border shadow-sm p-5">
+                      <h3 className="font-semibold text-sm text-foreground mb-5">Lampiran ({attachments.length})</h3>
                       {attachments.map((attachment) => {
                         const isOpen = expandedAttachments[attachment.id];
                         const fileExtension = attachment.filename?.split('.').pop()?.toLowerCase() || '';
@@ -213,12 +213,12 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
                         const downloadUrl = `${API_URL}/letter/${letterId}/attachments/${attachment.id}/download`;
 
                         return (
-                          <div key={attachment.id} className="w-full border-b border-border last:border-0 pb-6 mb-6">
+                          <div key={attachment.id} className="w-full border-b border-border last:border-0 pb-5 mb-5">
                             <div 
-                              className="flex justify-between items-center cursor-pointer mb-4"
+                              className="flex justify-between items-center cursor-pointer mb-3"
                               onClick={() => toggleAttachment(attachment.id)}
                             >
-                              <span className="font-bold text-base text-foreground">
+                              <span className="font-bold text-sm text-foreground">
                                 {attachment.originalName || attachment.filename}
                               </span>
                               <div className="flex items-center gap-2">
@@ -229,18 +229,18 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
                                   onClick={(e) => e.stopPropagation()}
                                   className="text-primary hover:text-primary/80"
                                 >
-                                  <Download className="w-5 h-5" />
+                                  <Download className="w-4 h-4" />
                                 </a>
                                 {isOpen ? (
-                                  <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                                  <ChevronUp className="w-4 h-4 text-muted-foreground" />
                                 ) : (
-                                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
                                 )}
                               </div>
                             </div>
                             
                             {isOpen && (
-                              <div className="w-full h-[500px] bg-muted rounded-lg flex items-center justify-center p-8 shadow-inner overflow-hidden">
+                              <div className="w-full h-[400px] bg-muted rounded-lg flex items-center justify-center p-6 shadow-inner overflow-hidden">
                                 {isImage && (
                                   <img 
                                     src={downloadUrl} 
@@ -279,15 +279,15 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
               </div>
               <div className="w-full xl:w-[400px]">
                  <div className="bg-card rounded-lg border shadow-sm sticky top-20">
-                    <div className="px-6 py-4 border-b border-border flex items-center gap-2">
-                       <FileText className="w-4 h-4 text-muted-foreground" />
-                       <h3 className="font-semibold text-base text-foreground">
+                    <div className="px-5 py-3 border-b border-border flex items-center gap-2">
+                       <FileText className="w-3.5 h-3.5 text-muted-foreground" />
+                       <h3 className="font-semibold text-sm text-foreground">
                          Riwayat Surat ({stepHistory.length})
                        </h3>
                     </div>
-                    <div className="p-6">
+                    <div className="p-5">
                        {stepHistory.length === 0 ? (
-                         <p className="text-sm text-muted-foreground text-center">Belum ada riwayat</p>
+                         <p className="text-xs text-muted-foreground text-center">Belum ada riwayat</p>
                        ) : (
                          <div className="flex flex-col">
                             {stepHistory.map((history, index) => (

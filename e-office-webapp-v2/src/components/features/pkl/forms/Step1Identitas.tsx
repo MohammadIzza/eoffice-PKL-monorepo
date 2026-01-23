@@ -76,23 +76,23 @@ export default function Step1Identitas() {
   };
 
   // Standarisasi styling dengan shadcn
-  const readOnlyClass = "h-10 bg-muted border-muted text-foreground cursor-default";
-  const editableClass = "h-10 bg-background border-input text-foreground placeholder:text-muted-foreground";
-  const labelClass = "text-sm font-medium text-foreground mb-1.5";
+  const readOnlyClass = "h-9 bg-muted border-muted text-foreground cursor-default text-sm";
+  const editableClass = "h-9 bg-background border-input text-foreground placeholder:text-muted-foreground text-sm";
+  const labelClass = "text-xs font-medium text-foreground mb-1.5";
 
   return (
-    <div className="w-full max-w-7xl mx-auto flex flex-col items-center gap-8 pt-12 pb-32 px-4">
-      <div className="w-full max-w-5xl flex flex-col gap-2 items-start">
-        <h1 className="text-4xl font-black tracking-tight text-foreground">Identitas Pemohon</h1>
-        <p className="text-base text-muted-foreground">Data berikut diisi secara otomatis berdasarkan data Anda. Mohon periksa kembali.</p>
+    <div className="w-full max-w-7xl mx-auto flex flex-col items-center gap-6 pt-8 pb-20 px-4">
+      <div className="w-full max-w-5xl flex flex-col gap-1.5 items-start">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Identitas Pemohon</h1>
+        <p className="text-sm text-muted-foreground">Data berikut diisi secara otomatis berdasarkan data Anda. Mohon periksa kembali.</p>
       </div>
       <div className="w-full max-w-5xl"><Stepper currentStep={1} /></div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="w-full flex flex-col items-center gap-10">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="w-full flex flex-col items-center gap-6">
           <Card className="w-full max-w-5xl bg-card border shadow-sm">
-            <CardContent className="p-11 px-14">
-              <div className="grid grid-cols-2 gap-x-6 gap-y-6">
+            <CardContent className="p-6">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-4">
                 <FormField control={form.control} name="namaLengkap" render={({ field }) => (
                   <FormItem><FormLabel className={labelClass}>Nama Lengkap</FormLabel><FormControl><Input {...field} readOnly className={readOnlyClass} /></FormControl><FormMessage /></FormItem>
                 )} />
@@ -204,10 +204,10 @@ export default function Step1Identitas() {
           </Card>
 
           <div className="w-full max-w-5xl flex justify-between items-center">
-            <Button type="button" variant="outline" size="lg" className="min-w-[84px]">
+            <Button type="button" variant="outline" size="default" className="min-w-[84px]">
               Kembali
             </Button>
-            <Button type="submit" size="lg" className="min-w-[84px]">
+            <Button type="submit" size="default" className="min-w-[84px]">
               Lanjut
             </Button>
           </div>
