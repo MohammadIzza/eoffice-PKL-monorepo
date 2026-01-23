@@ -10,10 +10,7 @@ import {
   Eye, 
   CheckCircle,
   LayoutDashboard,
-  Inbox,
   ClipboardList,
-  Users,
-  Settings,
   ChevronLeft,
   ChevronRight
 } from "lucide-react";
@@ -43,10 +40,6 @@ export default function PKLSidebar() {
       'upa'
     ].includes(role)
   );
-  const isDosen = userRoles.some(role => 
-    ['dosen_pembimbing', 'dosen_koordinator'].includes(role)
-  );
-
   const getMenuItems = () => {
     const items: Array<{
       title: string;
@@ -116,27 +109,9 @@ export default function PKLSidebar() {
             icon: LayoutDashboard,
           },
           {
-            href: '/dashboard/surat',
-            label: 'Surat Masuk',
-            icon: Inbox,
-          },
-        ],
-      });
-    }
-
-    if (isDosen) {
-      items.push({
-        title: 'MENU DOSEN',
-        items: [
-          {
-            href: '/dashboard/dosen',
-            label: 'Dasbor Dosen',
-            icon: LayoutDashboard,
-          },
-          {
-            href: '/dashboard/dosen/surat-masuk',
-            label: 'Surat Masuk',
-            icon: Inbox,
+            href: '/dashboard/approval/queue',
+            label: 'Antrian Approval',
+            icon: ClipboardList,
           },
         ],
       });

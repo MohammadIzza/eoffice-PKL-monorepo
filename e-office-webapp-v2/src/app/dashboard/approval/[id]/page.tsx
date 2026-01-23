@@ -56,6 +56,7 @@ export default function ApprovalDetailPage() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const isWD1 = letter?.currentStep === 7;
+  const isSupervisor = letter?.currentStep === 5; // Supervisor Akademik
   const needsSignature = isWD1;
 
   // Load preview
@@ -189,6 +190,21 @@ export default function ApprovalDetailPage() {
             </Button>
           </div>
         </div>
+
+        {/* Edit Button for Supervisor */}
+        {isSupervisor && (
+          <Card className="bg-white border-[#E5E5E7] shadow-sm mb-6">
+            <CardContent className="p-6">
+              <Button
+                onClick={() => router.push(`/dashboard/approval/${letter.id}/edit`)}
+                className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3]"
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Edit Dokumen
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Preview */}
         <Card className="bg-white border-[#E5E5E7] shadow-sm mb-6">

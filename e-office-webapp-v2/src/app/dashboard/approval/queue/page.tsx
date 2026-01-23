@@ -127,7 +127,7 @@ export default function ApprovalQueuePage() {
             Antrian Approval
           </h1>
           <p className="font-lexend font-normal text-[16px] leading-[24px] text-[#86868B]">
-            Daftar surat yang menunggu persetujuan Anda{activeRole && ` sebagai ${getStepLabel(letters[0]?.currentStep || null)}`}
+            Daftar surat yang menunggu persetujuan Anda{activeRole && letters.length > 0 && ` sebagai ${getStepLabel(letters[0]?.currentStep || null)}`}
           </p>
         </div>
 
@@ -149,7 +149,7 @@ export default function ApprovalQueuePage() {
           <Card className="bg-white border-[#E5E5E7] shadow-sm">
             <CardContent className="p-12">
               <Empty
-                icon={FileText}
+                icon={<FileText className="w-12 h-12 text-[#86868B]/50" />}
                 title="Tidak ada surat"
                 description={searchQuery ? "Tidak ada surat yang sesuai dengan pencarian Anda." : "Tidak ada surat yang menunggu persetujuan Anda saat ini."}
               />

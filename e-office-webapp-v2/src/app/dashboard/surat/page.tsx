@@ -28,7 +28,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import Link from 'next/link';
-import { useMyLetters } from '@/hooks/api';
+import { useMyLetters, useApprovalQueue } from '@/hooks/api';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { 
@@ -103,9 +103,21 @@ const getStatusLabel = (status: string) => {
 };
 
 export default function SuratListPage() {
-  const { letters, isLoading, error, refetch } = useMyLetters();
   const { user } = useAuthStore();
   const isMahasiswa = user?.roles?.some(r => r.name === 'mahasiswa');
+  const isApprover = user?.roles?.some(role => 
+    ['dosen_pembimbing', 'dosen_koordinator', 'ketua_program_studi', 'admin_fakultas', 
+     'supervisor_akademik', 'manajer_tu', 'wakil_dekan_1', 'upa'].includes(role.name)
+  );
+  
+  // Use different hooks based on role
+  const myLettersData = useMyLetters();
+  const approvalQueueData = useApprovalQueue();
+  
+  // Select data based on role
+  const { letters, isLoading, error, refetch } = isMahasiswa 
+    ? myLettersData 
+    : approvalQueueData;
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -318,7 +330,7 @@ export default function SuratListPage() {
                       <TableHead className="font-semibold text-[#1D1D1F] text-center w-[100px] text-xs py-4 tracking-tight">Aksi</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
+                  <TableBody> 
                     {paginatedLetters.map((letter, index) => {
                       const letterTypeName = letter.letterType?.name || 'PKL';
                       const createdAt = letter.createdAt 

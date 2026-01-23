@@ -9,7 +9,7 @@ export default new Elysia()
 	.get(
 		"/",
 		async ({ params: { id }, user }) => {
-		const letter = await Prisma.letterInstance.findUnique({
+			const letter = await Prisma.letterInstance.findUnique({
 			where: { id },
 			include: {
 				letterType: true,
@@ -28,9 +28,9 @@ export default new Elysia()
 				throw new Error("Surat tidak ditemukan");
 			}
 
-		const isCreator = letter.createdById === user.id;
+			const isCreator = letter.createdById === user.id;
 
-		const hasApproved = await Prisma.letterStepHistory.findFirst({
+			const hasApproved = await Prisma.letterStepHistory.findFirst({
 				where: {
 					letterId: letter.id,
 					actorUserId: user.id,
@@ -60,9 +60,9 @@ export default new Elysia()
 				isEditable: boolean;
 			}> | null;
 
-		// Jika belum ada document version atau storageKey null, generate HTML on-the-fly
-		if (!documentVersions || documentVersions.length === 0 || 
-			!documentVersions.some(v => v.storageKey)) {
+			// Jika belum ada document version atau storageKey null, generate HTML on-the-fly
+			if (!documentVersions || documentVersions.length === 0 || 
+				!documentVersions.some(v => v.storageKey)) {
 			// Generate HTML on-the-fly
 			const html = await DocumentService.generateHTML(letter);
 			
@@ -90,8 +90,8 @@ export default new Elysia()
 			};
 		}
 
-		// Prioritas: PDF terbaru > Editable terbaru
-		const latestPDF = documentVersions
+			// Prioritas: PDF terbaru > Editable terbaru
+			const latestPDF = documentVersions
 			.filter((v) => v.isPDF && v.storageKey)
 			.sort((a, b) => b.version - a.version)[0];
 

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthStore } from '@/stores';
-import { useMyLetters } from '@/hooks/api';
+import { useMyLetters, useApprovalQueue } from '@/hooks/api';
 import Link from 'next/link';
 import { 
   FileText, 
@@ -15,7 +15,8 @@ import {
   XCircle, 
   AlertCircle,
   TrendingUp,
-  BarChart3
+  BarChart3,
+  ClipboardList
 } from 'lucide-react';
 import {
   BarChart,
@@ -45,8 +46,20 @@ const COLORS = {
 
 export default function DashboardPage() {
   const { user, isLoading: authLoading } = useAuthStore();
-  const { letters, isLoading: lettersLoading } = useMyLetters();
   const isMahasiswa = user?.roles?.some(r => r.name === 'mahasiswa');
+  const isApprover = user?.roles?.some(role => 
+    ['dosen_pembimbing', 'dosen_koordinator', 'ketua_program_studi', 'admin_fakultas', 
+     'supervisor_akademik', 'manajer_tu', 'wakil_dekan_1', 'upa'].includes(role.name)
+  );
+  
+  // Use different hooks based on role
+  const myLettersData = useMyLetters();
+  const approvalQueueData = useApprovalQueue();
+  
+  // Select data based on role
+  const { letters, isLoading: lettersLoading } = isMahasiswa 
+    ? myLettersData 
+    : approvalQueueData;
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -152,14 +165,24 @@ export default function DashboardPage() {
                 Selamat datang kembali, <span className="font-medium text-[#1D1D1F]">{user?.name || 'Pengguna'}</span>
               </p>
             </div>
-            {isMahasiswa && (
-              <Link href="/dashboard/pengajuan/pkl/identitas">
-                <Button className="gap-2" size="default">
-                  <Plus className="w-4 h-4" />
-                  Buat Pengajuan Baru
-                </Button>
-              </Link>
-            )}
+            <div className="flex gap-3">
+              {isMahasiswa && (
+                <Link href="/dashboard/pengajuan/pkl/identitas">
+                  <Button className="gap-2" size="default">
+                    <Plus className="w-4 h-4" />
+                    Buat Pengajuan Baru
+                  </Button>
+                </Link>
+              )}
+              {isApprover && (
+                <Link href="/dashboard/approval/queue">
+                  <Button className="gap-2" size="default">
+                    <ClipboardList className="w-4 h-4" />
+                    Antrian Approval
+                  </Button>
+                </Link>
+              )}
+            </div>
           </div>
         </div>
 

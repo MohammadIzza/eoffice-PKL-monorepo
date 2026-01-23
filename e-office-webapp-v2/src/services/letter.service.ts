@@ -392,6 +392,65 @@ export const letterService = {
 		}
 	},
 
+	getEditableDocument: async (id: string): Promise<{
+		html: string;
+		version: number;
+		canEdit: boolean;
+	}> => {
+		try {
+			const response = await client.letter[id].editor.get();
+			
+			if (response.data && typeof response.data === 'object') {
+				const data = response.data as any;
+				if (data.success && data.data) {
+					return data.data;
+				}
+			}
+			
+			throw new Error('Invalid response from /letter/:id/editor endpoint');
+		} catch (error) {
+			throw handleApiError(error);
+		}
+	},
+
+	saveDraft: async (id: string, html: string): Promise<void> => {
+		try {
+			const response = await client.letter[id].editor.draft.post({
+				html,
+			});
+			
+			if (!response.data || typeof response.data !== 'object') {
+				throw new Error('Invalid response from /letter/:id/editor/draft endpoint');
+			}
+		} catch (error) {
+			throw handleApiError(error);
+		}
+	},
+
+	publishVersion: async (id: string, html: string, comment?: string): Promise<{
+		version: number;
+		storageKey: string;
+		timestamp: string;
+	}> => {
+		try {
+			const response = await client.letter[id].editor.publish.post({
+				html,
+				comment,
+			});
+			
+			if (response.data && typeof response.data === 'object') {
+				const data = response.data as any;
+				if (data.success && data.data) {
+					return data.data;
+				}
+			}
+			
+			throw new Error('Invalid response from /letter/:id/editor/publish endpoint');
+		} catch (error) {
+			throw handleApiError(error);
+		}
+	},
+
 	assignNumber: async (id: string, numberString: string, date?: string): Promise<void> => {
 		try {
 			const response = await client.letter[id].numbering.post({
