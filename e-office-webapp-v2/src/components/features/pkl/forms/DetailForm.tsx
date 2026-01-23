@@ -3,9 +3,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-
-import Stepper from "@/components/features/pkl/Stepper";
+import Stepper from "@/components/features/pkl/navigation/Stepper";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -14,21 +12,7 @@ import { useDosenPembimbing, useKoordinatorKaprodi } from "@/hooks/api";
 import { usePKLFormStore } from "@/stores/pklFormStore";
 import { useAuthStore } from "@/stores";
 
-const formSchema = z.object({
-  jenisSurat: z.string().default("Surat Pengantar PKL"),
-  tujuanSurat: z.string().min(1, "Tujuan surat wajib diisi"),
-  jabatan: z.string().min(1, "Jabatan wajib diisi"),
-  namaInstansi: z.string().min(1, "Nama Instansi wajib diisi"),
-  alamatInstansi: z.string().min(1, "Alamat Instansi wajib diisi"),
-  judul: z.string().min(1, "Judul wajib diisi"),
-  dosenPembimbingId: z.string().min(1, "Dosen Pembimbing wajib dipilih"),
-  namaDosenKoordinator: z.string().min(1, "Nama Dosen Koordinator wajib diisi"),
-  nipDosenKoordinator: z.string().min(1, "NIP Koordinator wajib diisi").regex(/^\d+$/, "NIP harus angka"),
-  namaKaprodi: z.string().min(1, "Kaprodi wajib diisi"),
-  nipKaprodi: z.string().min(1, "NIP Kaprodi wajib diisi").regex(/^\d+$/, "NIP harus angka"),
-});
-
-type FormData = z.infer<typeof formSchema>;
+import { step2DetailSchema, type Step2DetailFormData } from "@/lib/validations";
 
 export default function Step2Detail() {
   const router = useRouter();
@@ -39,8 +23,8 @@ export default function Step2Detail() {
   const { data: koordinatorKaprodi, isLoading: isLoadingKoordinatorKaprodi } = useKoordinatorKaprodi(prodiId);
   const [selectedDosen, setSelectedDosen] = useState<{ id: string; name: string; nip: string | null } | null>(null);
   
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<Step2DetailFormData>({
+    resolver: zodResolver(step2DetailSchema),
     defaultValues: {
       jenisSurat: "Surat Pengantar PKL",
       tujuanSurat: formData.tujuanSurat || "",
@@ -90,7 +74,7 @@ export default function Step2Detail() {
     }
   };
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = (data: Step2DetailFormData) => {
     setFormData({
       ...formData,
       ...data,

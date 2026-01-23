@@ -3,11 +3,8 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Calendar } from "lucide-react";
-import { format, parse } from "date-fns";
-import { id } from "date-fns/locale";
-import Stepper from "@/components/features/pkl/Stepper";
+import Stepper from "@/components/features/pkl/navigation/Stepper";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,123 +18,16 @@ import {
 } from "@/components/ui/form";
 import { useAuthStore } from "@/stores";
 import { usePKLFormStore } from "@/stores/pklFormStore";
+import { step1IdentitasSchema, type Step1IdentitasFormData } from "@/lib/validations";
+import { normalizeDateValue, formatTanggalLahir } from "@/lib/utils/date.utils";
 
-const formSchema = z.object({
-  namaLengkap: z.string().min(1, "Nama Lengkap wajib diisi"),
-  role: z.string().default("Mahasiswa"),
-  nim: z
-    .string()
-    .min(12, "NIM minimal 12 digit")
-    .max(14, "NIM maksimal 14 digit")
-    .regex(/^\d+$/, "NIM harus berupa angka"), 
-  email: z.string().email("Format email tidak valid"),
-  departemen: z.string().min(1, "Departemen wajib diisi"),
-  programStudi: z.string().min(1, "Prodi wajib diisi"),
-  tempatLahir: z.string().min(1, "Tempat Lahir wajib diisi"),
-  tanggalLahir: z.string().min(1, "Tanggal lahir wajib diisi").transform((date) => {
-    if (!date || date.trim() === "") return "";
-    try {
-      let parsedDate: Date;
-      const dateStr = date.trim();
-      
-      if (dateStr.includes("T")) {
-        parsedDate = new Date(dateStr);
-      } else if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        parsedDate = new Date(dateStr + "T00:00:00");
-      } else if (dateStr.match(/^\d{1,2}\s+\w+\s+\d{4}$/)) {
-        try {
-          parsedDate = parse(dateStr, "dd MMMM yyyy", new Date(), { locale: id });
-        } catch {
-          parsedDate = new Date(dateStr);
-        }
-      } else {
-        parsedDate = new Date(dateStr);
-      }
-      
-      if (isNaN(parsedDate.getTime())) {
-        return dateStr;
-      }
-      return parsedDate.toISOString().split('T')[0];
-    } catch {
-      return date;
-    }
-  }).refine((date) => {
-    if (!date || date.trim() === "") return false;
-    try {
-      let parsedDate: Date;
-      const dateStr = date.trim();
-      
-      if (dateStr.includes("T")) {
-        parsedDate = new Date(dateStr);
-      } else if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        parsedDate = new Date(dateStr + "T00:00:00");
-      } else {
-        parsedDate = new Date(dateStr);
-      }
-      
-      if (isNaN(parsedDate.getTime())) return false;
-      const today = new Date();
-      today.setHours(23, 59, 59, 999);
-      return parsedDate <= today;
-    } catch {
-      return false;
-    }
-  }, {
-    message: "Tanggal lahir tidak valid",
-  }),
-  noHp: z
-    .string()
-    .min(10, "No HP minimal 10 digit")
-    .regex(/^\d+$/, "No HP harus berupa angka"),
-  alamat: z.string().min(1, "Alamat wajib diisi"),
-  ipk: z.string().refine((val) => {
-    const num = parseFloat(val);
-    return !isNaN(num) && num >= 0.00 && num <= 4.00;
-  }, { message: "IPK harus antara 0.00 - 4.00" }),
-  sks: z
-    .string()
-    .min(1, "SKS wajib diisi")
-    .regex(/^\d+$/, "SKS harus berupa angka"),
-});
-
-type FormData = z.infer<typeof formSchema>;
-
-export default function Step1identitas() {
+export default function Step1Identitas() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { formData, setFormData } = usePKLFormStore();
-  
-  const normalizeDateValue = (dateValue: string | null | undefined): string => {
-    if (!dateValue || (typeof dateValue === 'string' && dateValue.trim() === "")) return "";
-    try {
-      let date: Date;
-      const dateStr = String(dateValue).trim();
-      
-      if (dateStr.includes("T")) {
-        date = new Date(dateStr);
-      } else if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        date = new Date(dateStr + "T00:00:00");
-      } else if (dateStr.match(/^\d{1,2}\s+\w+\s+\d{4}$/)) {
-        try {
-          date = parse(dateStr, "dd MMMM yyyy", new Date(), { locale: id });
-        } catch {
-          date = new Date(dateStr);
-        }
-      } else {
-        date = new Date(dateStr);
-      }
-      
-      if (isNaN(date.getTime())) {
-        return "";
-      }
-      return date.toISOString().split('T')[0];
-    } catch (error) {
-      return "";
-    }
-  };
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<Step1IdentitasFormData>({
+    resolver: zodResolver(step1IdentitasSchema),
     defaultValues: {
       namaLengkap: formData.namaLengkap || user?.name || "",
       role: "Mahasiswa", 
@@ -174,18 +64,7 @@ export default function Step1identitas() {
     }
   }, [user, form, formData]);
 
-  const formatTanggalLahir = (dateString: string | null | undefined): string => {
-    if (!dateString) return "";
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return dateString;
-      return format(date, "dd MMMM yyyy", { locale: id });
-    } catch {
-      return dateString;
-    }
-  };
-
-  const onSubmit = (data: FormData) => {
+  const onSubmit = (data: Step1IdentitasFormData) => {
     setFormData({
       ...formData,
       ...data,
@@ -206,7 +85,6 @@ export default function Step1identitas() {
 
   return (
     <div className="w-full max-w-[1117px] mx-auto flex flex-col items-center gap-[32px] pt-[48px] pb-[122px] px-[16px]">
-      
       <div className="w-full max-w-[1073px] flex flex-col gap-[8px] items-start">
         <h1 className="text-[36px] font-black tracking-[-1.19px] text-[#111418] font-inter">Identitas Pemohon</h1>
         <p className="text-[16px] text-[#6B7280] font-inter">Data berikut diisi secara otomatis berdasarkan data Anda. Mohon periksa kembali.</p>
@@ -215,7 +93,6 @@ export default function Step1identitas() {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="w-full flex flex-col items-center gap-10">
-          
           <Card className="w-full max-w-[1073px] bg-white rounded-xl border-none shadow-sm">
             <CardContent className="p-[44px] px-[56px]">
               <div className="grid grid-cols-2 gap-x-[24px] gap-y-[24px]">

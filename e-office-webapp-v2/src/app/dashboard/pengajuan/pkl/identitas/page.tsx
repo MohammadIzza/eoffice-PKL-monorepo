@@ -1,5 +1,5 @@
-import Step1identitas from "@/components/features/pkl/Step1identitas";
+import Step1Identitas from "@/components/features/pkl/forms/Step1Identitas";
 
 export default function IdentitasPage() {
-  return <Step1identitas />;
+  return <Step1Identitas />;
 }

@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Stepper from "@/components/features/pkl/Stepper";
+import Stepper from "@/components/features/pkl/navigation/Stepper";
 import { Button } from "@/components/ui/button";
 import {
   Select,

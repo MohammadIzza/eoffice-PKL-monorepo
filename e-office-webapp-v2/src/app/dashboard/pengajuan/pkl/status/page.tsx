@@ -1,10 +1,10 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import Step5Status from "@/components/features/pkl/Step5Status";
+import LetterDetail from "@/components/features/pkl/display/LetterDetail";
 
 export default function StatusPage() {
   const searchParams = useSearchParams();
   const id = searchParams.get('id');
-  return <Step5Status id={id || undefined} />;
+  return <LetterDetail id={id || undefined} />;
 }

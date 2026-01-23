@@ -1,4 +1,4 @@
-import Step5Status from "@/components/features/pkl/Step5Status";
+import LetterDetail from "@/components/features/pkl/display/LetterDetail";
 
 export default async function SuratDetailPage({ 
   params 
@@ -6,5 +6,5 @@ export default async function SuratDetailPage({
   params: Promise<{ id: string }> 
 }) {
   const { id } = await params;
-  return <Step5Status id={id} />;
+  return <LetterDetail id={id} />;
 }

@@ -42,114 +42,95 @@ export default function PKLSidebar() {
   );
 
   const getMenuItems = () => {
-    const items: Array<{ title: string; items: Array<{ href: string; label: string; icon: any }> }> = [];
+    const items: Array<{
+      title: string;
+      items: Array<{
+        href: string;
+        label: string;
+        icon: React.ComponentType<{ className?: string }>;
+      }>;
+    }> = [];
 
     if (isMahasiswa) {
       items.push({
-        title: "Menu Utama",
+        title: 'MENU UTAMA',
         items: [
           {
-            href: "/dashboard",
-            label: "Dasbor",
+            href: '/dashboard',
+            label: 'Dasbor',
             icon: LayoutDashboard,
           },
           {
-            href: "/dashboard/surat",
-            label: "Daftar Surat Saya",
-            icon: Inbox,
+            href: '/dashboard/surat',
+            label: 'Daftar Surat Saya',
+            icon: FileText,
           },
         ],
       });
 
       items.push({
-        title: "Pengajuan PKL",
+        title: 'PENGAJUAN PKL',
         items: [
           {
-            href: "/dashboard/pengajuan/pkl/identitas",
-            label: "Identitas Pemohon",
+            href: '/dashboard/pengajuan/pkl/identitas',
+            label: 'Identitas Pemohon',
             icon: User,
           },
           {
-            href: "/dashboard/pengajuan/pkl/detail-pengajuan",
-            label: "Detail Pengajuan",
+            href: '/dashboard/pengajuan/pkl/detail-pengajuan',
+            label: 'Detail Pengajuan',
             icon: FileText,
           },
           {
-            href: "/dashboard/pengajuan/pkl/lampiran",
-            label: "Lampiran",
+            href: '/dashboard/pengajuan/pkl/lampiran',
+            label: 'Lampiran',
             icon: Paperclip,
           },
           {
-            href: "/dashboard/pengajuan/pkl/review",
-            label: "Review",
+            href: '/dashboard/pengajuan/pkl/review',
+            label: 'Review',
             icon: Eye,
           },
           {
-            href: "/dashboard/pengajuan/pkl/status",
-            label: "Status",
+            href: '/dashboard/pengajuan/pkl/status',
+            label: 'Status',
             icon: CheckCircle,
           },
         ],
       });
     }
 
-    if (isApprover && !isMahasiswa) {
+    if (isApprover) {
       items.push({
-        title: "Menu Utama",
+        title: 'MENU UTAMA',
         items: [
           {
-            href: "/dashboard",
-            label: "Dasbor",
+            href: '/dashboard',
+            label: 'Dasbor',
             icon: LayoutDashboard,
           },
           {
-            href: "/dashboard/surat",
-            label: "Daftar Surat",
+            href: '/dashboard/surat',
+            label: 'Surat Masuk',
             icon: Inbox,
           },
         ],
       });
     }
 
-    if (isApprover) {
-      if (isDosen) {
-        items.push({
-          title: "Dashboard Dosen",
-          items: [
-            {
-              href: "/dashboard/dosen",
-              label: "Dashboard Persuratan",
-              icon: LayoutDashboard,
-            },
-            {
-              href: "/dashboard/dosen/surat-masuk",
-              label: "Surat Masuk",
-              icon: Inbox,
-            },
-          ],
-        });
-      }
-
+    if (isDosen) {
       items.push({
-        title: "Approval",
+        title: 'MENU DOSEN',
         items: [
           {
-            href: "/dashboard/surat",
-            label: "Antrian Approval",
-            icon: ClipboardList,
+            href: '/dashboard/dosen',
+            label: 'Dasbor Dosen',
+            icon: LayoutDashboard,
           },
-        ],
-      });
-    }
-
-    if (userRoles.includes('admin_fakultas')) {
-      items.push({
-        title: "Administrasi",
-        items: [
           {
-            href: "/dashboard",
-            label: "Pengaturan",
-            icon: Settings,
+            href: '/dashboard/dosen/surat-masuk',
+            label: 'Surat Masuk',
+            icon: Inbox,
           },
         ],
       });
@@ -160,9 +141,9 @@ export default function PKLSidebar() {
 
   const menuItems = getMenuItems();
 
-  const isActive = (href: string) => {
-    if (href === "/dashboard") {
-      return pathname === href;
+  const isActive = (href: string): boolean => {
+    if (href === '/dashboard') {
+      return pathname === '/dashboard';
     }
     return pathname?.startsWith(href);
   };

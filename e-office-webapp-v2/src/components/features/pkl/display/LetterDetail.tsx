@@ -13,15 +13,14 @@ import {
   Image as ImageIcon
 } from "lucide-react";
 import { useLetter } from "@/hooks/api";
-import { format } from "date-fns";
-import { id } from "date-fns/locale";
+import { formatDate, formatDateTime } from "@/lib/utils/date.utils";
 import { API_URL } from "@/lib/constants";
 
-interface Step5StatusProps {
+interface LetterDetailProps {
   id?: string;
 }
 
-export default function Step5Status({ id: idProp }: Step5StatusProps = {}) {
+export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
   const searchParams = useSearchParams();
   const idFromQuery = searchParams.get('id');
   const letterId = idProp || idFromQuery || null;
@@ -39,25 +38,6 @@ export default function Step5Status({ id: idProp }: Step5StatusProps = {}) {
     </div>
   );
 
-  const formatDate = (date: Date | string | null | undefined): string => {
-    if (!date) return '-';
-    try {
-      const d = date instanceof Date ? date : new Date(date);
-      return format(d, 'dd/MM/yyyy');
-    } catch {
-      return '-';
-    }
-  };
-
-  const formatDateTime = (date: Date | string | null | undefined): string => {
-    if (!date) return '-';
-    try {
-      const d = date instanceof Date ? date : new Date(date);
-      return format(d, 'dd MMMM yyyy, HH:mm:ss', { locale: id });
-    } catch {
-      return '-';
-    }
-  };
 
   const getActionLabel = (action: string): string => {
     const actionMap: Record<string, string> = {

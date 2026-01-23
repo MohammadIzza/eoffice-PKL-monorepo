@@ -1,13 +1,13 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Stepper from "@/components/features/pkl/Stepper";
+import Stepper from "@/components/features/pkl/navigation/Stepper";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, ChevronDown, FileText, Image as ImageIcon, Loader2 } from "lucide-react";
 import { usePKLFormStore } from "@/stores/pklFormStore";
 import { useAuthStore } from "@/stores";
 import { letterService } from "@/services";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils/date.utils";
 
 export default function Step4Review() {
   const router = useRouter();
@@ -31,16 +31,6 @@ export default function Step4Review() {
   const cardBaseClass = "w-full bg-white rounded-[12px] border border-[#E5E7EB] overflow-hidden";
   const headerSectionClass = "w-full px-[24px] py-[16px] border-b border-[#E5E7EB] bg-white";
   const headerTitleClass = "font-inter font-semibold text-[18px] leading-[28px] text-[#111827]";
-
-  const formatDate = (dateString: string | null | undefined): string => {
-    if (!dateString) return '-';
-    try {
-      const date = new Date(dateString);
-      return format(date, 'dd / MM / yyyy');
-    } catch {
-      return dateString;
-    }
-  };
 
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return bytes + ' B';
