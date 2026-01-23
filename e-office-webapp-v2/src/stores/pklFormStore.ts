@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import * as IndexedDB from '@/lib/storage/indexedDB';
 
 export interface AttachmentFile {
   id: string; // Unique ID untuk tracking
@@ -16,7 +17,8 @@ interface AttachmentMetadata {
   type: string;
   category: 'proposal' | 'ktm' | 'tambahan';
   lastModified: number;
-  dataUrl: string; // Base64 untuk restore file
+  dataUrl: string; // Base64 untuk restore file (hanya untuk file kecil)
+  storedInIndexedDB?: boolean; // Flag untuk menandai file besar yang disimpan di IndexedDB
 }
 
 interface PKLFormState {
@@ -30,7 +32,7 @@ interface PKLFormState {
   removeAttachment: (id: string) => void;
   updateAttachmentCategory: (id: string, category: 'proposal' | 'ktm' | 'tambahan') => void;
   resetForm: () => void;
-  restoreAttachments: () => void; // Method to restore attachments from localStorage
+  restoreAttachments: () => Promise<void>; // Method to restore attachments from localStorage and IndexedDB
   cleanupOldAttachments: () => void; // Method to cleanup old localStorage entries
   // Helper untuk convert File ke base64
   fileToBase64: (file: File) => Promise<string>;
@@ -131,9 +133,16 @@ export const usePKLFormStore = create<PKLFormState>()(
               console.warn(`[PKL Store] Failed to convert small file to base64: ${file.name}`, error);
             }
           } else {
-            // For large files, we'll store the File object in IndexedDB or just metadata
-            // For now, we'll only store metadata and user will need to re-upload on refresh
-            console.log(`[PKL Store] File ${file.name} is too large (${(file.size / 1024 / 1024).toFixed(2)}MB) for localStorage. Will require re-upload on refresh.`);
+            // For large files, store the File object directly in IndexedDB
+            console.log(`[PKL Store] File ${file.name} is too large (${(file.size / 1024 / 1024).toFixed(2)}MB) for localStorage. Storing in IndexedDB...`);
+            try {
+              // Store file in IndexedDB
+              await IndexedDB.storeFile(id, file, category);
+              console.log(`[PKL Store] Large file stored in IndexedDB: ${file.name}`);
+            } catch (indexedDBError) {
+              console.error('[PKL Store] Failed to store file in IndexedDB:', indexedDBError);
+              // Continue anyway - file is already in state for UI feedback
+            }
           }
           
           const metadata: AttachmentMetadata = {
@@ -144,6 +153,7 @@ export const usePKLFormStore = create<PKLFormState>()(
             category,
             lastModified: file.lastModified,
             dataUrl: dataUrl || '', // Empty string for large files
+            storedInIndexedDB: !isSmallFile, // Mark large files as stored in IndexedDB
           };
           
           // Store metadata in localStorage separately
@@ -151,8 +161,20 @@ export const usePKLFormStore = create<PKLFormState>()(
           try {
             const storedMetadata = JSON.parse(localStorage.getItem('pkl-attachments-metadata') || '[]') as AttachmentMetadata[];
             
-            // For replace categories, also remove old metadata from localStorage
+            // For replace categories, also remove old metadata from localStorage and IndexedDB
             if (isReplaceCategory) {
+              const oldFiles = storedMetadata.filter(meta => meta.category === category);
+              // Remove old files from IndexedDB
+              for (const oldFile of oldFiles) {
+                if (oldFile.storedInIndexedDB) {
+                  try {
+                    await IndexedDB.deleteFile(oldFile.id);
+                  } catch (error) {
+                    console.error(`[PKL Store] Error deleting old file from IndexedDB: ${oldFile.id}`, error);
+                  }
+                }
+              }
+              
               const filteredMetadata = storedMetadata.filter(meta => meta.category !== category);
               storedMetadata.length = 0;
               storedMetadata.push(...filteredMetadata);
@@ -206,6 +228,15 @@ export const usePKLFormStore = create<PKLFormState>()(
           
           // Remove from localStorage metadata by ID
           const storedMetadata = JSON.parse(localStorage.getItem('pkl-attachments-metadata') || '[]') as AttachmentMetadata[];
+          const fileToRemove = storedMetadata.find(meta => meta.id === id);
+          
+          // Remove from IndexedDB if it's stored there
+          if (fileToRemove?.storedInIndexedDB) {
+            IndexedDB.deleteFile(id).catch(error => {
+              console.error(`[PKL Store] Error deleting file from IndexedDB: ${id}`, error);
+            });
+          }
+          
           const filteredMetadata = storedMetadata.filter(meta => meta.id !== id);
           localStorage.setItem('pkl-attachments-metadata', JSON.stringify(filteredMetadata));
           
@@ -239,6 +270,10 @@ export const usePKLFormStore = create<PKLFormState>()(
           });
           // Clear localStorage metadata
           localStorage.removeItem('pkl-attachments-metadata');
+          // Clear IndexedDB
+          IndexedDB.clearAllFiles().catch(error => {
+            console.error('[PKL Store] Error clearing IndexedDB:', error);
+          });
           return { currentStep: 1, formData: {}, attachments: [], _hasHydrated: false };
         });
       },
@@ -256,40 +291,38 @@ export const usePKLFormStore = create<PKLFormState>()(
           console.error('[PKL Store] Error cleaning up old attachments:', error);
         }
       },
-      restoreAttachments: () => {
+      restoreAttachments: async () => {
         // This method will be called after hydration to restore attachments
         // Use set directly, no need for get() since we're already in the store context
-        set((state) => {
-          // Only restore if not already hydrated
-          if (state._hasHydrated) {
-            console.log('[PKL Store] restoreAttachments: Already hydrated, skipping');
-            return {};
-          }
-          
-          console.log('[PKL Store] restoreAttachments: Starting restore...');
-          
-          try {
+        
+        // Check if already hydrated first
+        const currentState = get();
+        if (currentState._hasHydrated) {
+          console.log('[PKL Store] restoreAttachments: Already hydrated, skipping');
+          return;
+        }
+        
+        console.log('[PKL Store] restoreAttachments: Starting restore...');
+        
+        try {
             const storedMetadata = JSON.parse(localStorage.getItem('pkl-attachments-metadata') || '[]') as AttachmentMetadata[];
             console.log('[PKL Store] restoreAttachments: Found metadata', { count: storedMetadata.length });
             
             if (storedMetadata.length > 0) {
-              // Filter out metadata without dataUrl (large files that weren't stored as base64)
-              const validMetadata = storedMetadata.filter((meta) => {
-                if (!meta.dataUrl || meta.dataUrl === '') {
-                  console.warn(`[PKL Store] Skipping metadata without dataUrl (large file): ${meta.name}. User needs to re-upload.`);
-                  return false;
-                }
-                return true;
-              });
+              // Separate small files (with dataUrl) and large files (stored in IndexedDB)
+              const smallFiles = storedMetadata.filter(meta => meta.dataUrl && meta.dataUrl !== '' && !meta.storedInIndexedDB);
+              const largeFiles = storedMetadata.filter(meta => meta.storedInIndexedDB === true);
               
-              console.log(`[PKL Store] Valid metadata count: ${validMetadata.length} out of ${storedMetadata.length}`);
-              console.log(`[PKL Store] Skipped ${storedMetadata.length - validMetadata.length} large files that need re-upload`);
+              console.log(`[PKL Store] Found ${smallFiles.length} small files (localStorage) and ${largeFiles.length} large files (IndexedDB)`);
+              
+              // Combine small and large files
+              const allMetadata = [...smallFiles, ...largeFiles];
               
               // For 'proposal' and 'ktm', only keep the latest one (most recent lastModified)
               // For 'tambahan', keep all
-              const proposalFiles = validMetadata.filter(m => m.category === 'proposal');
-              const ktmFiles = validMetadata.filter(m => m.category === 'ktm');
-              const tambahanFiles = validMetadata.filter(m => m.category === 'tambahan');
+              const proposalFiles = allMetadata.filter(m => m.category === 'proposal');
+              const ktmFiles = allMetadata.filter(m => m.category === 'ktm');
+              const tambahanFiles = allMetadata.filter(m => m.category === 'tambahan');
               
               // Get the latest file for each replace category
               const latestProposal = proposalFiles.length > 0 
@@ -322,30 +355,46 @@ export const usePKLFormStore = create<PKLFormState>()(
                 });
               }
               
-              const restoredAttachments: AttachmentFile[] = metadataToRestore.map((meta) => {
+              // Restore files: small files from base64, large files from IndexedDB
+              const restoredAttachments: AttachmentFile[] = [];
+              
+              for (const meta of metadataToRestore) {
                 try {
-                  if (!meta.dataUrl || meta.dataUrl === '') {
-                    return null;
+                  let file: File | null = null;
+                  
+                  if (meta.storedInIndexedDB) {
+                    // Restore large file from IndexedDB
+                    file = await IndexedDB.getFile(meta.id);
+                    if (!file) {
+                      console.warn(`[PKL Store] Large file not found in IndexedDB: ${meta.name}. Skipping.`);
+                      continue;
+                    }
+                    console.log(`[PKL Store] Restored large file from IndexedDB: ${meta.name}`);
+                  } else if (meta.dataUrl && meta.dataUrl !== '') {
+                    // Restore small file from base64
+                    file = base64ToFile(meta.dataUrl, meta.name, meta.type);
+                    console.log(`[PKL Store] Restored small file from localStorage: ${meta.name}`);
+                  } else {
+                    console.warn(`[PKL Store] No data available for file: ${meta.name}. Skipping.`);
+                    continue;
                   }
                   
-                  const file = base64ToFile(meta.dataUrl, meta.name, meta.type);
-                  const preview = file.type.startsWith('image/') || file.type === 'application/pdf' 
-                    ? URL.createObjectURL(file) 
-                    : undefined;
-                  
-                  console.log(`[PKL Store] Restored file: ${meta.name}`, { id: meta.id, category: meta.category });
-                  
-                  return { 
-                    id: meta.id, 
-                    file, 
-                    category: meta.category, 
-                    preview 
-                  };
+                  if (file) {
+                    const preview = file.type.startsWith('image/') || file.type === 'application/pdf' 
+                      ? URL.createObjectURL(file) 
+                      : undefined;
+                    
+                    restoredAttachments.push({ 
+                      id: meta.id, 
+                      file, 
+                      category: meta.category, 
+                      preview 
+                    });
+                  }
                 } catch (error) {
                   console.error(`[PKL Store] Error restoring file ${meta.name}:`, error);
-                  return null;
                 }
-              }).filter((att): att is AttachmentFile => att !== null);
+              }
               
               console.log('[PKL Store] restoreAttachments: Successfully restored', { 
                 total: storedMetadata.length, 
@@ -366,19 +415,19 @@ export const usePKLFormStore = create<PKLFormState>()(
                 console.error('[PKL Store] Error cleaning up localStorage during restore:', error);
               }
               
-              return { 
+              // Update state with restored attachments
+              set({ 
                 attachments: restoredAttachments, 
                 _hasHydrated: true 
-              };
+              });
             } else {
               console.log('[PKL Store] restoreAttachments: No metadata found');
-              return { _hasHydrated: true };
+              set({ _hasHydrated: true });
             }
           } catch (error) {
-            console.error('[PKL Store] Error restoring attachments from localStorage:', error);
-            return { _hasHydrated: true };
+            console.error('[PKL Store] Error restoring attachments from localStorage/IndexedDB:', error);
+            set({ _hasHydrated: true });
           }
-        });
       },
       fileToBase64,
       base64ToFile,
@@ -428,7 +477,9 @@ export const usePKLFormStore = create<PKLFormState>()(
                   console.log('[PKL Store] Found metadata in localStorage', { count: storedMetadata.length });
                   
                   if (!currentState._hasHydrated) {
-                    currentState.restoreAttachments();
+                    currentState.restoreAttachments().catch(error => {
+                      console.error('[PKL Store] Error in restoreAttachments:', error);
+                    });
                     console.log('[PKL Store] restoreAttachments() called');
                   } else {
                     console.log('[PKL Store] Already hydrated, skipping restore');

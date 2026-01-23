@@ -35,10 +35,14 @@ export default function Step3Lampiran() {
     // If we have metadata but no attachments, force restore
     if (hasMetadata && !hasAttachments) {
       console.log('[Step3Lampiran] Metadata exists but no attachments - forcing restore');
-      restoreAttachments();
+      restoreAttachments().catch(error => {
+        console.error('[Step3Lampiran] Error restoring attachments:', error);
+      });
     } else if (!_hasHydrated && hasMetadata) {
       console.log('[Step3Lampiran] Not hydrated and has metadata - calling restore');
-      restoreAttachments();
+      restoreAttachments().catch(error => {
+        console.error('[Step3Lampiran] Error restoring attachments:', error);
+      });
     } else if (_hasHydrated && hasAttachments) {
       console.log('[Step3Lampiran] Already hydrated with attachments:', attachments.length);
     }
@@ -194,12 +198,12 @@ export default function Step3Lampiran() {
             <label className="text-xs font-medium text-foreground">
               File Proposal<span className="text-destructive">*</span>
             </label>
-            
-            <input
+
+        <input
               ref={proposalInputRef}
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
-              className="hidden"
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png"
+          className="hidden"
               onChange={(e) => {
                 if (e.target.files && e.target.files[0]) {
                   handleFileSelect(e.target.files[0], 'proposal');
@@ -300,19 +304,19 @@ export default function Step3Lampiran() {
               >
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2">
                   <UploadCloud className="w-5 h-5 text-primary" />
-                </div>
-                <div className="text-center">
+           </div>
+           <div className="text-center">
                   <span className="font-semibold text-sm text-foreground">
                     Seret & lepas atau <span className="text-primary">pilih file</span>
-                  </span>
-                </div>
+              </span>
+           </div>
                 <span className="font-normal text-[10px] text-muted-foreground mt-0.5">
-                  untuk diunggah
-                </span>
-              </div>
+              untuk diunggah
+           </span>
+        </div>
             )}
-          </div>
-
+                   </div>
+                   
           {/* File KTM */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-foreground">
@@ -352,8 +356,8 @@ export default function Step3Lampiran() {
                     </div>
                     <span className="font-normal text-xs text-muted-foreground">
                       {formatFileSize(ktmFile.file.size)}
-                    </span>
-                  </div>
+                      </span>
+                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {ktmFile.preview && (
@@ -447,29 +451,29 @@ export default function Step3Lampiran() {
          >
            <div className="flex flex-col gap-1">
              <h3 className="font-semibold text-base text-primary">
-                Lampiran Tambahan
-             </h3>
+              Lampiran Tambahan
+           </h3>
              <p className="font-normal text-xs text-muted-foreground">
-                Opsional. Tambahkan dokumen pendukung lainnya jika diperlukan.
-             </p>
+              Opsional. Tambahkan dokumen pendukung lainnya jika diperlukan.
+           </p>
            </div>
            <ChevronDown 
              className={`w-5 h-5 text-primary transition-transform duration-300 ease-in-out ${isTambahanOpen ? 'rotate-180' : ''}`}
            />
-         </div>
+        </div>
 
          {isTambahanOpen && (
            <div className="w-full flex flex-col gap-4 mt-2 animate-in fade-in slide-in-from-top-2 duration-300">
-             <input
-               ref={tambahanInputRef}
-               type="file"
-               multiple
-               accept=".pdf,.jpg,.jpeg,.png"
-               className="hidden"
+        <input
+          ref={tambahanInputRef}
+          type="file"
+          multiple
+          accept=".pdf,.jpg,.jpeg,.png"
+          className="hidden"
                onChange={(e) => handleFileSelectMultiple(e.target.files, 'tambahan')}
-             />
+        />
 
-             <div
+        <div
                className="w-full h-36 flex flex-col items-center justify-center border-2 border-dashed rounded-lg bg-primary/5 cursor-pointer transition-all duration-300 border-primary/30 hover:bg-primary/10 hover:border-primary/50 hover:scale-[1.01]"
           onDragEnter={(e) => {
             e.preventDefault();
@@ -494,62 +498,62 @@ export default function Step3Lampiran() {
         >
                 <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center mb-2">
                    <UploadCloud className="w-5 h-5 text-primary" />
-                </div>
-                
-                <div className="text-center">
+           </div>
+           
+           <div className="text-center">
                    <span className="font-semibold text-sm text-foreground">
                      Seret & lepas atau <span className="text-primary">pilih file</span>
-                   </span>
-                </div>
-                
+              </span>
+           </div>
+           
                 <span className="font-normal text-[10px] text-muted-foreground mt-0.5">
-                   untuk diunggah
-                </span>
-             </div>
+              untuk diunggah
+           </span>
+        </div>
 
-             {tambahanFiles.length > 0 && (
+        {tambahanFiles.length > 0 && (
                <div className="w-full flex flex-col gap-3">
                  {tambahanFiles.map((attachment) => {
-                   return (
+              return (
                      <div key={attachment.id} className={`${fileItemClass} border-primary/20 bg-primary/5 animate-in fade-in slide-in-from-left-2 duration-300`}>
                        <div className="flex items-center gap-4">
                           <div className={`w-10 h-10 rounded-lg ${getFileIconBg(attachment.file)} flex items-center justify-center`}>
-                             {getFileIcon(attachment.file)}
-                          </div>
-                          
-                          <div className="flex flex-col">
+                        {getFileIcon(attachment.file)}
+                     </div>
+                     
+                     <div className="flex flex-col">
                              <span className="font-medium text-base text-foreground">
-                                {attachment.file.name}
-                             </span>
+                           {attachment.file.name}
+                        </span>
                              <span className="font-normal text-sm text-muted-foreground">
-                                {formatFileSize(attachment.file.size)}
-                             </span>
-                          </div>
-                       </div>
+                           {formatFileSize(attachment.file.size)}
+                        </span>
+                     </div>
+                  </div>
                        <div className="flex items-center gap-2">
-                          {attachment.preview && (
-                            <button
+                     {attachment.preview && (
+                       <button
                               className="w-9 h-9 flex items-center justify-center rounded-md border border-transparent hover:border-primary/30 hover:bg-primary/10 transition-all"
-                              onClick={() => window.open(attachment.preview, '_blank')}
-                            >
+                         onClick={() => window.open(attachment.preview, '_blank')}
+                       >
                                <Eye className="w-5 h-5 text-primary" />
-                            </button>
-                          )}
+                       </button>
+                     )}
 
-                          <button
+                     <button
                             className="w-9 h-9 flex items-center justify-center rounded-md border border-transparent hover:border-destructive/20 hover:bg-destructive/10 transition-all"
                             onClick={() => removeAttachment(attachment.id)}
-                          >
+                     >
                              <Trash2 className="w-5 h-5 text-destructive" />
-                          </button>
-                       </div>
-                     </div>
-                   );
-                 })}
+                     </button>
+                  </div>
+                </div>
+              );
+            })}
                </div>
              )}
-           </div>
-         )}
+          </div>
+        )}
       </div>
 
       <div className="w-full max-w-5xl flex justify-between items-center">

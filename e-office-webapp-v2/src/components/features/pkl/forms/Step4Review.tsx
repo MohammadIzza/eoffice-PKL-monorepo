@@ -39,10 +39,14 @@ export default function Step4Review() {
     // If we have metadata but no attachments, force restore
     if (hasMetadata && !hasAttachments) {
       console.log('[Step4Review] Metadata exists but no attachments - forcing restore');
-      restoreAttachments();
+      restoreAttachments().catch(error => {
+        console.error('[Step4Review] Error restoring attachments:', error);
+      });
     } else if (!_hasHydrated && hasMetadata) {
       console.log('[Step4Review] Not hydrated and has metadata - calling restore');
-      restoreAttachments();
+      restoreAttachments().catch(error => {
+        console.error('[Step4Review] Error restoring attachments:', error);
+      });
     } else if (_hasHydrated && hasAttachments) {
       console.log('[Step4Review] Already hydrated with attachments:', attachments.length);
     }
