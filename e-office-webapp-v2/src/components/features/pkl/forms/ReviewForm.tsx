@@ -235,7 +235,7 @@ export default function Step4Review() {
             Kembali
             </Button>
             <Button
-              className="h-11 px-6 bg-[#0079BD] text-white font-bold hover:bg-blue-700 rounded-[8px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="h-11 px-6 bg-[#3b82f6] text-white font-bold hover:bg-[#2563eb] rounded-[8px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleSubmit}
               disabled={isSubmitting}
             >

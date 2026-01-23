@@ -6,10 +6,10 @@
 export const designTokens = {
   colors: {
     primary: {
-      DEFAULT: '#0079BD',
-      hover: '#0066A0',
-      light: '#E6F4F8',
-      dark: '#005A8A',
+      DEFAULT: '#3b82f6',
+      hover: '#2563eb',
+      light: '#dbeafe',
+      dark: '#1d4ed8',
     },
     secondary: {
       DEFAULT: '#6B7280',

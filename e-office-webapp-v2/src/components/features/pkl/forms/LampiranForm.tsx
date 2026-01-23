@@ -27,7 +27,7 @@ export default function Step3Lampiran() {
 
   const cardClass = "w-full bg-white rounded-[12px] border border-[#E5E7EB] p-[24px] flex flex-col items-center gap-[24px]";
   const uploadAreaClass = `w-full max-w-[846px] h-[156px] flex flex-col items-center justify-center border-[2px] border-dashed rounded-[8px] bg-[#FAFAFA] cursor-pointer hover:bg-gray-50 transition-colors ${
-    dragActive ? 'border-[#137FEC] bg-blue-50' : 'border-[#E5E7EB]'
+    dragActive ? 'border-[#3b82f6] bg-[#dbeafe]' : 'border-[#E5E7EB]'
   }`;
   const fileItemClass = "w-full max-w-[846px] h-[70px] flex items-center justify-between p-[12px] border border-[#E5E7EB] rounded-[8px] bg-white";
 
@@ -156,13 +156,13 @@ export default function Step3Lampiran() {
           onDrop={(e) => handleDrop(e, 'file')}
           onClick={() => fileInputRef.current?.click()}
         >
-           <div className="w-[48px] h-[48px] rounded-full bg-[#137FEC1A] flex items-center justify-center mb-[12px]">
-              <UploadCloud className="w-[24px] h-[24px] text-[#137FEC]" />
+           <div className="w-[48px] h-[48px] rounded-full bg-[#3b82f61A] flex items-center justify-center mb-[12px]">
+              <UploadCloud className="w-[24px] h-[24px] text-[#3b82f6]" />
            </div>
            
            <div className="text-center">
               <span className="font-inter font-semibold text-[16px] leading-[24px] text-[#111418]">
-                Seret & lepas atau <span className="text-[#137FEC]">pilih file</span>
+                Seret & lepas atau <span className="text-[#3b82f6]">pilih file</span>
               </span>
            </div>
            
@@ -253,13 +253,13 @@ export default function Step3Lampiran() {
           onDrop={(e) => handleDrop(e, 'tambahan')}
           onClick={() => tambahanInputRef.current?.click()}
         >
-           <div className="w-[48px] h-[48px] rounded-full bg-[#137FEC1A] flex items-center justify-center mb-[12px]">
-              <UploadCloud className="w-[24px] h-[24px] text-[#137FEC]" />
+           <div className="w-[48px] h-[48px] rounded-full bg-[#3b82f61A] flex items-center justify-center mb-[12px]">
+              <UploadCloud className="w-[24px] h-[24px] text-[#3b82f6]" />
            </div>
            
            <div className="text-center">
               <span className="font-inter font-semibold text-[16px] leading-[24px] text-[#111418]">
-                Seret & lepas atau <span className="text-[#137FEC]">pilih file</span>
+                Seret & lepas atau <span className="text-[#3b82f6]">pilih file</span>
               </span>
            </div>
            
@@ -321,7 +321,7 @@ export default function Step3Lampiran() {
           Kembali
         </Button>
         <Button
-          className="h-11 px-6 bg-[#0079BD] text-white font-bold hover:bg-blue-700 cursor-pointer rounded-[8px]"
+          className="h-11 px-6 bg-[#3b82f6] text-white font-bold hover:bg-[#2563eb] cursor-pointer rounded-[8px]"
           onClick={() => {
             if (utamaFiles.length === 0) {
               setError('Minimal 1 lampiran utama wajib diunggah');

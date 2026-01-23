@@ -79,7 +79,7 @@ export default function LetterTable() {
              <Search className="absolute left-[12px] top-[11px] h-[16px] w-[16px] text-[#64748B]" />
              <input 
                placeholder="Cari surat..." 
-               className="w-full h-full pl-[36px] pr-[16px] py-[9px] bg-[#F8FAFC] border border-[#CBD5E1] rounded-[12px] text-[14px] font-lexend text-[#0F172A] placeholder:text-[#64748B] focus:outline-none focus:ring-1 focus:ring-blue-500"
+               className="w-full h-full pl-[36px] pr-[16px] py-[9px] bg-[#F8FAFC] border border-[#CBD5E1] rounded-[12px] text-[14px] font-lexend text-[#0F172A] placeholder:text-[#64748B] focus:outline-none focus:ring-1 focus:ring-[#3b82f6]"
              />
            </div>
 
