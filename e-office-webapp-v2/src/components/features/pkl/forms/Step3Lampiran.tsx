@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Stepper from "@/components/features/pkl/navigation/Stepper";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,30 @@ const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'
 
 export default function Step3Lampiran() {
   const router = useRouter();
-  const { attachments, addAttachment, removeAttachment, updateAttachmentCategory } = usePKLFormStore();
+  const { attachments, addAttachment, removeAttachment, updateAttachmentCategory, restoreAttachments, _hasHydrated } = usePKLFormStore();
+  
+  // Ensure attachments are restored after hydration
+  useEffect(() => {
+    console.log('[Step3Lampiran] useEffect check', { _hasHydrated, attachmentsCount: attachments.length });
+    
+    // Check if there's metadata in localStorage but no attachments in state
+    const storedMetadata = JSON.parse(localStorage.getItem('pkl-attachments-metadata') || '[]');
+    const hasMetadata = storedMetadata.length > 0;
+    const hasAttachments = attachments.length > 0;
+    
+    console.log('[Step3Lampiran] Storage check', { hasMetadata, hasAttachments, metadataCount: storedMetadata.length });
+    
+    // If we have metadata but no attachments, force restore
+    if (hasMetadata && !hasAttachments) {
+      console.log('[Step3Lampiran] Metadata exists but no attachments - forcing restore');
+      restoreAttachments();
+    } else if (!_hasHydrated && hasMetadata) {
+      console.log('[Step3Lampiran] Not hydrated and has metadata - calling restore');
+      restoreAttachments();
+    } else if (_hasHydrated && hasAttachments) {
+      console.log('[Step3Lampiran] Already hydrated with attachments:', attachments.length);
+    }
+  }, []); // Only run once on mount
   const [dragActive, setDragActive] = useState<{ proposal: boolean; ktm: boolean }>({ proposal: false, ktm: false });
   const [error, setError] = useState<string | null>(null);
   const [isTambahanOpen, setIsTambahanOpen] = useState(false);
@@ -44,7 +67,7 @@ export default function Step3Lampiran() {
     return null;
   };
 
-  const handleFileSelectMultiple = (files: FileList | null, category: 'file' | 'foto' | 'tambahan') => {
+  const handleFileSelectMultiple = (files: FileList | null, category: 'proposal' | 'ktm' | 'tambahan') => {
     if (!files || files.length === 0) return;
 
     setError(null);
@@ -92,19 +115,14 @@ export default function Step3Lampiran() {
       return;
     }
     
-    // Remove existing file of same type by checking filename prefix
-    const prefix = `${type}_`;
-    const existingIndex = attachments.findIndex(
-      att => (att.category === 'file' || att.category === 'foto') && 
-      att.file.name.toLowerCase().startsWith(prefix.toLowerCase())
-    );
-    if (existingIndex !== -1) {
-      removeAttachment(existingIndex);
+    // Remove existing file of same type
+    const existingAttachment = attachments.find(att => att.category === type);
+    if (existingAttachment) {
+      removeAttachment(existingAttachment.id);
     }
     
-    // Create new file with prefix to identify the type
-    const fileWithPrefix = new File([file], `${prefix}${file.name}`, { type: file.type });
-    addAttachment(fileWithPrefix, 'file');
+    // Add file with correct category
+    addAttachment(file, type);
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -127,15 +145,9 @@ export default function Step3Lampiran() {
     return 'bg-primary/10';
   };
 
-  // Get specific files - check for prefix in filename
-  const proposalFile = attachments.find(att => 
-    (att.category === 'file' || att.category === 'foto') && 
-    (att.file.name.toLowerCase().startsWith('proposal_') || att.file.name.toLowerCase().includes('proposal'))
-  );
-  const ktmFile = attachments.find(att => 
-    (att.category === 'file' || att.category === 'foto') && 
-    (att.file.name.toLowerCase().startsWith('ktm_') || att.file.name.toLowerCase().includes('ktm'))
-  );
+  // Get specific files by category
+  const proposalFile = attachments.find(att => att.category === 'proposal');
+  const ktmFile = attachments.find(att => att.category === 'ktm');
   const tambahanFiles = attachments.filter(att => att.category === 'tambahan');
 
   return (
@@ -207,7 +219,7 @@ export default function Step3Lampiran() {
                   <div className="flex flex-col min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-sm text-foreground truncate">
-                        {proposalFile.file.name.replace(/^(proposal_|ktm_)/i, '')}
+                        {proposalFile.file.name.replace(/^(proposal_|ktm_)/i, '') || proposalFile.file.name}
                       </span>
                       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-success/10 text-success border border-success/20">
                         <CheckCircle2 className="w-3 h-3" />
@@ -266,8 +278,7 @@ export default function Step3Lampiran() {
                     size="sm"
                     className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
                     onClick={() => {
-                      const index = attachments.findIndex(att => att === proposalFile);
-                      if (index !== -1) removeAttachment(index);
+                      if (proposalFile) removeAttachment(proposalFile.id);
                     }}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -332,7 +343,7 @@ export default function Step3Lampiran() {
                   <div className="flex flex-col min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-sm text-foreground truncate">
-                        {ktmFile.file.name.replace(/^(proposal_|ktm_)/i, '')}
+                        {ktmFile.file.name.replace(/^(proposal_|ktm_)/i, '') || ktmFile.file.name}
                       </span>
                       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-success/10 text-success border border-success/20">
                         <CheckCircle2 className="w-3 h-3" />
@@ -353,7 +364,7 @@ export default function Step3Lampiran() {
                       onClick={() => {
                         const newWindow = window.open('', '_blank');
                         if (newWindow && ktmFile.preview) {
-                          const displayName = ktmFile.file.name.replace(/^(proposal_|ktm_)/i, '');
+                          const displayName = ktmFile.file.name.replace(/^(proposal_|ktm_)/i, '') || ktmFile.file.name;
                           const fileExtension = displayName.split('.').pop()?.toLowerCase() || '';
                           const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension);
                           const isPdf = fileExtension === 'pdf';
@@ -392,8 +403,7 @@ export default function Step3Lampiran() {
                     size="sm"
                     className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
                     onClick={() => {
-                      const index = attachments.findIndex(att => att === ktmFile);
-                      if (index !== -1) removeAttachment(index);
+                      if (ktmFile) removeAttachment(ktmFile.id);
                     }}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -499,10 +509,9 @@ export default function Step3Lampiran() {
 
              {tambahanFiles.length > 0 && (
                <div className="w-full flex flex-col gap-3">
-                 {tambahanFiles.map((attachment, index) => {
-                   const actualIndex = attachments.findIndex(att => att === attachment);
+                 {tambahanFiles.map((attachment) => {
                    return (
-                     <div key={actualIndex} className={`${fileItemClass} border-primary/20 bg-primary/5 animate-in fade-in slide-in-from-left-2 duration-300`}>
+                     <div key={attachment.id} className={`${fileItemClass} border-primary/20 bg-primary/5 animate-in fade-in slide-in-from-left-2 duration-300`}>
                        <div className="flex items-center gap-4">
                           <div className={`w-10 h-10 rounded-lg ${getFileIconBg(attachment.file)} flex items-center justify-center`}>
                              {getFileIcon(attachment.file)}
@@ -529,7 +538,7 @@ export default function Step3Lampiran() {
 
                           <button
                             className="w-9 h-9 flex items-center justify-center rounded-md border border-transparent hover:border-destructive/20 hover:bg-destructive/10 transition-all"
-                            onClick={() => removeAttachment(actualIndex)}
+                            onClick={() => removeAttachment(attachment.id)}
                           >
                              <Trash2 className="w-5 h-5 text-destructive" />
                           </button>

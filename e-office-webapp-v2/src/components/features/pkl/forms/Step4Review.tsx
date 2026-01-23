@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Stepper from "@/components/features/pkl/navigation/Stepper";
 import { Button } from "@/components/ui/button";
@@ -19,11 +19,34 @@ import { formatDate } from "@/lib/utils/date.utils";
 
 export default function Step4Review() {
   const router = useRouter();
-  const { formData, attachments, resetForm } = usePKLFormStore();
+  const { formData, attachments, resetForm, restoreAttachments, _hasHydrated } = usePKLFormStore();
   const { user } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedAttachments, setExpandedAttachments] = useState<Record<number, boolean>>({});
+  
+  // Ensure attachments are restored after hydration (same as Step3Lampiran)
+  useEffect(() => {
+    console.log('[Step4Review] useEffect check', { _hasHydrated, attachmentsCount: attachments.length });
+    
+    // Check if there's metadata in localStorage but no attachments in state
+    const storedMetadata = JSON.parse(localStorage.getItem('pkl-attachments-metadata') || '[]');
+    const hasMetadata = storedMetadata.length > 0;
+    const hasAttachments = attachments.length > 0;
+    
+    console.log('[Step4Review] Storage check', { hasMetadata, hasAttachments, metadataCount: storedMetadata.length });
+    
+    // If we have metadata but no attachments, force restore
+    if (hasMetadata && !hasAttachments) {
+      console.log('[Step4Review] Metadata exists but no attachments - forcing restore');
+      restoreAttachments();
+    } else if (!_hasHydrated && hasMetadata) {
+      console.log('[Step4Review] Not hydrated and has metadata - calling restore');
+      restoreAttachments();
+    } else if (_hasHydrated && hasAttachments) {
+      console.log('[Step4Review] Already hydrated with attachments:', attachments.length);
+    }
+  }, []); // Only run once on mount
 
   const ReviewRow = ({ label, value }: { label: string; value: string }) => (
     <div className="w-full flex justify-between items-center py-3 px-5 border-b border-border last:border-b-0">
@@ -73,14 +96,8 @@ export default function Step4Review() {
       return;
     }
 
-    const proposalFile = attachments.find(att => 
-      (att.category === 'file' || att.category === 'foto') && 
-      att.file.name.toLowerCase().includes('proposal')
-    );
-    const ktmFile = attachments.find(att => 
-      (att.category === 'file' || att.category === 'foto') && 
-      att.file.name.toLowerCase().includes('ktm')
-    );
+    const proposalFile = attachments.find(att => att.category === 'proposal');
+    const ktmFile = attachments.find(att => att.category === 'ktm');
     
     if (!proposalFile || !ktmFile) {
       setError('File Proposal dan File KTM wajib diunggah.');
@@ -103,17 +120,10 @@ export default function Step4Review() {
       if (attachments.length > 0) {
         try {
           // Filter utama files: proposal dan ktm (cek dari nama file atau category)
-          const utamaFiles = attachments.filter(att => {
-            const fileName = att.file.name.toLowerCase();
-            return (
-              att.category === 'file' || 
-              att.category === 'foto' ||
-              fileName.startsWith('proposal_') ||
-              fileName.startsWith('ktm_') ||
-              fileName.includes('proposal') ||
-              fileName.includes('ktm')
-            ) && att.category !== 'tambahan';
-          });
+          // Filter utama files: proposal dan ktm
+          const utamaFiles = attachments.filter(att => 
+            att.category === 'proposal' || att.category === 'ktm'
+          );
           const tambahanFiles = attachments.filter(att => att.category === 'tambahan');
 
           if (utamaFiles.length > 0) {
@@ -339,7 +349,7 @@ export default function Step4Review() {
     }
   };
 
-  const utamaFiles = attachments.filter(att => att.category === 'file' || att.category === 'foto');
+  const utamaFiles = attachments.filter(att => att.category === 'proposal' || att.category === 'ktm');
   const tambahanFiles = attachments.filter(att => att.category === 'tambahan');
 
   return (
@@ -492,7 +502,7 @@ export default function Step4Review() {
                              {attachment.file.name}
                            </span>
                            <span className="text-xs text-muted-foreground">
-                             {formatFileSize(attachment.file.size)} • {attachment.category === 'tambahan' ? 'Tambahan' : attachment.category === 'foto' ? 'Foto' : 'File'}
+                             {formatFileSize(attachment.file.size)} • {attachment.category === 'tambahan' ? 'Tambahan' : attachment.category === 'proposal' ? 'Proposal' : attachment.category === 'ktm' ? 'KTM' : 'File'}
                            </span>
                          </div>
                        </div>
