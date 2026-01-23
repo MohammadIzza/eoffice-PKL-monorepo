@@ -7,13 +7,13 @@ export default new Elysia()
 	.get(
 		"/all",
 		async () => {
-			DepartemenService.getAll();
-			return;
+			const departemen = await DepartemenService.getAll();
+			return {
+				success: true,
+				data: departemen,
+			};
 		},
-		{
-			...requirePermission("departemen", "read"),
-			body: t.Object({}),
-		},
+		{},
 	)
 	.get(
 		"/:id",

@@ -1,9 +1,12 @@
 "use client";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Calendar } from "lucide-react";
+import { format, parse } from "date-fns";
+import { id } from "date-fns/locale";
 import Stepper from "@/components/features/pkl/Stepper";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -16,6 +19,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useAuthStore } from "@/stores";
+import { usePKLFormStore } from "@/stores/pklFormStore";
 
 const formSchema = z.object({
   namaLengkap: z.string().min(1, "Nama Lengkap wajib diisi"),
@@ -29,7 +34,55 @@ const formSchema = z.object({
   departemen: z.string().min(1, "Departemen wajib diisi"),
   programStudi: z.string().min(1, "Prodi wajib diisi"),
   tempatLahir: z.string().min(1, "Tempat Lahir wajib diisi"),
-  tanggalLahir: z.string().refine((date) => new Date(date) <= new Date(), {
+  tanggalLahir: z.string().min(1, "Tanggal lahir wajib diisi").transform((date) => {
+    if (!date || date.trim() === "") return "";
+    try {
+      let parsedDate: Date;
+      const dateStr = date.trim();
+      
+      if (dateStr.includes("T")) {
+        parsedDate = new Date(dateStr);
+      } else if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        parsedDate = new Date(dateStr + "T00:00:00");
+      } else if (dateStr.match(/^\d{1,2}\s+\w+\s+\d{4}$/)) {
+        try {
+          parsedDate = parse(dateStr, "dd MMMM yyyy", new Date(), { locale: id });
+        } catch {
+          parsedDate = new Date(dateStr);
+        }
+      } else {
+        parsedDate = new Date(dateStr);
+      }
+      
+      if (isNaN(parsedDate.getTime())) {
+        return dateStr;
+      }
+      return parsedDate.toISOString().split('T')[0];
+    } catch {
+      return date;
+    }
+  }).refine((date) => {
+    if (!date || date.trim() === "") return false;
+    try {
+      let parsedDate: Date;
+      const dateStr = date.trim();
+      
+      if (dateStr.includes("T")) {
+        parsedDate = new Date(dateStr);
+      } else if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        parsedDate = new Date(dateStr + "T00:00:00");
+      } else {
+        parsedDate = new Date(dateStr);
+      }
+      
+      if (isNaN(parsedDate.getTime())) return false;
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      return parsedDate <= today;
+    } catch {
+      return false;
+    }
+  }, {
     message: "Tanggal lahir tidak valid",
   }),
   noHp: z
@@ -51,26 +104,95 @@ type FormData = z.infer<typeof formSchema>;
 
 export default function Step1identitas() {
   const router = useRouter();
+  const { user } = useAuthStore();
+  const { formData, setFormData } = usePKLFormStore();
   
+  const normalizeDateValue = (dateValue: string | null | undefined): string => {
+    if (!dateValue || (typeof dateValue === 'string' && dateValue.trim() === "")) return "";
+    try {
+      let date: Date;
+      const dateStr = String(dateValue).trim();
+      
+      if (dateStr.includes("T")) {
+        date = new Date(dateStr);
+      } else if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        date = new Date(dateStr + "T00:00:00");
+      } else if (dateStr.match(/^\d{1,2}\s+\w+\s+\d{4}$/)) {
+        try {
+          date = parse(dateStr, "dd MMMM yyyy", new Date(), { locale: id });
+        } catch {
+          date = new Date(dateStr);
+        }
+      } else {
+        date = new Date(dateStr);
+      }
+      
+      if (isNaN(date.getTime())) {
+        return "";
+      }
+      return date.toISOString().split('T')[0];
+    } catch (error) {
+      return "";
+    }
+  };
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      namaLengkap: "Ahmad Syaifullah",
+      namaLengkap: formData.namaLengkap || user?.name || "",
       role: "Mahasiswa", 
-      nim: "24060121130089",
-      email: "ahmadsyaifullah@students.undip.ac.id",
-      departemen: "Informatika",
-      programStudi: "S1 - Informatika",
-      tempatLahir: "Blora",
-      tanggalLahir: "2006-03-18",
-      noHp: "",
-      alamat: "",
-      ipk: "",
-      sks: "",
+      nim: formData.nim || user?.mahasiswa?.nim || "",
+      email: formData.email || user?.email || "",
+      departemen: formData.departemen || user?.mahasiswa?.departemen?.name || "",
+      programStudi: formData.programStudi || user?.mahasiswa?.programStudi?.name || "",
+      tempatLahir: formData.tempatLahir || user?.mahasiswa?.tempatLahir || "",
+      tanggalLahir: normalizeDateValue(formData.tanggalLahir || user?.mahasiswa?.tanggalLahir || ""),
+      noHp: formData.noHp || user?.mahasiswa?.noHp || "",
+      alamat: formData.alamat || user?.mahasiswa?.alamat || "",
+      ipk: formData.ipk || "",
+      sks: formData.sks || "",
     },
   });
 
+  useEffect(() => {
+    if (user?.mahasiswa) {
+      const mahasiswa = user.mahasiswa;
+      form.reset({
+        namaLengkap: user.name || "",
+        role: "Mahasiswa",
+        nim: mahasiswa.nim || "",
+        email: user.email || "",
+        departemen: mahasiswa.departemen?.name || "",
+        programStudi: mahasiswa.programStudi?.name || "",
+        tempatLahir: mahasiswa.tempatLahir || "",
+        tanggalLahir: normalizeDateValue(mahasiswa.tanggalLahir || ""),
+        noHp: mahasiswa.noHp || "",
+        alamat: mahasiswa.alamat || "",
+        ipk: formData.ipk || "",
+        sks: formData.sks || "",
+      });
+    }
+  }, [user, form, formData]);
+
+  const formatTanggalLahir = (dateString: string | null | undefined): string => {
+    if (!dateString) return "";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      return format(date, "dd MMMM yyyy", { locale: id });
+    } catch {
+      return dateString;
+    }
+  };
+
   const onSubmit = (data: FormData) => {
+    setFormData({
+      ...formData,
+      ...data,
+      tanggalLahir: normalizeDateValue(data.tanggalLahir),
+      programStudiId: user?.mahasiswa?.programStudi?.id || "",
+      departemenId: user?.mahasiswa?.departemen?.id || "",
+    });
     router.push("/dashboard/pengajuan/pkl/detail-pengajuan");
   };
 
@@ -80,7 +202,6 @@ export default function Step1identitas() {
   const labelClass = "text-[14px] font-medium leading-[20px] text-[#111418] font-inter mb-[6px] block";
   
   const btnKembali = "h-[44px] min-w-[84px] px-[24px] rounded-[8px] border border-[#D1D5DB] bg-white text-[#374151] font-bold text-[14px] hover:bg-gray-50";
-  const btnSimpan = "h-[44px] min-w-[84px] px-[24px] rounded-[8px] border border-[#137FEC] bg-white text-[#137FEC] font-bold text-[14px] hover:bg-blue-50";
   const btnLanjut = "h-[44px] min-w-[84px] px-[24px] rounded-[8px] bg-[#D1D5DB] text-white font-bold text-[14px] hover:bg-gray-400";
 
   return (
@@ -119,14 +240,32 @@ export default function Step1identitas() {
                 <FormField control={form.control} name="tempatLahir" render={({ field }) => (
                   <FormItem><FormLabel className={labelClass}>Tempat Lahir</FormLabel><FormControl><Input {...field} readOnly className={readOnlyClass} /></FormControl><FormMessage /></FormItem>
                 )} />
-                <FormField control={form.control} name="tanggalLahir" render={({ field }) => (
-                  <FormItem><FormLabel className={labelClass}>Tanggal Lahir</FormLabel>
-                    <div className="relative">
-                      <FormControl><Input {...field} readOnly className={`${readOnlyClass} pr-10`} /></FormControl>
-                      <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    </div>
-                  <FormMessage />                  </FormItem>
-                )} />
+                <FormField 
+                  control={form.control} 
+                  name="tanggalLahir" 
+                  render={({ field }) => {
+                    const displayValue = formatTanggalLahir(field.value);
+                    return (
+                      <FormItem>
+                        <FormLabel className={labelClass}>Tanggal Lahir</FormLabel>
+                        <div className="relative">
+                          <FormControl>
+                            <Input 
+                              value={displayValue}
+                              readOnly 
+                              className={`${readOnlyClass} pr-10`}
+                              onBlur={field.onBlur}
+                              name={field.name}
+                              ref={field.ref}
+                            />
+                          </FormControl>
+                          <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }} 
+                />
                 <FormField control={form.control} name="noHp" render={({ field }) => (
                   <FormItem>
                     <FormLabel className={labelClass}>No. HP</FormLabel>
@@ -192,10 +331,7 @@ export default function Step1identitas() {
 
           <div className="w-full max-w-[1073px] flex justify-between items-center">
             <Button type="button" variant="outline" className={btnKembali}>Kembali</Button>
-            <div className="flex gap-4">
-              <Button type="button" variant="outline" className={btnSimpan}>Simpan Draft</Button>
-              <Button type="submit" className={btnLanjut}>Lanjut</Button>
-            </div>
+            <Button type="submit" className={btnLanjut}>Lanjut</Button>
           </div>
 
         </form>
