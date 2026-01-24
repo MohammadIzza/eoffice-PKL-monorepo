@@ -17,10 +17,15 @@ import {
   CheckCircle2,
   XCircle,
   Edit,
-  ArrowLeft
+  ArrowLeft,
+  Clock,
+  Download,
+  File,
+  Image as ImageIcon
 } from 'lucide-react';
-import { useAuthStore } from '@/stores';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { formatDate, formatDateTime } from '@/lib/utils/date.utils';
+import { API_URL } from '@/lib/constants';
 
 const getStepLabel = (step: number | null): string => {
   if (!step) return '-';
@@ -37,13 +42,76 @@ const getStepLabel = (step: number | null): string => {
   return stepMap[step] || `Step ${step}`;
 };
 
+const getActionLabel = (action: string): string => {
+  const actionMap: Record<string, string> = {
+    SUBMITTED: 'Surat Diajukan',
+    APPROVED: 'Disetujui',
+    REJECTED: 'Ditolak',
+    REVISED: 'Direvisi',
+    SELF_REVISED: 'Direvisi oleh Mahasiswa',
+    RESUBMITTED: 'Dikirim Ulang',
+    SIGNED: 'Ditandatangani',
+    NUMBERED: 'Diberi Nomor',
+    CANCELLED: 'Dibatalkan',
+  };
+  return actionMap[action] || action;
+};
+
+const getStatusLabel = (action: string, step: number | null): string => {
+  if (action === 'SUBMITTED') return 'Surat Diajukan';
+  if (action === 'APPROVED') {
+    const stepMap: Record<number, string> = {
+      1: 'Disetujui Dosen Pembimbing',
+      2: 'Disetujui Dosen Koordinator',
+      3: 'Disetujui Ketua Program Studi',
+      4: 'Disetujui Admin Fakultas',
+      5: 'Disetujui Supervisor Akademik',
+      6: 'Disetujui Manajer TU',
+      7: 'Ditandatangani Wakil Dekan 1',
+      8: 'Diberi Nomor oleh UPA',
+    };
+    return step ? stepMap[step] || 'Disetujui' : 'Disetujui';
+  }
+  return getActionLabel(action);
+};
+
+const getStatusDisplayLabel = (status: string, currentStep: number | null): string => {
+  const statusMap: Record<string, string> = {
+    DRAFT: 'Draft',
+    PENDING: 'Menunggu',
+    PROCESSING: 'Diproses',
+    REVISION: 'Revisi',
+    COMPLETED: 'Selesai',
+    REJECTED: 'Ditolak',
+    CANCELLED: 'Dibatalkan',
+  };
+  return statusMap[status] || status;
+};
+
+const getAttachmentCategoryLabel = (category?: string | null): string => {
+  if (!category) return 'Lampiran';
+  if (category === 'proposal') return 'Proposal';
+  if (category === 'ktm') return 'KTM';
+  if (category === 'tambahan') return 'Tambahan';
+  return category;
+};
+
+const getTimelineBadgeClass = (action: string): string => {
+  const key = action.toUpperCase();
+  if (key === 'APPROVED') return 'bg-[#E7F9EE] text-[#1E8E3E] border-[#BFEBD1]';
+  if (key === 'REJECTED' || key === 'CANCELLED') return 'bg-[#FFECEC] text-[#D93025] border-[#F9BDB9]';
+  if (key === 'REVISED' || key === 'SELF_REVISED') return 'bg-[#FFF7E6] text-[#B26A00] border-[#F7D9A6]';
+  if (key === 'SIGNED' || key === 'NUMBERED') return 'bg-[#EAF2FF] text-[#1B5BD7] border-[#C7DAFF]';
+  if (key === 'SUBMITTED' || key === 'RESUBMITTED') return 'bg-[#EEF4FF] text-[#1D4ED8] border-[#C7DAFF]';
+  return 'bg-[#F5F5F7] text-[#636366] border-[#E5E5E7]';
+};
+
 export default function ApprovalDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
   const { letter, isLoading, error, refetch } = useLetter(id);
   const { refetch: refetchQueue } = useApprovalQueue();
-  const { user } = useAuthStore();
   
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,6 +131,16 @@ export default function ApprovalDetailPage() {
   const [numberInput, setNumberInput] = useState<string>('');
   const [isAssigningNumber, setIsAssigningNumber] = useState(false);
   const [numberError, setNumberError] = useState<string | null>(null);
+  const [previewAttachment, setPreviewAttachment] = useState<{
+    id: string;
+    filename: string;
+    url: string;
+    isImage: boolean;
+    isPdf: boolean;
+    category: string | null;
+    createdAt: Date;
+  } | null>(null);
+  const [showDocumentPreview, setShowDocumentPreview] = useState(false);
 
   const isWD1 = letter?.currentStep === 7;
   const isSupervisor = letter?.currentStep === 5; // Supervisor Akademik
@@ -207,6 +285,27 @@ export default function ApprovalDetailPage() {
     }
   };
 
+  const handleOpenAttachmentPreview = (attachment: {
+    id: string;
+    filename: string;
+    category: string | null;
+    createdAt: Date;
+  }) => {
+    const fileExtension = attachment.filename?.split('.').pop()?.toLowerCase() || '';
+    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension);
+    const isPdf = fileExtension === 'pdf';
+    const url = `${API_URL}/letter/${letter?.id}/attachments/${attachment.id}/download`;
+    setPreviewAttachment({
+      id: attachment.id,
+      filename: attachment.filename,
+      url,
+      isImage,
+      isPdf,
+      category: attachment.category,
+      createdAt: attachment.createdAt,
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="flex-1 px-[40px] py-[32px] overflow-y-auto bg-white">
@@ -231,7 +330,90 @@ export default function ApprovalDetailPage() {
     );
   }
 
-  const values = letter.values as Record<string, any>;
+  const formValues = letter.values as Record<string, any>;
+  const stepHistory = letter.stepHistory || [];
+  const attachments = letter.attachments || [];
+  const sortedHistory = [...stepHistory].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+  const letterNumber = letter.letterNumber || letter.numbering?.numberString || null;
+  const isFinalDocument = !!letterNumber;
+
+  const SummaryItem = ({ label, value }: { label: string; value?: string | null }) => (
+    <div className="flex flex-col gap-1">
+      <span className="text-xs text-[#86868B]">{label}</span>
+      <span className="text-sm font-medium text-[#1D1D1F] break-words">{value || '-'}</span>
+    </div>
+  );
+
+  const DetailRow = ({ label, value }: { label: string; value?: string | null }) => (
+    <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-2 py-3 px-5 border-b border-[#E5E5E7] last:border-0">
+      <div className="text-sm text-[#86868B]">{label}</div>
+      <div className="text-sm font-medium text-[#1D1D1F]">{value || '-'}</div>
+    </div>
+  );
+
+  const TimelineItem = ({
+    role,
+    time,
+    status,
+    note,
+    action,
+    isLatest,
+    isLast,
+  }: {
+    role: string;
+    time: string;
+    status: string;
+    note?: string | null;
+    action: string;
+    isLatest?: boolean;
+    isLast?: boolean;
+  }) => (
+    <div className="relative pl-6">
+      {!isLast && (
+        <div className="absolute left-[6px] top-3 h-full border-l-2 border-dashed border-[#E5E5E7]" />
+      )}
+      <div
+        className={`absolute left-[1px] top-3 h-3 w-3 rounded-full border-2 ${
+          isLatest
+            ? 'border-[#0071E3] bg-[#E8F1FF]'
+            : 'border-[#CBD5E1] bg-white'
+        }`}
+      />
+      <div className="flex flex-col gap-1">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-[#1D1D1F]">{role}</p>
+            <div className="mt-1 flex items-center gap-1 text-xs text-[#86868B]">
+              <Clock className="w-3 h-3" />
+              <span>{time}</span>
+            </div>
+          </div>
+          {isLatest && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#0071E3]/10 text-[#0071E3] font-semibold">
+              Terbaru
+            </span>
+          )}
+        </div>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span
+            className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${getTimelineBadgeClass(action)}`}
+          >
+            {status}
+          </span>
+        </div>
+        {note && (
+          <div className="mt-3 rounded-lg border border-[#E5E5E7] bg-[#FAFAFC] p-3">
+            <p className="text-[11px] font-semibold text-[#86868B] mb-1">Catatan</p>
+            <p className="text-sm text-[#1D1D1F] leading-relaxed whitespace-pre-line">
+              {note}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex-1 px-[40px] py-[32px] overflow-y-auto bg-white">
@@ -270,239 +452,402 @@ export default function ApprovalDetailPage() {
           </div>
         </div>
 
-        {/* Edit Button for Supervisor */}
-        {isSupervisor && (
-          <Card className="bg-white border-[#E5E5E7] shadow-sm mb-6">
-            <CardContent className="p-6">
-              <Button
-                onClick={() => router.push(`/dashboard/approval/${letter.id}/edit`)}
-                className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3]"
-              >
-                <Edit className="w-4 h-4 mr-2" />
-                Edit Dokumen
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Preview */}
-        <Card className="bg-white border-[#E5E5E7] shadow-sm mb-6">
-          <CardHeader className="border-b border-[#E5E5E7]">
-            <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
-              Preview Dokumen
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            {isLoadingPreview ? (
-              <Skeleton className="h-96 w-full" />
-            ) : previewData ? (
-              <div className="border border-[#E5E5E7] rounded-lg overflow-hidden">
-                {previewData.htmlContent ? (
-                  <iframe
-                    srcDoc={previewData.htmlContent}
-                    className="w-full h-[800px] border-none"
-                    title="Document Preview"
-                  />
-                ) : (
-                  <iframe
-                    src={previewData.previewUrl}
-                    className="w-full h-[800px] border-none"
-                    title="Document Preview"
-                  />
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-12 text-[#86868B]">
-                <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Preview tidak tersedia</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {isUPA ? (
-          <Card className="bg-white border-[#E5E5E7] shadow-sm">
-            <CardHeader className="border-b border-[#E5E5E7]">
-              <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
-                Penomoran Surat
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              {numberError && (
-                <Alert variant="destructive" className="mb-6">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{numberError}</AlertDescription>
-                </Alert>
-              )}
-              <div className="space-y-5">
-                <div>
-                  <label className="block text-sm font-medium text-[#1D1D1F] mb-2">
-                    Tanggal
-                  </label>
-                  <Input
-                    type="date"
-                    value={numberDate}
-                    onChange={(e) => setNumberDate(e.target.value)}
-                    className="bg-white border-[#E5E5E7] focus:border-[#0071E3]"
-                  />
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-6">
+          <div className="flex flex-col gap-6">
+            <Card className="bg-white border-[#E5E5E7] shadow-sm">
+              <CardHeader className="border-b border-[#E5E5E7]">
+                <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
+                  Ringkasan Surat
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <SummaryItem label="ID Surat" value={letter.id} />
+                  <SummaryItem label="Jenis Surat" value={letter.letterType?.name || 'PKL'} />
+                  <SummaryItem label="Status" value={getStatusDisplayLabel(letter.status, letter.currentStep)} />
+                  <SummaryItem label="Step Saat Ini" value={getStepLabel(letter.currentStep)} />
+                  <SummaryItem label="Nomor Surat" value={letterNumber} />
+                  <SummaryItem label="Diajukan Oleh" value={letter.createdBy?.name} />
+                  <SummaryItem label="Email Pengaju" value={letter.createdBy?.email} />
+                  <SummaryItem label="Tanggal Pengajuan" value={formatDateTime(letter.createdAt)} />
+                  <SummaryItem label="Terakhir Diperbarui" value={formatDateTime(letter.updatedAt)} />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#1D1D1F] mb-2">
-                    Nomor Surat
-                  </label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={numberInput}
-                      onChange={(e) => setNumberInput(e.target.value.toUpperCase())}
-                      placeholder="AK15-01/DD/MM/YYYY"
-                      className="bg-white border-[#E5E5E7] focus:border-[#0071E3]"
-                    />
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white border-[#E5E5E7] shadow-sm">
+              <CardHeader className="border-b border-[#E5E5E7]">
+                <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
+                  Identitas Pengaju
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <DetailRow label="Nama Lengkap" value={formValues.namaLengkap || letter.createdBy?.name} />
+                <DetailRow label="NIM/NIP" value={formValues.nim} />
+                <DetailRow label="Email" value={formValues.email || letter.createdBy?.email} />
+                <DetailRow label="Departemen" value={formValues.departemen} />
+                <DetailRow label="Program Studi" value={formValues.programStudi} />
+                <DetailRow label="Tempat Lahir" value={formValues.tempatLahir} />
+                <DetailRow label="Tanggal Lahir" value={formatDate(formValues.tanggalLahir)} />
+                <DetailRow label="No HP" value={formValues.noHp} />
+                <DetailRow label="Alamat" value={formValues.alamat} />
+                <DetailRow label="IPK" value={formValues.ipk} />
+                <DetailRow label="SKS" value={formValues.sks} />
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white border-[#E5E5E7] shadow-sm">
+              <CardHeader className="border-b border-[#E5E5E7]">
+                <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
+                  Detail Surat Pengajuan
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <DetailRow label="Jenis Surat" value={letter.letterType?.name || 'PKL'} />
+                <DetailRow label="Tujuan Surat" value={formValues.tujuanSurat} />
+                <DetailRow label="Jabatan" value={formValues.jabatan} />
+                <DetailRow label="Nama Instansi" value={formValues.namaInstansi} />
+                <DetailRow label="Alamat Instansi" value={formValues.alamatInstansi} />
+                <DetailRow label="Judul" value={formValues.judul} />
+                <DetailRow label="Nama Dosen Koordinator PKL" value={formValues.namaDosenKoordinator} />
+                <DetailRow label="NIP Dosen Koordinator" value={formValues.nipDosenKoordinator} />
+                <DetailRow label="Nama Kaprodi" value={formValues.namaKaprodi} />
+                <DetailRow label="NIP Kaprodi" value={formValues.nipKaprodi} />
+                {(letterNumber || letter.numbering?.numberString) && (
+                  <DetailRow label="Nomor Surat" value={letterNumber} />
+                )}
+                <DetailRow label="Status" value={getStatusDisplayLabel(letter.status, letter.currentStep)} />
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white border-[#E5E5E7] shadow-sm">
+              <CardHeader className="border-b border-[#E5E5E7]">
+                <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
+                  Lampiran ({attachments.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                {attachments.length === 0 ? (
+                  <div className="text-center text-[#86868B] py-6">Tidak ada lampiran</div>
+                ) : (
+                  <div className="space-y-4">
+                    {attachments.map((attachment) => {
+                      const fileExtension = attachment.filename?.split('.').pop()?.toLowerCase() || '';
+                      const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension);
+                      const isPdf = fileExtension === 'pdf';
+                      const downloadUrl = `${API_URL}/letter/${letter.id}/attachments/${attachment.id}/download`;
+
+                      return (
+                        <div key={attachment.id} className="border border-[#E5E5E7] rounded-lg overflow-hidden">
+                          <div className="w-full flex items-center justify-between px-4 py-3 bg-[#F5F5F7]">
+                            <div className="flex items-center gap-3 text-left">
+                              <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-white border border-[#E5E5E7]">
+                                {isImage ? (
+                                  <ImageIcon className="w-5 h-5 text-[#0071E3]" />
+                                ) : isPdf ? (
+                                  <FileText className="w-5 h-5 text-[#FF3B30]" />
+                                ) : (
+                                  <File className="w-5 h-5 text-[#1D1D1F]" />
+                                )}
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <span className="font-semibold text-sm text-[#1D1D1F] truncate">
+                                  {attachment.filename}
+                                </span>
+                                <span className="text-xs text-[#86868B]">
+                                  {getAttachmentCategoryLabel(attachment.category)} • {formatDateTime(attachment.createdAt)}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleOpenAttachmentPreview(attachment)}
+                                className="bg-white border-[#E5E5E7] text-[#1D1D1F] hover:bg-[#F5F5F7]"
+                              >
+                                Preview
+                              </Button>
+                              <a
+                                href={downloadUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[#0071E3] hover:text-[#0051A3]"
+                              >
+                                <Download className="w-4 h-4" />
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+          </div>
+
+          <div className="flex flex-col gap-6">
+            <Card className="bg-white border-[#E5E5E7] shadow-sm">
+              <CardHeader className="border-b border-[#E5E5E7]">
+                <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
+                  Dokumen
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                {isSupervisor && (
+                  <Button
+                    onClick={() => router.push(`/dashboard/approval/${letter.id}/edit`)}
+                    className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3]"
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit Dokumen
+                  </Button>
+                )}
+                <div className={isSupervisor ? 'pt-4 border-t border-[#E5E5E7]' : ''}>
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-semibold text-[#1D1D1F]">
+                        {isFinalDocument ? 'Dokumen Final' : 'Preview Dokumen Sementara'}
+                      </p>
+                      <p className="text-xs text-[#86868B]">
+                        {isLoadingPreview
+                          ? 'Memuat preview...'
+                          : previewData
+                            ? isFinalDocument
+                              ? 'Dokumen final sudah tersedia.'
+                              : 'Dokumen masih sementara. Final tersedia setelah penomoran.'
+                            : 'Preview tidak tersedia.'}
+                      </p>
+                    </div>
                     <Button
                       variant="outline"
-                      type="button"
-                      onClick={() => setNumberInput(numberSuggestion)}
-                      disabled={!numberSuggestion}
+                      size="sm"
+                      onClick={() => setShowDocumentPreview(true)}
+                      disabled={isLoadingPreview || !previewData}
                       className="bg-white border-[#E5E5E7] text-[#1D1D1F] hover:bg-[#F5F5F7]"
                     >
-                      Gunakan Saran
+                      {isFinalDocument ? 'Lihat Final' : 'Lihat Draft'}
                     </Button>
                   </div>
-                  {numberSuggestion && (
-                    <p className="text-xs text-[#86868B] mt-2">
-                      Saran: {numberSuggestion}
-                    </p>
-                  )}
                 </div>
-                <Button
-                  onClick={handleAssignNumber}
-                  disabled={isAssigningNumber || !numberInput.trim()}
-                  className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3] disabled:opacity-50"
-                >
-                  {isAssigningNumber ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Menetapkan...
-                    </>
-                  ) : (
-                    'Tetapkan Nomor'
+              </CardContent>
+            </Card>
+
+            {isUPA ? (
+              <Card className="bg-white border-[#E5E5E7] shadow-sm">
+                <CardHeader className="border-b border-[#E5E5E7]">
+                  <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
+                    Penomoran Surat
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  {numberError && (
+                    <Alert variant="destructive" className="mb-6">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>{numberError}</AlertDescription>
+                    </Alert>
                   )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="bg-white border-[#E5E5E7] shadow-sm">
-            <CardHeader className="border-b border-[#E5E5E7]">
-              <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
-                Tindakan Approval
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              {submitError && (
-                <Alert variant="destructive" className="mb-6">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{submitError}</AlertDescription>
-                </Alert>
-              )}
-
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-[#1D1D1F] mb-2">
-                    Komentar {needsSignature && '(Opsional)'}
-                  </label>
-                  <Textarea
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    placeholder="Tambahkan komentar (opsional untuk approve, wajib untuk reject/revisi)"
-                    className="min-h-[100px] bg-white border-[#E5E5E7] focus:border-[#0071E3]"
-                  />
-                </div>
-
-                {needsSignature && (
-                  <div>
-                    <label className="block text-sm font-medium text-[#1D1D1F] mb-2">
-                      Tanda Tangan <span className="text-[#FF3B30]">*</span>
-                    </label>
-                    <Input
-                      type="file"
-                      accept="image/png,image/jpeg"
-                      onChange={handleSignatureChange}
-                      className="bg-white border-[#E5E5E7] focus:border-[#0071E3]"
-                    />
-                    {signatureError && (
-                      <p className="text-xs text-[#FF3B30] mt-2">{signatureError}</p>
-                    )}
-                    {signaturePreview && (
-                      <div className="mt-3 p-3 border border-[#E5E5E7] rounded-lg bg-white">
-                        <img
-                          src={signaturePreview}
-                          alt="Preview Tanda Tangan"
-                          className="max-h-32 object-contain"
+                  <div className="space-y-5">
+                    <div>
+                      <label className="block text-sm font-medium text-[#1D1D1F] mb-2">
+                        Tanggal
+                      </label>
+                      <Input
+                        type="date"
+                        value={numberDate}
+                        onChange={(e) => setNumberDate(e.target.value)}
+                        className="bg-white border-[#E5E5E7] focus:border-[#0071E3]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-[#1D1D1F] mb-2">
+                        Nomor Surat
+                      </label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={numberInput}
+                          onChange={(e) => setNumberInput(e.target.value.toUpperCase())}
+                          placeholder="AK15-01/DD/MM/YYYY"
+                          className="bg-white border-[#E5E5E7] focus:border-[#0071E3]"
                         />
+                        <Button
+                          variant="outline"
+                          type="button"
+                          onClick={() => setNumberInput(numberSuggestion)}
+                          disabled={!numberSuggestion}
+                          className="bg-white border-[#E5E5E7] text-[#1D1D1F] hover:bg-[#F5F5F7]"
+                        >
+                          Gunakan Saran
+                        </Button>
+                      </div>
+                      {numberSuggestion && (
+                        <p className="text-xs text-[#86868B] mt-2">
+                          Saran: {numberSuggestion}
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      onClick={handleAssignNumber}
+                      disabled={isAssigningNumber || !numberInput.trim()}
+                      className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3] disabled:opacity-50"
+                    >
+                      {isAssigningNumber ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Menetapkan...
+                        </>
+                      ) : (
+                        'Tetapkan Nomor'
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="bg-white border-[#E5E5E7] shadow-sm">
+                <CardHeader className="border-b border-[#E5E5E7]">
+                  <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
+                    Tindakan Approval
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  {submitError && (
+                    <Alert variant="destructive" className="mb-6">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>{submitError}</AlertDescription>
+                    </Alert>
+                  )}
+
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-medium text-[#1D1D1F] mb-2">
+                        Komentar {needsSignature && '(Opsional)'}
+                      </label>
+                      <Textarea
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        placeholder="Tambahkan komentar (opsional untuk approve, wajib untuk reject/revisi)"
+                        className="min-h-[100px] bg-white border-[#E5E5E7] focus:border-[#0071E3]"
+                      />
+                    </div>
+
+                    {needsSignature && (
+                      <div>
+                        <label className="block text-sm font-medium text-[#1D1D1F] mb-2">
+                          Tanda Tangan <span className="text-[#FF3B30]">*</span>
+                        </label>
+                        <Input
+                          type="file"
+                          accept="image/png,image/jpeg"
+                          onChange={handleSignatureChange}
+                          className="bg-white border-[#E5E5E7] focus:border-[#0071E3]"
+                        />
+                        {signatureError && (
+                          <p className="text-xs text-[#FF3B30] mt-2">{signatureError}</p>
+                        )}
+                        {signaturePreview && (
+                          <div className="mt-3 p-3 border border-[#E5E5E7] rounded-lg bg-white">
+                            <img
+                              src={signaturePreview}
+                              alt="Preview Tanda Tangan"
+                              className="max-h-32 object-contain"
+                            />
+                          </div>
+                        )}
                       </div>
                     )}
+
+                    <div className="flex flex-col gap-3 pt-2">
+                      <Button
+                        onClick={() => handleAction('approve')}
+                        disabled={isSubmitting || (needsSignature && !signatureData)}
+                        className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3] disabled:opacity-50"
+                      >
+                        {isSubmitting && actionType === 'approve' ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Memproses...
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="w-4 h-4 mr-2" />
+                            Setujui
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        onClick={() => handleAction('reject')}
+                        disabled={isSubmitting}
+                        variant="destructive"
+                        className="w-full"
+                      >
+                        {isSubmitting && actionType === 'reject' ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Memproses...
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="w-4 h-4 mr-2" />
+                            Tolak
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        onClick={() => handleAction('revise')}
+                        disabled={isSubmitting}
+                        variant="outline"
+                        className="w-full bg-white border-[#E5E5E7] text-[#1D1D1F] hover:bg-[#F5F5F7]"
+                      >
+                        {isSubmitting && actionType === 'revise' ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Memproses...
+                          </>
+                        ) : (
+                          <>
+                            <Edit className="w-4 h-4 mr-2" />
+                            Revisi
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            <Card className="bg-white border-[#E5E5E7] shadow-sm">
+              <CardHeader className="border-b border-[#E5E5E7]">
+                <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
+                  Riwayat Proses ({sortedHistory.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                {sortedHistory.length === 0 ? (
+                  <p className="text-sm text-[#86868B] text-center">Belum ada riwayat</p>
+                ) : (
+                  <div className="flex flex-col gap-6">
+                    {sortedHistory.map((history, index) => (
+                      <TimelineItem
+                        key={history.id}
+                        role={history.actor?.name || history.actorRole || 'System'}
+                        time={formatDateTime(history.createdAt)}
+                        status={getStatusLabel(history.action, history.step)}
+                        note={history.comment}
+                        action={history.action}
+                        isLatest={index === 0}
+                        isLast={index === sortedHistory.length - 1}
+                      />
+                    ))}
                   </div>
                 )}
-
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    onClick={() => handleAction('approve')}
-                    disabled={isSubmitting || (needsSignature && !signatureData)}
-                    className="flex-1 bg-[#0071E3] text-white hover:bg-[#0051A3] disabled:opacity-50"
-                  >
-                    {isSubmitting && actionType === 'approve' ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Memproses...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 className="w-4 h-4 mr-2" />
-                        Setujui
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    onClick={() => handleAction('reject')}
-                    disabled={isSubmitting}
-                    variant="destructive"
-                    className="flex-1"
-                  >
-                    {isSubmitting && actionType === 'reject' ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Memproses...
-                      </>
-                    ) : (
-                      <>
-                        <XCircle className="w-4 h-4 mr-2" />
-                        Tolak
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    onClick={() => handleAction('revise')}
-                    disabled={isSubmitting}
-                    variant="outline"
-                    className="flex-1 bg-white border-[#E5E5E7] text-[#1D1D1F] hover:bg-[#F5F5F7]"
-                  >
-                    {isSubmitting && actionType === 'revise' ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Memproses...
-                      </>
-                    ) : (
-                      <>
-                        <Edit className="w-4 h-4 mr-2" />
-                        Revisi
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
 
       {/* Confirm Dialog */}
@@ -544,6 +889,97 @@ export default function ApprovalDetailPage() {
                 'Konfirmasi'
               )}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!previewAttachment} onOpenChange={(open) => !open && setPreviewAttachment(null)}>
+        <DialogContent className="max-w-[960px] w-[92vw] p-0 overflow-hidden">
+          {previewAttachment && (
+            <>
+              <DialogHeader className="px-6 pt-5 pb-4 border-b border-[#E5E5E7] pr-12">
+                <div className="min-w-0">
+                  <DialogTitle className="text-lg">Preview Lampiran</DialogTitle>
+                  <p className="mt-2 text-sm font-semibold text-[#1D1D1F] break-words">
+                    {previewAttachment.filename}
+                  </p>
+                  <p className="mt-1 text-xs text-[#86868B]">
+                    {getAttachmentCategoryLabel(previewAttachment.category)} • {formatDateTime(previewAttachment.createdAt)}
+                  </p>
+                  <a
+                    href={previewAttachment.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-flex items-center text-sm text-[#0071E3] hover:text-[#0051A3]"
+                  >
+                    Unduh
+                  </a>
+                </div>
+              </DialogHeader>
+              <div className="bg-[#F7F7FA] p-4">
+                <div className="w-full h-[70vh] bg-white rounded-lg border border-[#E5E5E7] flex items-center justify-center overflow-hidden">
+                  {previewAttachment.isImage && (
+                    <img
+                      src={previewAttachment.url}
+                      alt={previewAttachment.filename}
+                      className="max-w-full max-h-full object-contain"
+                    />
+                  )}
+                  {previewAttachment.isPdf && (
+                    <iframe
+                      src={previewAttachment.url}
+                      className="w-full h-full border-none"
+                      title={previewAttachment.filename}
+                    />
+                  )}
+                  {!previewAttachment.isImage && !previewAttachment.isPdf && (
+                    <div className="text-center text-[#86868B]">
+                      <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p>Preview tidak tersedia untuk tipe file ini.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showDocumentPreview} onOpenChange={setShowDocumentPreview}>
+        <DialogContent className="max-w-[1100px] w-[92vw] p-0 overflow-hidden">
+          <DialogHeader className="px-6 pt-5 pb-4 border-b border-[#E5E5E7] pr-12">
+            <DialogTitle className="text-lg">
+              {isFinalDocument ? 'Dokumen Final' : 'Preview Dokumen Sementara'}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-[#86868B]">
+              {isFinalDocument
+                ? 'Dokumen final sudah bernomor dan siap didistribusikan.'
+                : 'Dokumen ini masih draft. Dokumen final tersedia setelah penomoran.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="bg-[#F7F7FA] p-4">
+            {previewData ? (
+              <div className="w-full h-[75vh] bg-white rounded-lg border border-[#E5E5E7] flex items-center justify-center overflow-hidden">
+                {previewData.htmlContent ? (
+                  <iframe
+                    srcDoc={previewData.htmlContent}
+                    className="w-full h-full border-none"
+                    title="Document Preview"
+                  />
+                ) : (
+                  <iframe
+                    src={previewData.previewUrl}
+                    className="w-full h-full border-none"
+                    title="Document Preview"
+                  />
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-[#86868B]">
+                <FileText className="w-10 h-10 mx-auto mb-3 opacity-50" />
+                <p>Preview tidak tersedia</p>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
