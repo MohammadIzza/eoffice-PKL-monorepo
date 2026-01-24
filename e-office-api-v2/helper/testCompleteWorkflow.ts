@@ -171,6 +171,75 @@ async function testCompleteWorkflow() {
 		return { status: letter.status, currentStep: letter.currentStep, historyCount: letter.stepHistory.length };
 	});
 
+	// ========== 5.1 UPLOAD LAMPIRAN WAJIB ==========
+	console.log("\n5.1) UPLOAD LAMPIRAN WAJIB (Proposal & KTM)...\n");
+
+	await test("Upload lampiran Proposal", async () => {
+		const formData = new FormData();
+		const proposalFile = new File(
+			[Buffer.from("Dummy proposal file for E2E testing")],
+			"proposal.pdf",
+			{ type: "application/pdf" },
+		);
+
+		formData.append("files", proposalFile);
+		formData.append("category", "proposal");
+		formData.append("replaceExisting", "true");
+
+		const res = await fetch(`${API_BASE}/letter/${letterId}/attachments`, {
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${sessions.mahasiswa}`,
+			},
+			body: formData,
+		});
+
+		if (!res.ok) {
+			const text = await res.text();
+			throw new Error(`HTTP ${res.status}: ${text.substring(0, 200)}`);
+		}
+
+		const data = await res.json();
+		if (!data.success) {
+			throw new Error(`Upload proposal failed: ${data.message || JSON.stringify(data)}`);
+		}
+
+		return data;
+	});
+
+	await test("Upload lampiran KTM", async () => {
+		const formData = new FormData();
+		const ktmFile = new File(
+			[Buffer.from("Dummy KTM file for E2E testing")],
+			"ktm.png",
+			{ type: "image/png" },
+		);
+
+		formData.append("files", ktmFile);
+		formData.append("category", "ktm");
+		formData.append("replaceExisting", "true");
+
+		const res = await fetch(`${API_BASE}/letter/${letterId}/attachments`, {
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${sessions.mahasiswa}`,
+			},
+			body: formData,
+		});
+
+		if (!res.ok) {
+			const text = await res.text();
+			throw new Error(`HTTP ${res.status}: ${text.substring(0, 200)}`);
+		}
+
+		const data = await res.json();
+		if (!data.success) {
+			throw new Error(`Upload KTM failed: ${data.message || JSON.stringify(data)}`);
+		}
+
+		return data;
+	});
+
 	// ========== 6. APPROVE dengan COMMENT (Dospem) ==========
 	console.log("\n6) APPROVE dengan COMMENT (Dospem - Step 1)...\n");
 
@@ -759,6 +828,72 @@ async function testCompleteWorkflow() {
 		}
 
 		letterId2 = data.data.letterId;
+		return data;
+	});
+
+	await test("Upload lampiran proposal (surat kedua)", async () => {
+		const formData = new FormData();
+		const proposalFile = new File(
+			[Buffer.from("Dummy proposal file for self-revise test")],
+			"proposal-self-revise.pdf",
+			{ type: "application/pdf" },
+		);
+
+		formData.append("files", proposalFile);
+		formData.append("category", "proposal");
+		formData.append("replaceExisting", "true");
+
+		const res = await fetch(`${API_BASE}/letter/${letterId2}/attachments`, {
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${sessions.mahasiswa}`,
+			},
+			body: formData,
+		});
+
+		if (!res.ok) {
+			const text = await res.text();
+			throw new Error(`HTTP ${res.status}: ${text.substring(0, 200)}`);
+		}
+
+		const data = await res.json();
+		if (!data.success) {
+			throw new Error(`Upload proposal failed: ${data.message || JSON.stringify(data)}`);
+		}
+
+		return data;
+	});
+
+	await test("Upload lampiran KTM (surat kedua)", async () => {
+		const formData = new FormData();
+		const ktmFile = new File(
+			[Buffer.from("Dummy KTM file for self-revise test")],
+			"ktm-self-revise.png",
+			{ type: "image/png" },
+		);
+
+		formData.append("files", ktmFile);
+		formData.append("category", "ktm");
+		formData.append("replaceExisting", "true");
+
+		const res = await fetch(`${API_BASE}/letter/${letterId2}/attachments`, {
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${sessions.mahasiswa}`,
+			},
+			body: formData,
+		});
+
+		if (!res.ok) {
+			const text = await res.text();
+			throw new Error(`HTTP ${res.status}: ${text.substring(0, 200)}`);
+		}
+
+		const data = await res.json();
+		if (!data.success) {
+			throw new Error(`Upload KTM failed: ${data.message || JSON.stringify(data)}`);
+		}
+
 		return data;
 	});
 

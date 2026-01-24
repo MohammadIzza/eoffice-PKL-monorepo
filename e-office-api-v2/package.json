@@ -22,6 +22,7 @@
     "elysia-remote-dts": "^1.0.3",
     "env-var": "^7.5.0",
     "minio": "^8.0.6",
+    "puppeteer": "^24.10.0",
     "zod": "^4.2.1"
   },
   "devDependencies": {

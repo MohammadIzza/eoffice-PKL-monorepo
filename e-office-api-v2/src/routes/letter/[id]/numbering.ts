@@ -1,5 +1,8 @@
 import { authGuardPlugin } from "@backend/middlewares/auth.ts";
 import { Prisma } from "@backend/db/index.ts";
+import { DocumentService } from "@backend/services/document.service.ts";
+import { MinioService } from "@backend/services/minio.service.ts";
+import { PdfService } from "@backend/services/pdf.service.ts";
 import {
 	validateUserIsAssignee,
 	PKL_WORKFLOW_STEPS,
@@ -79,8 +82,21 @@ export default new Elysia()
 			const match = numberString.match(/^AK15-(\d+)\//);
 			const counter = match ? Number.parseInt(match[1], 10) : 1;
 
+			const documentVersions = (letter.documentVersions as Array<{
+				version: number;
+				storageKey: string | null;
+				format: string;
+				createdBy: string;
+				reason: string;
+				timestamp: string;
+				isPDF: boolean;
+				isEditable: boolean;
+			}>) || [];
+
+			let numberingRecord: { id: string } | null = null;
+
 			try {
-				await Prisma.letterNumbering.create({
+				numberingRecord = await Prisma.letterNumbering.create({
 					data: {
 						letterId: letter.id,
 						letterTypeCode: "AK15",
@@ -99,12 +115,89 @@ export default new Elysia()
 				throw error;
 			}
 
-			await Prisma.letterInstance.update({
-				where: { id },
-				data: {
-					status: "COMPLETED",
-				},
-			});
+			try {
+				const latestEditable = documentVersions
+					.filter((v) => v.isEditable && v.storageKey)
+					.sort((a, b) => b.version - a.version)[0];
+				const pdfVersion = latestEditable?.version || letter.latestEditableVersion || 1;
+
+				let htmlContent = "";
+				if (latestEditable?.storageKey) {
+					const { stream } = await MinioService.getFileStream(latestEditable.storageKey);
+					const chunks: Uint8Array[] = [];
+					for await (const chunk of stream) {
+						chunks.push(chunk);
+					}
+					htmlContent = Buffer.concat(chunks).toString("utf-8");
+				} else {
+					const letterWithNumbering = await Prisma.letterInstance.findUnique({
+						where: { id: letter.id },
+						include: { numbering: true },
+					});
+					if (!letterWithNumbering) {
+						throw new Error("Surat tidak ditemukan saat generate PDF");
+					}
+					htmlContent = await DocumentService.generateHTML(letterWithNumbering);
+				}
+
+				const htmlWithNumber = htmlContent.replace(
+					/Nomor:\s*[^<]*(<br\s*\/?>)/i,
+					`Nomor: ${numberString}$1`,
+				);
+
+				const htmlWithSignature =
+					letter.signatureUrl
+						? htmlWithNumber.replace(
+								/<img([^>]*alt=["']?Signature["']?[^>]*)>/i,
+								(match) =>
+									match.includes("src=")
+										? match.replace(/src=["'][^"']*["']/, `src="${letter.signatureUrl}"`)
+										: `<img src="${letter.signatureUrl}" ${match.replace("<img", "").replace(">", "").trim()}>`,
+						  )
+						: htmlWithNumber;
+
+				const pdfBuffer = await PdfService.generatePdfFromHtml(htmlWithSignature);
+				const pdfFile = new File(
+					[pdfBuffer],
+					`document_v${pdfVersion}.pdf`,
+					{ type: "application/pdf" },
+				);
+
+				const pdfResult = await MinioService.uploadFile(
+					pdfFile,
+					`letters/${letter.id}/`,
+					"application/pdf",
+				);
+
+				const updatedDocumentVersions = documentVersions.filter(
+					(v) => !(v.isPDF && v.version === pdfVersion),
+				);
+
+				updatedDocumentVersions.push({
+					version: pdfVersion,
+					storageKey: `letters/${letter.id}/${pdfResult.nameReplace}`,
+					format: "PDF",
+					createdBy: user.id,
+					reason: "FINAL_PDF_GENERATED",
+					timestamp: new Date().toISOString(),
+					isPDF: true,
+					isEditable: false,
+				});
+
+				await Prisma.letterInstance.update({
+					where: { id },
+					data: {
+						status: "COMPLETED",
+						documentVersions: updatedDocumentVersions,
+						latestPDFVersion: pdfVersion,
+					},
+				});
+			} catch (error) {
+				if (numberingRecord?.id) {
+					await Prisma.letterNumbering.delete({ where: { id: numberingRecord.id } });
+				}
+				throw error;
+			}
 
 			await Prisma.letterStepHistory.create({
 				data: {

@@ -119,6 +119,8 @@ export default function ApprovalDetailPage() {
   const [previewData, setPreviewData] = useState<{
     previewUrl: string;
     htmlContent?: string;
+    isPDF?: boolean;
+    format?: string;
   } | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [actionType, setActionType] = useState<'approve' | 'reject' | 'revise' | null>(null);
@@ -156,6 +158,8 @@ export default function ApprovalDetailPage() {
           setPreviewData({
             previewUrl: preview.previewUrl,
             htmlContent: (preview as any).htmlContent,
+            isPDF: preview.isPDF,
+            format: preview.format,
           });
         })
         .catch((err) => {
@@ -948,14 +952,28 @@ export default function ApprovalDetailPage() {
       <Dialog open={showDocumentPreview} onOpenChange={setShowDocumentPreview}>
         <DialogContent className="max-w-[1100px] w-[92vw] p-0 overflow-hidden">
           <DialogHeader className="px-6 pt-5 pb-4 border-b border-[#E5E5E7] pr-12">
-            <DialogTitle className="text-lg">
-              {isFinalDocument ? 'Dokumen Final' : 'Preview Dokumen Sementara'}
-            </DialogTitle>
-            <DialogDescription className="text-xs text-[#86868B]">
-              {isFinalDocument
-                ? 'Dokumen final sudah bernomor dan siap didistribusikan.'
-                : 'Dokumen ini masih draft. Dokumen final tersedia setelah penomoran.'}
-            </DialogDescription>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <DialogTitle className="text-lg">
+                  {isFinalDocument ? 'Dokumen Final' : 'Preview Dokumen Sementara'}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-[#86868B]">
+                  {isFinalDocument
+                    ? 'Dokumen final sudah bernomor dan siap didistribusikan.'
+                    : 'Dokumen ini masih draft. Dokumen final tersedia setelah penomoran.'}
+                </DialogDescription>
+              </div>
+              {previewData?.isPDF && (
+                <a
+                  href={previewData.previewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-[#0071E3] hover:text-[#0051A3]"
+                >
+                  Unduh PDF
+                </a>
+              )}
+            </div>
           </DialogHeader>
           <div className="bg-[#F7F7FA] p-4">
             {previewData ? (
