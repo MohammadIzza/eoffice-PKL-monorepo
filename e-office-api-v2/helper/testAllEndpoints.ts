@@ -2,6 +2,8 @@
 import { Prisma } from "@backend/db/index.ts";
 
 const API_BASE = "http://localhost:3001";
+const SIGNATURE_DATA_URL =
+	"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP8/5+hHgAHggJ/PQ3d1wAAAABJRU5ErkJggg==";
 
 interface TestResult {
 	name: string;
@@ -398,7 +400,9 @@ async function testAllEndpoints() {
 			},
 			body: JSON.stringify({
 				comment: "Data sudah lengkap dan sesuai, saya setujui",
-				...(letterDetail?.currentStep === 7 ? { signatureData: { method: "UPLOAD", data: "base64_mock" } } : {}),
+				...(letterDetail?.currentStep === 7
+					? { signatureData: { method: "UPLOAD", data: SIGNATURE_DATA_URL } }
+					: {}),
 			}),
 		});
 
@@ -759,7 +763,9 @@ async function testAllEndpoints() {
 						},
 						body: JSON.stringify({
 							comment: `Approved by ${role} (step ${step})`,
-							...(step === 7 ? { signatureData: { method: "UPLOAD", data: "base64_mock" } } : {}),
+							...(step === 7
+								? { signatureData: { method: "UPLOAD", data: SIGNATURE_DATA_URL } }
+								: {}),
 						}),
 					});
 				} catch (e) {

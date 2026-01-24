@@ -2,6 +2,8 @@
 import { Prisma } from "@backend/db/index.ts";
 
 const API_BASE = "http://localhost:3001";
+const SIGNATURE_DATA_URL =
+	"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP8/5+hHgAHggJ/PQ3d1wAAAABJRU5ErkJggg==";
 
 async function testWorkflow() {
 	console.log("========================================");
@@ -321,7 +323,7 @@ async function testWorkflow() {
 				comment: "Disetujui dan ditandatangani",
 				signatureData: {
 					method: "UPLOAD",
-					data: "base64_signature_mock_data",
+					data: SIGNATURE_DATA_URL,
 				},
 			}),
 		});

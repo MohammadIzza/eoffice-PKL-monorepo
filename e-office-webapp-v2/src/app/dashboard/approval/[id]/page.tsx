@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -128,6 +128,13 @@ export default function ApprovalDetailPage() {
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const [signaturePreview, setSignaturePreview] = useState<string | null>(null);
   const [signatureError, setSignatureError] = useState<string | null>(null);
+  const [signatureMode, setSignatureMode] = useState<'draw' | 'upload'>('draw');
+  const [signatureMethod, setSignatureMethod] = useState<'DRAW' | 'UPLOAD'>('DRAW');
+  const [hasDrawnSignature, setHasDrawnSignature] = useState(false);
+  const signatureCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const signatureInputRef = useRef<HTMLInputElement | null>(null);
+  const isDrawingRef = useRef(false);
+  const hasDrawnRef = useRef(false);
   const [numberDate, setNumberDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
   const [numberSuggestion, setNumberSuggestion] = useState<string>('');
   const [numberInput, setNumberInput] = useState<string>('');
@@ -188,6 +195,7 @@ export default function ApprovalDetailPage() {
   const handleSignatureChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     setSignatureError(null);
+    setSignatureMethod('UPLOAD');
 
     if (!file) {
       setSignatureData(null);
@@ -216,6 +224,134 @@ export default function ApprovalDetailPage() {
       setSignatureError('Gagal membaca file tanda tangan');
     };
     reader.readAsDataURL(file);
+  };
+
+  const setupSignatureCanvas = () => {
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.floor(rect.width * dpr);
+    canvas.height = Math.floor(rect.height * dpr);
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#1D1D1F';
+    ctx.clearRect(0, 0, rect.width, rect.height);
+
+    if (signaturePreview) {
+      const img = new Image();
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0, rect.width, rect.height);
+      };
+      img.src = signaturePreview;
+    }
+  };
+
+  useEffect(() => {
+    if (!needsSignature || signatureMode !== 'draw') return;
+
+    setupSignatureCanvas();
+    const handleResize = () => setupSignatureCanvas();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [needsSignature, signatureMode, signaturePreview]);
+
+  const getSignaturePoint = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    };
+  };
+
+  const handleSignaturePointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (signatureMode !== 'draw') return;
+    const canvas = signatureCanvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
+
+    canvas.setPointerCapture(event.pointerId);
+    const point = getSignaturePoint(event);
+    if (!point) return;
+
+    isDrawingRef.current = true;
+    if (!hasDrawnRef.current) {
+      hasDrawnRef.current = true;
+      setHasDrawnSignature(true);
+    }
+    ctx.beginPath();
+    ctx.moveTo(point.x, point.y);
+  };
+
+  const handleSignaturePointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!isDrawingRef.current) return;
+    const canvas = signatureCanvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
+
+    const point = getSignaturePoint(event);
+    if (!point) return;
+    ctx.lineTo(point.x, point.y);
+    ctx.stroke();
+
+    if (!hasDrawnRef.current) {
+      hasDrawnRef.current = true;
+      setHasDrawnSignature(true);
+    }
+  };
+
+  const finalizeSignatureDrawing = (event?: React.PointerEvent<HTMLCanvasElement>) => {
+    if (event && signatureCanvasRef.current) {
+      signatureCanvasRef.current.releasePointerCapture(event.pointerId);
+    }
+
+    if (!isDrawingRef.current) return;
+    isDrawingRef.current = false;
+
+    if (!hasDrawnRef.current) return;
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return;
+
+    const dataUrl = canvas.toDataURL('image/png');
+    setSignatureMethod('DRAW');
+    setSignatureData(dataUrl);
+    setSignaturePreview(dataUrl);
+    setSignatureError(null);
+  };
+
+  const clearSignatureCanvas = () => {
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    hasDrawnRef.current = false;
+    setHasDrawnSignature(false);
+    setSignatureData(null);
+    setSignaturePreview(null);
+  };
+
+  const switchSignatureMode = (mode: 'draw' | 'upload') => {
+    setSignatureMode(mode);
+    setSignatureMethod(mode === 'draw' ? 'DRAW' : 'UPLOAD');
+    setSignatureError(null);
+    setSignatureData(null);
+    setSignaturePreview(null);
+    hasDrawnRef.current = false;
+    setHasDrawnSignature(false);
+    if (signatureInputRef.current) {
+      signatureInputRef.current.value = '';
+    }
   };
 
   const handleAction = async (type: 'approve' | 'reject' | 'revise') => {
@@ -248,7 +384,7 @@ export default function ApprovalDetailPage() {
         await letterService.approve(
           letter.id,
           comment || undefined,
-          signatureData ? { method: 'UPLOAD', data: signatureData } : undefined
+          signatureData ? { method: signatureMethod, data: signatureData } : undefined
         );
       } else if (actionType === 'reject') {
         await letterService.reject(letter.id, comment);
@@ -742,23 +878,79 @@ export default function ApprovalDetailPage() {
                         <label className="block text-sm font-medium text-[#1D1D1F] mb-2">
                           Tanda Tangan <span className="text-[#FF3B30]">*</span>
                         </label>
-                        <Input
-                          type="file"
-                          accept="image/png,image/jpeg"
-                          onChange={handleSignatureChange}
-                          className="bg-white border-[#E5E5E7] focus:border-[#0071E3]"
-                        />
-                        {signatureError && (
-                          <p className="text-xs text-[#FF3B30] mt-2">{signatureError}</p>
-                        )}
-                        {signaturePreview && (
-                          <div className="mt-3 p-3 border border-[#E5E5E7] rounded-lg bg-white">
-                            <img
-                              src={signaturePreview}
-                              alt="Preview Tanda Tangan"
-                              className="max-h-32 object-contain"
-                            />
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          <Button
+                            type="button"
+                            onClick={() => switchSignatureMode('draw')}
+                            variant={signatureMode === 'draw' ? 'default' : 'outline'}
+                            className="h-8 px-3 text-xs"
+                          >
+                            Tanda Tangan Langsung
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={() => switchSignatureMode('upload')}
+                            variant={signatureMode === 'upload' ? 'default' : 'outline'}
+                            className="h-8 px-3 text-xs"
+                          >
+                            Upload Gambar
+                          </Button>
+                        </div>
+
+                        {signatureMode === 'draw' ? (
+                          <div className="space-y-2">
+                            <div className="rounded-lg border border-[#E5E5E7] bg-white p-3">
+                              <p className="text-xs text-[#86868B] mb-2">
+                                Gunakan mouse atau sentuhan untuk menulis tanda tangan.
+                              </p>
+                              <canvas
+                                ref={signatureCanvasRef}
+                                className="w-full h-40 border border-dashed border-[#D2D2D7] rounded-md touch-none cursor-crosshair bg-white"
+                                onPointerDown={handleSignaturePointerDown}
+                                onPointerMove={handleSignaturePointerMove}
+                                onPointerUp={finalizeSignatureDrawing}
+                                onPointerLeave={finalizeSignatureDrawing}
+                              />
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs text-[#86868B]">
+                                {hasDrawnSignature ? 'Tanda tangan siap digunakan.' : 'Belum ada tanda tangan.'}
+                              </p>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="h-8 px-3 text-xs"
+                                onClick={clearSignatureCanvas}
+                              >
+                                Hapus
+                              </Button>
+                            </div>
+                            {signatureError && (
+                              <p className="text-xs text-[#FF3B30]">{signatureError}</p>
+                            )}
                           </div>
+                        ) : (
+                          <>
+                            <Input
+                              ref={signatureInputRef}
+                              type="file"
+                              accept="image/png,image/jpeg"
+                              onChange={handleSignatureChange}
+                              className="bg-white border-[#E5E5E7] focus:border-[#0071E3]"
+                            />
+                            {signatureError && (
+                              <p className="text-xs text-[#FF3B30] mt-2">{signatureError}</p>
+                            )}
+                            {signaturePreview && (
+                              <div className="mt-3 p-3 border border-[#E5E5E7] rounded-lg bg-white">
+                                <img
+                                  src={signaturePreview}
+                                  alt="Preview Tanda Tangan"
+                                  className="max-h-32 object-contain"
+                                />
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                     )}

@@ -2,6 +2,8 @@
 import { Prisma } from "@backend/db/index.ts";
 
 const API_BASE = "http://localhost:3001";
+const SIGNATURE_DATA_URL =
+	"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP8/5+hHgAHggJ/PQ3d1wAAAABJRU5ErkJggg==";
 
 interface TestResult {
 	name: string;
@@ -536,7 +538,7 @@ async function testCompleteWorkflow() {
 				comment: "Surat sudah lengkap dan sesuai, saya tanda tangani",
 				signatureData: {
 					method: "UPLOAD",
-					data: "base64_mock_signature_data_for_testing",
+					data: SIGNATURE_DATA_URL,
 				},
 			}),
 		});

@@ -3,6 +3,104 @@
 
 ---
 
+## 🔄 UPDATE STATUS (2026-01-24)
+
+### ✅ Sudah Berfungsi End-to-End
+- Auth login/logout + middleware + RBAC
+- PKL submission (step 1-4) + validasi + draft persistence
+- Upload lampiran ke Minio + download lampiran
+- Approval queue + approval detail (data lengkap, lampiran, history)
+- Approve/Reject/Revise + self-revise + cancel + resubmit
+- Supervisor editor (draft/publish) + preview HTML
+- WD1 signature upload (terintegrasi ke approve)
+- UPA numbering + suggestion + selesai setelah penomoran
+
+### ⚠️ Masih Parsial / Perlu Disempurnakan
+- Preview dokumen: masih draft sebelum penomoran (final setelah nomor)
+- Version history UI (backend ada, UI belum)
+- Dashboard analytics (basic sudah, advanced belum)
+- Advanced search/filter (basic ada, advanced belum)
+- PDF pipeline: backend sudah generate PDF saat penomoran, UI download tersedia (perlu verifikasi runtime)
+
+### ❌ Belum Ada
+- Distribusi dokumen (email/riwayat distribusi)
+- Notification system (in-app/email)
+- Template management UI
+- Role & permission management UI
+- Admin master data UI (departemen, prodi, user, dosen)
+- Audit log & activity tracking UI
+
+---
+
+## 🧭 ROADMAP V2 (12 FASE)
+
+### FASE 1 — Stabilization & E2E Smoke
+- Finalisasi checklist E2E (auth, submit, approval, numbering, lampiran)
+- Perbaiki edge case yang ketemu saat smoke test
+- **Testing:** jalankan smoke test manual + helper scripts
+
+**Status:** IN PROGRESS  
+**Checklist E2E (Fase 1):**
+- [ ] Auth: login/logout, redirect, session clear, middleware guard
+- [ ] Submit PKL: Step 1–4 sampai submit sukses
+- [ ] Lampiran: upload proposal+KTM + download via approver
+- [ ] Approval flow: approve/reject/revise + self‑revise + resubmit
+- [ ] Supervisor editor: buka editor → save draft → publish
+- [ ] WD1: upload signature → approve
+- [ ] UPA: suggestion nomor → assign → status COMPLETED
+- [ ] UI detail approval: data pengajuan + lampiran + history tampil
+- [ ] Error handling: 401/403, lampiran wajib sebelum approve
+
+### FASE 2 — Final Document Pipeline (PDF)
+- Service HTML → PDF + storage di Minio
+- Preview & download PDF
+- **Testing:** publish → generate PDF → preview/download
+
+### FASE 3 — Signature Hardening
+- Validasi ukuran/format + error handling
+- Audit trail untuk signature metadata
+- **Testing:** WD1 approve dengan signature, cek history
+**Status:** DONE
+
+### FASE 4 — Document Distribution
+- Endpoint distribusi + history
+- UI distribusi + email sending
+- **Testing:** distribusi berhasil + history tercatat
+
+### FASE 5 — Template Management UI
+- List template + editor + preview + versioning
+- **Testing:** buat template → publish → dipakai submit baru
+
+### FASE 6 — Role & Permission UI
+- Assign role/user + permission matrix
+- **Testing:** ubah role → akses UI berubah
+
+### FASE 7 — Master Data UI
+- CRUD departemen/prodi/dosen/user
+- **Testing:** data master baru muncul di form submission
+
+### FASE 8 — Version History UI
+- List version + download + restore
+- **Testing:** publish versi baru → restore versi lama
+
+### FASE 9 — Notification System
+- In-app notifications + email
+- **Testing:** approval event → notifikasi terkirim
+
+### FASE 10 — Advanced Search & Export
+- Filter lanjutan + export (Excel/PDF) + bulk action
+- **Testing:** filter + export sesuai data
+
+### FASE 11 — Audit Log & Activity
+- Audit log backend + UI viewer
+- **Testing:** semua aksi tercatat
+
+### FASE 12 — Multi-letter Type & Workflow Builder
+- Workflow per jenis surat + builder UI
+- **Testing:** surat non-PKL dengan alur berbeda
+
+---
+
 ## 📊 STATUS SAAT INI
 
 ### ✅ Fitur yang Sudah Ada (Backend + Frontend)
@@ -76,18 +174,18 @@
 ## 🚧 Fitur yang Perlu Disempurnakan
 
 ### 1. **Signature Upload (WD1)**
-**Status:** Backend ready, Frontend placeholder
-- ❌ Upload signature image
-- ❌ Signature preview
-- ❌ Signature validation
-- ❌ Signature storage (Minio)
+**Status:** Completed
+- ✅ Upload signature image
+- ✅ Signature preview
+- ✅ Signature validation (format & size)
+- ✅ Signature storage (Minio)
+- ✅ Signature metadata in history
 
 ### 2. **PDF Generation**
-**Status:** Belum ada
-- ❌ HTML to PDF conversion
-- ❌ PDF generation setelah publish
-- ❌ PDF download
-- ❌ PDF preview
+**Status:** Parsial (backend implemented, perlu verifikasi runtime)
+- ✅ HTML to PDF conversion (generate saat penomoran)
+- ⚠️ PDF download (UI tersedia di preview modal)
+- ⚠️ PDF preview (via preview endpoint ketika PDF ada)
 
 ### 3. **Document Distribution**
 **Status:** Belum ada

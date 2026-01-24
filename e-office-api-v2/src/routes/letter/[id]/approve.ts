@@ -14,6 +14,8 @@ export default new Elysia()
 		"/",
 		async ({ params: { id }, body, user }) => {
 			const { comment, signatureData } = body;
+			const MAX_SIGNATURE_BYTES = 2 * 1024 * 1024;
+			const ALLOWED_SIGNATURE_MIME = new Set(["image/png", "image/jpeg", "image/jpg"]);
 
 			const letter = await Prisma.letterInstance.findUnique({
 				where: { id },
@@ -64,32 +66,43 @@ export default new Elysia()
 					throw new Error("Tanda tangan diperlukan untuk Wakil Dekan");
 				}
 
-			if (!signatureData.data || typeof signatureData.data !== "string") {
-				throw new Error("Data tanda tangan tidak valid");
-			}
+				if (!signatureData.data || typeof signatureData.data !== "string") {
+					throw new Error("Data tanda tangan tidak valid");
+				}
 
-			const dataUrl = signatureData.data;
-			const dataUrlMatch = dataUrl.match(/^data:(.+);base64,(.+)$/);
-			const mimeType = dataUrlMatch?.[1] || "image/png";
-			const base64Data = dataUrlMatch?.[2] || dataUrl;
-			const buffer = Buffer.from(base64Data, "base64");
-			const extension =
-				mimeType === "image/jpeg"
-					? "jpg"
-					: mimeType === "image/png"
-						? "png"
-						: "png";
+				const dataUrl = signatureData.data;
+				const dataUrlMatch = dataUrl.match(/^data:(.+);base64,(.+)$/);
+				if (!dataUrlMatch) {
+					throw new Error("Format tanda tangan tidak valid. Gunakan data URL base64.");
+				}
 
-			const fileName = `signature_${letter.id}_${Date.now()}.${extension}`;
-			const signatureFile = new File([buffer], fileName, { type: mimeType });
-			const { url, nameReplace } = await MinioService.uploadFile(
-				signatureFile,
-				`signatures/${letter.id}/`,
-				mimeType,
-			);
+				const mimeType = dataUrlMatch[1];
+				if (!ALLOWED_SIGNATURE_MIME.has(mimeType)) {
+					throw new Error("Format tanda tangan harus PNG atau JPG");
+				}
 
-			const signatureUrl = url;
-			const signatureStorageKey = `signatures/${letter.id}/${nameReplace}`;
+				const base64Data = dataUrlMatch[2];
+				const buffer = Buffer.from(base64Data, "base64");
+				if (!buffer.length) {
+					throw new Error("Data tanda tangan tidak valid");
+				}
+				if (buffer.length > MAX_SIGNATURE_BYTES) {
+					throw new Error("Ukuran tanda tangan maksimal 2MB");
+				}
+
+				const extension =
+					mimeType === "image/jpeg" || mimeType === "image/jpg" ? "jpg" : "png";
+
+				const fileName = `signature_${letter.id}_${Date.now()}.${extension}`;
+				const signatureFile = new File([buffer], fileName, { type: mimeType });
+				const { url, nameReplace } = await MinioService.uploadFile(
+					signatureFile,
+					`signatures/${letter.id}/`,
+					mimeType,
+				);
+
+				const signatureUrl = url;
+				const signatureStorageKey = `signatures/${letter.id}/${nameReplace}`;
 
 				await Prisma.letterInstance.update({
 					where: { id },
@@ -111,6 +124,9 @@ export default new Elysia()
 							signatureUrl,
 							signatureStorageKey,
 							method: signatureData.method || "UPLOAD",
+							mimeType,
+							sizeBytes: buffer.length,
+							fileName,
 						},
 					},
 				});
