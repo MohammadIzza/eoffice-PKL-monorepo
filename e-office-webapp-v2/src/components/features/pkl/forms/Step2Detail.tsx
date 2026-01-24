@@ -27,7 +27,6 @@ export default function Step2Detail() {
   const [selectedDosen, setSelectedDosen] = useState<{ id: string; name: string; nip: string | null } | null>(null);
   
   const form = useForm<Step2DetailFormData>({
-    // NOTE: zodResolver typing currently mismatches Zod v4 types; runtime is fine.
     resolver: zodResolver(step2DetailSchema as any),
     defaultValues: {
       jenisSurat: "Surat Pengantar PKL",

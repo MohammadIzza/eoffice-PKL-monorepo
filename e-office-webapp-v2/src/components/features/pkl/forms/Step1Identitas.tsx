@@ -28,7 +28,6 @@ export default function Step1Identitas() {
   const { formData, setFormData } = usePKLFormStore();
 
   const form = useForm<Step1IdentitasFormData>({
-    // NOTE: zodResolver typing currently mismatches Zod v4 types; runtime is fine.
     resolver: zodResolver(step1IdentitasSchema as any),
     defaultValues: {
       namaLengkap: formData.namaLengkap || user?.name || "",

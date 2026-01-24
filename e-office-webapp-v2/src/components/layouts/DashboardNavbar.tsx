@@ -37,8 +37,17 @@ export default function DashboardNavbar() {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      // Clear auth store
       logout();
-      router.push('/sign-in');
+      
+      // Clear cookie explicitly (in case backend didn't)
+      document.cookie = 'better-auth.session_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+      
+      // Clear localStorage
+      localStorage.removeItem('auth-storage');
+      
+      // Redirect to login
+      router.push('/login');
     }
   };
 

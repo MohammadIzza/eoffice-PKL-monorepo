@@ -90,7 +90,6 @@ export default function ApprovalDetailPage() {
     }
 
     if (type === 'approve' && needsSignature) {
-      // TODO: Implement signature upload for WD1
       setSubmitError('Tanda tangan diperlukan untuk Wakil Dekan 1');
       return;
     }

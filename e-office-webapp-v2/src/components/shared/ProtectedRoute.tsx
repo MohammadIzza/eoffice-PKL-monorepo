@@ -3,6 +3,8 @@
 import { useAuthStore } from '@/stores';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { PageLoading } from './PageLoading';
+import { ErrorDisplay } from './ErrorDisplay';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -30,7 +32,7 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
         });
     } else if (user) {
       setIsChecking(false);
-      setHasChecked(true      );
+      setHasChecked(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -42,14 +44,7 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
   }, [hasChecked, isChecking, isLoading, user, router]);
   
   if (isChecking || (isLoading && !hasChecked)) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[#F2F2F2]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600">Memeriksa sesi...</p>
-        </div>
-      </div>
-    );
+    return <PageLoading text="Memeriksa sesi..." />;
   }
 
   if (!user) {
@@ -60,14 +55,10 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
     const userRoles = user.roles?.map((r) => r.name) || [];
     if (!userRoles.includes(requiredRole)) {
       return (
-        <div className="flex items-center justify-center min-h-screen bg-[#F2F2F2]">
-          <div className="text-center">
-            <h2 className="text-xl font-semibold text-gray-900">Akses Ditolak</h2>
-            <p className="mt-2 text-sm text-gray-600">
-              Anda tidak memiliki akses ke halaman ini. Role yang diperlukan: {requiredRole}
-            </p>
-          </div>
-        </div>
+        <ErrorDisplay
+          title="Akses Ditolak"
+          message={`Anda tidak memiliki akses ke halaman ini. Role yang diperlukan: ${requiredRole}`}
+        />
       );
     }
   }
