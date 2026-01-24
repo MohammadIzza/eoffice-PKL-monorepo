@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -54,9 +55,18 @@ export default function ApprovalDetailPage() {
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [actionType, setActionType] = useState<'approve' | 'reject' | 'revise' | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [signatureData, setSignatureData] = useState<string | null>(null);
+  const [signaturePreview, setSignaturePreview] = useState<string | null>(null);
+  const [signatureError, setSignatureError] = useState<string | null>(null);
+  const [numberDate, setNumberDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
+  const [numberSuggestion, setNumberSuggestion] = useState<string>('');
+  const [numberInput, setNumberInput] = useState<string>('');
+  const [isAssigningNumber, setIsAssigningNumber] = useState(false);
+  const [numberError, setNumberError] = useState<string | null>(null);
 
   const isWD1 = letter?.currentStep === 7;
   const isSupervisor = letter?.currentStep === 5; // Supervisor Akademik
+  const isUPA = letter?.currentStep === 8;
   const needsSignature = isWD1;
 
   // Load preview
@@ -79,6 +89,53 @@ export default function ApprovalDetailPage() {
     }
   }, [letter?.id]);
 
+  // Load numbering suggestion for UPA
+  useEffect(() => {
+    if (!letter?.id || !isUPA) return;
+
+    letterService.getNumberingSuggestion(letter.id, numberDate)
+      .then((data) => {
+        setNumberSuggestion(data.suggestion);
+        setNumberInput(data.suggestion);
+      })
+      .catch((err) => {
+        console.error('Error loading numbering suggestion:', err);
+      });
+  }, [letter?.id, isUPA, numberDate]);
+
+  const handleSignatureChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    setSignatureError(null);
+
+    if (!file) {
+      setSignatureData(null);
+      setSignaturePreview(null);
+      return;
+    }
+
+    const allowedTypes = ['image/png', 'image/jpeg'];
+    if (!allowedTypes.includes(file.type)) {
+      setSignatureError('Format tanda tangan harus PNG atau JPG');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setSignatureError('Ukuran file maksimal 2MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      setSignatureData(result);
+      setSignaturePreview(result);
+    };
+    reader.onerror = () => {
+      setSignatureError('Gagal membaca file tanda tangan');
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleAction = async (type: 'approve' | 'reject' | 'revise') => {
     if (!letter) return;
 
@@ -89,7 +146,7 @@ export default function ApprovalDetailPage() {
       }
     }
 
-    if (type === 'approve' && needsSignature) {
+    if (type === 'approve' && needsSignature && !signatureData) {
       setSubmitError('Tanda tangan diperlukan untuk Wakil Dekan 1');
       return;
     }
@@ -106,7 +163,11 @@ export default function ApprovalDetailPage() {
 
     try {
       if (actionType === 'approve') {
-        await letterService.approve(letter.id, comment || undefined);
+        await letterService.approve(
+          letter.id,
+          comment || undefined,
+          signatureData ? { method: 'UPLOAD', data: signatureData } : undefined
+        );
       } else if (actionType === 'reject') {
         await letterService.reject(letter.id, comment);
       } else if (actionType === 'revise') {
@@ -124,6 +185,25 @@ export default function ApprovalDetailPage() {
       setSubmitError(errorMessage);
       setIsSubmitting(false);
       setShowConfirmDialog(false);
+    }
+  };
+
+  const handleAssignNumber = async () => {
+    if (!letter?.id || !numberInput.trim()) return;
+
+    setIsAssigningNumber(true);
+    setNumberError(null);
+
+    try {
+      await letterService.assignNumber(letter.id, numberInput.trim().toUpperCase(), numberDate);
+      await refetch();
+      await refetchQueue();
+      router.push('/dashboard/approval/queue');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Gagal menetapkan nomor';
+      setNumberError(errorMessage);
+    } finally {
+      setIsAssigningNumber(false);
     }
   };
 
@@ -240,106 +320,189 @@ export default function ApprovalDetailPage() {
           </CardContent>
         </Card>
 
-        {/* Action Form */}
-        <Card className="bg-white border-[#E5E5E7] shadow-sm">
-          <CardHeader className="border-b border-[#E5E5E7]">
-            <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
-              Tindakan Approval
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            {submitError && (
-              <Alert variant="destructive" className="mb-6">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{submitError}</AlertDescription>
-              </Alert>
-            )}
-
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-[#1D1D1F] mb-2">
-                  Komentar {needsSignature && '(Opsional)'}
-                </label>
-                <Textarea
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  placeholder="Tambahkan komentar (opsional untuk approve, wajib untuk reject/revisi)"
-                  className="min-h-[100px] bg-white border-[#E5E5E7] focus:border-[#0071E3]"
-                />
-              </div>
-
-              {needsSignature && (
+        {isUPA ? (
+          <Card className="bg-white border-[#E5E5E7] shadow-sm">
+            <CardHeader className="border-b border-[#E5E5E7]">
+              <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
+                Penomoran Surat
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              {numberError && (
+                <Alert variant="destructive" className="mb-6">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{numberError}</AlertDescription>
+                </Alert>
+              )}
+              <div className="space-y-5">
                 <div>
                   <label className="block text-sm font-medium text-[#1D1D1F] mb-2">
-                    Tanda Tangan <span className="text-[#FF3B30]">*</span>
+                    Tanggal
                   </label>
-                  <Alert>
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                      Fitur upload tanda tangan untuk Wakil Dekan 1 akan segera tersedia.
-                    </AlertDescription>
-                  </Alert>
+                  <Input
+                    type="date"
+                    value={numberDate}
+                    onChange={(e) => setNumberDate(e.target.value)}
+                    className="bg-white border-[#E5E5E7] focus:border-[#0071E3]"
+                  />
                 </div>
-              )}
-
-              <div className="flex gap-3 pt-4">
-                <Button
-                  onClick={() => handleAction('approve')}
-                  disabled={isSubmitting || (needsSignature && true)}
-                  className="flex-1 bg-[#0071E3] text-white hover:bg-[#0051A3] disabled:opacity-50"
-                >
-                  {isSubmitting && actionType === 'approve' ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Memproses...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4 mr-2" />
-                      Setujui
-                    </>
+                <div>
+                  <label className="block text-sm font-medium text-[#1D1D1F] mb-2">
+                    Nomor Surat
+                  </label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={numberInput}
+                      onChange={(e) => setNumberInput(e.target.value.toUpperCase())}
+                      placeholder="AK15-01/DD/MM/YYYY"
+                      className="bg-white border-[#E5E5E7] focus:border-[#0071E3]"
+                    />
+                    <Button
+                      variant="outline"
+                      type="button"
+                      onClick={() => setNumberInput(numberSuggestion)}
+                      disabled={!numberSuggestion}
+                      className="bg-white border-[#E5E5E7] text-[#1D1D1F] hover:bg-[#F5F5F7]"
+                    >
+                      Gunakan Saran
+                    </Button>
+                  </div>
+                  {numberSuggestion && (
+                    <p className="text-xs text-[#86868B] mt-2">
+                      Saran: {numberSuggestion}
+                    </p>
                   )}
-                </Button>
+                </div>
                 <Button
-                  onClick={() => handleAction('reject')}
-                  disabled={isSubmitting}
-                  variant="destructive"
-                  className="flex-1"
+                  onClick={handleAssignNumber}
+                  disabled={isAssigningNumber || !numberInput.trim()}
+                  className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3] disabled:opacity-50"
                 >
-                  {isSubmitting && actionType === 'reject' ? (
+                  {isAssigningNumber ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Memproses...
+                      Menetapkan...
                     </>
                   ) : (
-                    <>
-                      <XCircle className="w-4 h-4 mr-2" />
-                      Tolak
-                    </>
-                  )}
-                </Button>
-                <Button
-                  onClick={() => handleAction('revise')}
-                  disabled={isSubmitting}
-                  variant="outline"
-                  className="flex-1 bg-white border-[#E5E5E7] text-[#1D1D1F] hover:bg-[#F5F5F7]"
-                >
-                  {isSubmitting && actionType === 'revise' ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Memproses...
-                    </>
-                  ) : (
-                    <>
-                      <Edit className="w-4 h-4 mr-2" />
-                      Revisi
-                    </>
+                    'Tetapkan Nomor'
                   )}
                 </Button>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="bg-white border-[#E5E5E7] shadow-sm">
+            <CardHeader className="border-b border-[#E5E5E7]">
+              <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
+                Tindakan Approval
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              {submitError && (
+                <Alert variant="destructive" className="mb-6">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{submitError}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-[#1D1D1F] mb-2">
+                    Komentar {needsSignature && '(Opsional)'}
+                  </label>
+                  <Textarea
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder="Tambahkan komentar (opsional untuk approve, wajib untuk reject/revisi)"
+                    className="min-h-[100px] bg-white border-[#E5E5E7] focus:border-[#0071E3]"
+                  />
+                </div>
+
+                {needsSignature && (
+                  <div>
+                    <label className="block text-sm font-medium text-[#1D1D1F] mb-2">
+                      Tanda Tangan <span className="text-[#FF3B30]">*</span>
+                    </label>
+                    <Input
+                      type="file"
+                      accept="image/png,image/jpeg"
+                      onChange={handleSignatureChange}
+                      className="bg-white border-[#E5E5E7] focus:border-[#0071E3]"
+                    />
+                    {signatureError && (
+                      <p className="text-xs text-[#FF3B30] mt-2">{signatureError}</p>
+                    )}
+                    {signaturePreview && (
+                      <div className="mt-3 p-3 border border-[#E5E5E7] rounded-lg bg-white">
+                        <img
+                          src={signaturePreview}
+                          alt="Preview Tanda Tangan"
+                          className="max-h-32 object-contain"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    onClick={() => handleAction('approve')}
+                    disabled={isSubmitting || (needsSignature && !signatureData)}
+                    className="flex-1 bg-[#0071E3] text-white hover:bg-[#0051A3] disabled:opacity-50"
+                  >
+                    {isSubmitting && actionType === 'approve' ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Memproses...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4 mr-2" />
+                        Setujui
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => handleAction('reject')}
+                    disabled={isSubmitting}
+                    variant="destructive"
+                    className="flex-1"
+                  >
+                    {isSubmitting && actionType === 'reject' ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Memproses...
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="w-4 h-4 mr-2" />
+                        Tolak
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => handleAction('revise')}
+                    disabled={isSubmitting}
+                    variant="outline"
+                    className="flex-1 bg-white border-[#E5E5E7] text-[#1D1D1F] hover:bg-[#F5F5F7]"
+                  >
+                    {isSubmitting && actionType === 'revise' ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Memproses...
+                      </>
+                    ) : (
+                      <>
+                        <Edit className="w-4 h-4 mr-2" />
+                        Revisi
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Confirm Dialog */}

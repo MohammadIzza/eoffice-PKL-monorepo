@@ -1,5 +1,6 @@
 import { authGuardPlugin } from "@backend/middlewares/auth.ts";
 import { Prisma } from "@backend/db/index.ts";
+import { MinioService } from "@backend/services/minio.service.ts";
 import {
 	validateUserIsAssignee,
 	PKL_WORKFLOW_STEPS,
@@ -30,6 +31,27 @@ export default new Elysia()
 
 			validateUserIsAssignee(letter, user.id, currentStep);
 
+		// Enforce mandatory attachments before first approval
+		if (currentStep === PKL_WORKFLOW_STEPS.DOSEN_PEMBIMBING) {
+			const attachments = await Prisma.attachment.findMany({
+				where: {
+					letterId: letter.id,
+					isActive: true,
+				},
+				select: { category: true },
+			});
+
+			const hasProposal = attachments.some((a) => a.category === "proposal");
+			const hasKtm = attachments.some((a) => a.category === "ktm");
+			const utamaCount = attachments.filter((a) => a.category === "utama").length;
+
+			if ((!hasProposal || !hasKtm) && utamaCount < 2) {
+				throw new Error(
+					"Lampiran Proposal dan KTM wajib diunggah sebelum approval",
+				);
+			}
+		}
+
 			const userRoles = await Prisma.userRole.findFirst({
 				where: { userId: user.id },
 				include: { role: true },
@@ -42,7 +64,32 @@ export default new Elysia()
 					throw new Error("Tanda tangan diperlukan untuk Wakil Dekan");
 				}
 
-				const signatureUrl = "minio://signatures/temp.png";
+			if (!signatureData.data || typeof signatureData.data !== "string") {
+				throw new Error("Data tanda tangan tidak valid");
+			}
+
+			const dataUrl = signatureData.data;
+			const dataUrlMatch = dataUrl.match(/^data:(.+);base64,(.+)$/);
+			const mimeType = dataUrlMatch?.[1] || "image/png";
+			const base64Data = dataUrlMatch?.[2] || dataUrl;
+			const buffer = Buffer.from(base64Data, "base64");
+			const extension =
+				mimeType === "image/jpeg"
+					? "jpg"
+					: mimeType === "image/png"
+						? "png"
+						: "png";
+
+			const fileName = `signature_${letter.id}_${Date.now()}.${extension}`;
+			const signatureFile = new File([buffer], fileName, { type: mimeType });
+			const { url, nameReplace } = await MinioService.uploadFile(
+				signatureFile,
+				`signatures/${letter.id}/`,
+				mimeType,
+			);
+
+			const signatureUrl = url;
+			const signatureStorageKey = `signatures/${letter.id}/${nameReplace}`;
 
 				await Prisma.letterInstance.update({
 					where: { id },
@@ -62,6 +109,7 @@ export default new Elysia()
 						comment: null,
 						metadata: {
 							signatureUrl,
+							signatureStorageKey,
 							method: signatureData.method || "UPLOAD",
 						},
 					},

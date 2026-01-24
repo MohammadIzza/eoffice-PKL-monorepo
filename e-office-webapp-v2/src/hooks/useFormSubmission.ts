@@ -59,16 +59,25 @@ export function useFormSubmission(options?: UseFormSubmissionOptions) {
 
       // Upload attachments if any
       if (attachments.length > 0) {
-        const utamaFiles = attachments.filter(att => 
-          att.category === 'proposal' || att.category === 'ktm'
-        );
+        const proposalFiles = attachments.filter(att => att.category === 'proposal');
+        const ktmFiles = attachments.filter(att => att.category === 'ktm');
         const tambahanFiles = attachments.filter(att => att.category === 'tambahan');
 
-        if (utamaFiles.length > 0) {
+        if (proposalFiles.length > 0) {
           await letterService.uploadAttachments(
             result.letterId,
-            utamaFiles.map(att => att.file),
-            'utama'
+            proposalFiles.map(att => att.file),
+            'proposal',
+            true
+          );
+        }
+
+        if (ktmFiles.length > 0) {
+          await letterService.uploadAttachments(
+            result.letterId,
+            ktmFiles.map(att => att.file),
+            'ktm',
+            true
           );
         }
 

@@ -68,6 +68,7 @@ export abstract class MinioService {
 		if (!fs.existsSync(uploadDir)) {
 			fs.mkdirSync(uploadDir, { recursive: true });
 		}
+		await MinioService.ensureBucket();
 
 		const nameReplace =
 			MinioService.generateUniqueFileNameWithTimestamp(objectName);
@@ -115,6 +116,7 @@ export abstract class MinioService {
 			if (!fs.existsSync(uploadDir)) {
 				fs.mkdirSync(uploadDir, { recursive: true });
 			}
+			await MinioService.ensureBucket();
 
 			const nameReplace = MinioService.generateUniqueFileNameWithTimestamp(
 				file.name,

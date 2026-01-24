@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   ChevronDown, 
   Clock, 
@@ -13,6 +15,8 @@ import {
   Image as ImageIcon
 } from "lucide-react";
 import { useLetter } from "@/hooks/api";
+import { useAuthStore } from "@/stores";
+import { letterService } from "@/services";
 import { formatDate, formatDateTime } from "@/lib/utils/date.utils";
 import { API_URL } from "@/lib/constants";
 
@@ -24,8 +28,12 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
   const searchParams = useSearchParams();
   const idFromQuery = searchParams.get('id');
   const letterId = idProp || idFromQuery || null;
-  const { letter, isLoading, error, isForbidden } = useLetter(letterId);
+  const { letter, isLoading, error, isForbidden, refetch } = useLetter(letterId);
+  const { user } = useAuthStore();
   const [expandedAttachments, setExpandedAttachments] = useState<Record<string, boolean>>({});
+  const [actionType, setActionType] = useState<"cancel" | "self-revise" | "resubmit" | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isActionLoading, setIsActionLoading] = useState(false);
 
   const DetailRow = ({ label, value }: { label: string, value: string | null | undefined }) => (
     <div className="flex justify-between items-start py-2.5 px-5 border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
@@ -168,6 +176,45 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
   const formValues = letter.values as Record<string, any>;
   const stepHistory = letter.stepHistory || [];
   const attachments = letter.attachments || [];
+  const isCreator = user?.id && letter.createdById === user.id;
+  const hasRevisedHistory = stepHistory.some(
+    (history) => history.action === "REVISED" || history.action === "SELF_REVISED",
+  );
+  const canCancel =
+    !!isCreator &&
+    !letter.signedAt &&
+    !["COMPLETED", "REJECTED", "CANCELLED"].includes(letter.status);
+  const canSelfRevise =
+    !!isCreator &&
+    !letter.signedAt &&
+    ["PROCESSING", "REVISION"].includes(letter.status);
+  const canResubmit =
+    !!isCreator &&
+    ["PROCESSING", "REVISION"].includes(letter.status) &&
+    hasRevisedHistory;
+
+  const handleAction = async () => {
+    if (!letter || !actionType) return;
+
+    setIsActionLoading(true);
+    setActionError(null);
+    try {
+      if (actionType === "cancel") {
+        await letterService.cancel(letter.id);
+      } else if (actionType === "self-revise") {
+        await letterService.selfRevise(letter.id);
+      } else if (actionType === "resubmit") {
+        await letterService.resubmit(letter.id, letter.values as Record<string, any>);
+      }
+      await refetch();
+      setActionType(null);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Aksi gagal diproses";
+      setActionError(errorMessage);
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -180,6 +227,42 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
            </div>
            <div className="flex flex-col xl:flex-row gap-5">
               <div className="flex-1 flex flex-col gap-5">
+                 {(canCancel || canSelfRevise || canResubmit) && (
+                   <div className="bg-card rounded-lg border shadow-sm">
+                     <div className="px-5 py-3 border-b border-border">
+                       <h3 className="font-semibold text-sm text-foreground">Aksi Pengajuan</h3>
+                     </div>
+                     <div className="p-5 flex flex-wrap gap-2">
+                       {canResubmit && (
+                         <Button
+                           onClick={() => setActionType("resubmit")}
+                           className="bg-[#0071E3] text-white hover:bg-[#0051A3]"
+                         >
+                           Kirim Ulang
+                         </Button>
+                       )}
+                       {canSelfRevise && (
+                         <Button
+                           variant="outline"
+                           onClick={() => setActionType("self-revise")}
+                         >
+                           Revisi Mandiri
+                         </Button>
+                       )}
+                       {canCancel && (
+                         <Button
+                           variant="destructive"
+                           onClick={() => setActionType("cancel")}
+                         >
+                           Batalkan Pengajuan
+                         </Button>
+                       )}
+                     </div>
+                     {actionError && (
+                       <p className="px-5 pb-5 text-xs text-destructive">{actionError}</p>
+                     )}
+                   </div>
+                 )}
                  <div className="bg-card rounded-lg border shadow-sm">
                     <div className="px-5 py-3 border-b border-border">
                        <h3 className="font-semibold text-sm text-foreground">Identitas Pengaju</h3>
@@ -325,6 +408,55 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
            </div>
         </main>
       </div>
+
+      <Dialog open={!!actionType} onOpenChange={() => setActionType(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {actionType === "cancel"
+                ? "Konfirmasi Pembatalan"
+                : actionType === "self-revise"
+                  ? "Konfirmasi Revisi Mandiri"
+                  : "Konfirmasi Kirim Ulang"}
+            </DialogTitle>
+            <DialogDescription>
+              {actionType === "cancel" &&
+                "Pengajuan akan dibatalkan dan tidak dapat dilanjutkan."}
+              {actionType === "self-revise" &&
+                "Surat akan dikembalikan satu step agar Anda dapat memperbaiki data."}
+              {actionType === "resubmit" &&
+                "Data surat akan dikirim ulang ke alur approval."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setActionType(null)}
+              disabled={isActionLoading}
+            >
+              Batal
+            </Button>
+            <Button
+              onClick={handleAction}
+              disabled={isActionLoading}
+              className={
+                actionType === "cancel"
+                  ? "bg-[#FF3B30] hover:bg-[#D32F2F]"
+                  : "bg-[#0071E3] hover:bg-[#0051A3]"
+              }
+            >
+              {isActionLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Memproses...
+                </>
+              ) : (
+                "Konfirmasi"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
