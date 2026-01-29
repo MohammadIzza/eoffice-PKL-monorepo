@@ -41,4 +41,26 @@ export const departemenService = {
 			throw handleApiError(error);
 		}
 	},
+
+	create: async (data: { name: string; code: string }): Promise<void> => {
+		try {
+			const response = await client.master.departemen.post(data);
+			if (!response.data || typeof response.data !== 'object') {
+				throw new Error('Invalid response from /master/departemen endpoint');
+			}
+		} catch (error) {
+			throw handleApiError(error);
+		}
+	},
+
+	update: async (id: string, data: { name: string; code: string }): Promise<void> => {
+		try {
+			const response = await client.master.departemen.patch({ id, ...data });
+			if (!response.data || typeof response.data !== 'object') {
+				throw new Error('Invalid response from /master/departemen endpoint');
+			}
+		} catch (error) {
+			throw handleApiError(error);
+		}
+	},
 };

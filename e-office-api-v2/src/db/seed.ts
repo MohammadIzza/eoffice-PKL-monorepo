@@ -251,6 +251,10 @@ async function main() {
 		{ resource: "mahasiswa", action: "read" },
 		{ resource: "mahasiswa", action: "update" },
 		{ resource: "mahasiswa", action: "delete" },
+		{ resource: "pegawai", action: "create" },
+		{ resource: "pegawai", action: "read" },
+		{ resource: "pegawai", action: "update" },
+		{ resource: "pegawai", action: "delete" },
 	];
 
 	const permissions = await Promise.all(

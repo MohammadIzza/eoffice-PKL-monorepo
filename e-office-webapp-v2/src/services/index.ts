@@ -3,3 +3,7 @@ export * from './letter.service';
 export * from './programStudi.service';
 export * from './departemen.service';
 export * from './dosen.service';
+export * from './user.service';
+export * from './mahasiswa.service';
+export * from './pegawai.service';
+export * from './role.service';
