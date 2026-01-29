@@ -47,10 +47,13 @@ export function useFormSubmission(options?: UseFormSubmissionOptions) {
 
     try {
       if (isRevisi) {
-        await letterService.resubmit(revisiLetterId, formData);
-        resetForm();
+        const letterId = revisiLetterId;
+        await letterService.resubmit(letterId, formData);
         options?.onSuccess?.();
-        router.push(`/dashboard/surat/${revisiLetterId}`);
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('pkl-fromResubmit', '1');
+        }
+        router.push(`/dashboard/surat/${letterId}`);
         return;
       }
 

@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useLetter } from "@/hooks/api";
 import { useAuthStore } from "@/stores";
+import { usePKLFormStore } from "@/stores/pklFormStore";
 import { letterService } from "@/services";
 import { formatDate, formatDateTime } from "@/lib/utils/date.utils";
 import { API_URL } from "@/lib/constants";
@@ -119,6 +120,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
   const router = useRouter();
   const { letter, isLoading, error, isForbidden, refetch } = useLetter(id);
   const { user } = useAuthStore();
+  const resetForm = usePKLFormStore((s) => s.resetForm);
   const [actionType, setActionType] = useState<"cancel" | "self-revise" | "resubmit" | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isActionLoading, setIsActionLoading] = useState(false);
@@ -142,6 +144,14 @@ export default function LetterDetail({ id }: LetterDetailProps) {
   } | null>(null);
 
   const isMahasiswa = user?.roles?.some((r: { name?: string }) => r.name === "mahasiswa") ?? false;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (sessionStorage.getItem("pkl-fromResubmit")) {
+      sessionStorage.removeItem("pkl-fromResubmit");
+      resetForm();
+    }
+  }, [resetForm]);
 
   useEffect(() => {
     if (!letter?.id) return;
@@ -245,6 +255,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
       )[0]
     : null;
   const alreadyResubmitted = latestRevisionAction?.action === "RESUBMITTED";
+  const wasRevisedByApprover = latestRevisionAction?.action === "REVISED";
 
   const canCancel =
     !!isCreator &&
@@ -580,7 +591,15 @@ export default function LetterDetail({ id }: LetterDetailProps) {
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="flex flex-col gap-2">
-                    {canResubmit && (
+                    {canResubmit && wasRevisedByApprover && (
+                      <Button
+                        onClick={() => router.push(`/dashboard/pengajuan/pkl/identitas?revisi=${letter.id}`)}
+                        className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3]"
+                      >
+                        Perbaikan
+                      </Button>
+                    )}
+                    {canResubmit && !wasRevisedByApprover && (
                       <Button
                         onClick={() => setActionType("resubmit")}
                         className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3]"
@@ -588,7 +607,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
                         Kirim Ulang
                       </Button>
                     )}
-                    {canSelfRevise && (
+                    {canSelfRevise && !(canResubmit && wasRevisedByApprover) && (
                       <Button
                         variant="outline"
                         onClick={() => setActionType("self-revise")}
@@ -669,8 +688,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
                         role={h.actor?.name || h.actorRole || "System"}
                         time={formatDateTime(h.createdAt)}
                         status={getStatusLabel(h.action, h.step)}
-                        // note={h.comment}
-                        note={h.action === "SELF_REVISED" ? h.comment : undefined}
+                        note={h.action !== "RESUBMITTED" ? h.comment : undefined}
                         action={h.action}
                         isLatest={i === 0}
                         isLast={i === sortedHistory.length - 1}

@@ -358,8 +358,13 @@ export default function ApprovalDetailPage() {
     if (!letter) return;
 
     if (type === 'reject' || type === 'revise') {
-      if (!comment.trim()) {
+      const trimmed = comment.trim();
+      if (!trimmed) {
         setSubmitError(`${type === 'reject' ? 'Penolakan' : 'Revisi'} memerlukan komentar`);
+        return;
+      }
+      if (trimmed.length < 10) {
+        setSubmitError('Komentar minimal 10 karakter untuk penolakan dan revisi.');
         return;
       }
     }
@@ -376,6 +381,11 @@ export default function ApprovalDetailPage() {
   const confirmAction = async () => {
     if (!letter || !actionType) return;
 
+    if ((actionType === 'reject' || actionType === 'revise') && (comment || '').trim().length < 10) {
+      setSubmitError('Komentar minimal 10 karakter untuk penolakan dan revisi.');
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError(null);
 
@@ -387,9 +397,9 @@ export default function ApprovalDetailPage() {
           signatureData ? { method: signatureMethod, data: signatureData } : undefined
         );
       } else if (actionType === 'reject') {
-        await letterService.reject(letter.id, comment);
+        await letterService.reject(letter.id, (comment || '').trim());
       } else if (actionType === 'revise') {
-        await letterService.revise(letter.id, comment);
+        await letterService.revise(letter.id, (comment || '').trim());
       }
 
       // Refresh data
@@ -868,7 +878,7 @@ export default function ApprovalDetailPage() {
                       <Textarea
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
-                        placeholder="Tambahkan komentar (opsional untuk approve, wajib untuk reject/revisi)"
+                        placeholder="Tambahkan komentar (opsional untuk approve, wajib min. 10 karakter untuk reject/revisi)"
                         className="min-h-[100px] bg-white border-[#E5E5E7] focus:border-[#0071E3]"
                       />
                     </div>
@@ -1053,16 +1063,18 @@ export default function ApprovalDetailPage() {
             <DialogTitle>
               Konfirmasi {actionType === 'approve' ? 'Persetujuan' : actionType === 'reject' ? 'Penolakan' : 'Revisi'}
             </DialogTitle>
-            <DialogDescription>
-              Apakah Anda yakin ingin {actionType === 'approve' ? 'menyetujui' : actionType === 'reject' ? 'menolak' : 'merevisi'} surat ini?
-              {comment && (
-                <div className="mt-4 p-3 bg-[#F5F5F7] rounded-lg">
-                  <p className="text-sm font-medium mb-1">Komentar:</p>
-                  <p className="text-sm text-[#86868B]">{comment}</p>
-                </div>
-              )}
+            <DialogDescription asChild>
+              <div>
+                <span>Apakah Anda yakin ingin {actionType === 'approve' ? 'menyetujui' : actionType === 'reject' ? 'menolak' : 'merevisi'} surat ini?</span>
+              </div>
             </DialogDescription>
           </DialogHeader>
+          {comment && (
+            <div className="mt-2 p-3 bg-[#F5F5F7] rounded-lg">
+              <p className="text-sm font-medium mb-1">Komentar:</p>
+              <p className="text-sm text-[#86868B]">{comment}</p>
+            </div>
+          )}
           <div className="flex gap-3 justify-end mt-4">
             <Button
               variant="outline"
