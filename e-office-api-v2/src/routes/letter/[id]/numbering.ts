@@ -68,6 +68,10 @@ export default new Elysia()
 				throw new Error("Surat tidak ditemukan");
 			}
 
+			if (letter.status === "COMPLETED") {
+				throw new Error("Surat sudah diterbitkan. Penomoran tidak dapat dilakukan lagi.");
+			}
+
 			if (letter.currentStep !== PKL_WORKFLOW_STEPS.UPA) {
 				throw new Error("Penomoran hanya bisa dilakukan di step UPA");
 			}

@@ -362,7 +362,7 @@ export const letterService = {
 		}
 	},
 
-	getPreview: async (id: string): Promise<{
+	getPreview: async (id: string, previewNumber?: string): Promise<{
 		version: number;
 		format: string;
 		isPDF: boolean;
@@ -375,7 +375,9 @@ export const letterService = {
 		expiresIn: number;
 	}> => {
 		try {
-			const response = await client.letter[id].preview.get();
+			const response = await client.letter[id].preview.get({
+				...(previewNumber != null && previewNumber.trim() !== '' ? { query: { previewNumber: previewNumber.trim() } } : {}),
+			});
 			
 			if (response.data && typeof response.data === 'object') {
 				const data = response.data as any;

@@ -186,6 +186,11 @@ export default function ApprovalDetailPage() {
   } | null>(null);
   const [showDocumentPreview, setShowDocumentPreview] = useState(false);
   const [historyExpanded, setHistoryExpanded] = useState(false);
+  const [actionSuccess, setActionSuccess] = useState<{
+    kind: 'approve' | 'reject' | 'revise' | 'number';
+    message: string;
+  } | null>(null);
+  const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isWD1 = letter?.currentStep === 7;
   const isSupervisor = letter?.currentStep === 5; // Supervisor Akademik
@@ -227,6 +232,19 @@ export default function ApprovalDetailPage() {
         console.error('Error loading numbering suggestion:', err);
       });
   }, [letter?.id, isUPA, numberDate]);
+
+  useEffect(() => () => {
+    if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current);
+  }, []);
+
+  const showActionSuccess = (kind: 'approve' | 'reject' | 'revise' | 'number', message: string) => {
+    if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current);
+    setActionSuccess({ kind, message });
+    successTimeoutRef.current = setTimeout(() => {
+      setActionSuccess(null);
+      successTimeoutRef.current = null;
+    }, 2800);
+  };
 
   const handleSignatureChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -438,12 +456,28 @@ export default function ApprovalDetailPage() {
         await letterService.revise(letter.id, (comment || '').trim());
       }
 
-      // Refresh data
       await refetch();
       await refetchQueue();
-      
-      // Redirect to queue
-      router.push('/dashboard/approval/queue');
+
+      const kind = actionType;
+      setShowConfirmDialog(false);
+      setActionType(null);
+      setComment('');
+      clearSignatureCanvas();
+      if (signatureInputRef.current) signatureInputRef.current.value = '';
+      setSignatureError(null);
+      setSignatureData(null);
+      setSignaturePreview(null);
+      setSubmitError(null);
+      setIsSubmitting(false);
+
+      const msg =
+        kind === 'approve'
+          ? 'Surat berhasil disetujui'
+          : kind === 'reject'
+            ? 'Surat ditolak'
+            : 'Surat berhasil direvisi';
+      showActionSuccess(kind, msg);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Gagal memproses aksi';
       setSubmitError(errorMessage);
@@ -462,7 +496,7 @@ export default function ApprovalDetailPage() {
       await letterService.assignNumber(letter.id, numberInput.trim().toUpperCase(), numberDate);
       await refetch();
       await refetchQueue();
-      router.push('/dashboard/approval/queue');
+      showActionSuccess('number', 'Nomor surat berhasil ditetapkan');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Gagal menetapkan nomor';
       setNumberError(errorMessage);
@@ -540,6 +574,7 @@ export default function ApprovalDetailPage() {
   const approvedByMe = !!approvedEntry;
   const approvedAt = approvedEntry?.createdAt;
   const viewOnly = searchParams.get('view') === '1' || approvedByMe;
+  const isCompleted = letter?.status === 'COMPLETED';
 
   const SummaryItem = ({ label, value }: { label: string; value?: string | null }) => (
     <div className="flex flex-col gap-1">
@@ -636,6 +671,28 @@ export default function ApprovalDetailPage() {
           <span className="mx-2 text-[#CBD5E1]">/</span>
           <span className="font-medium text-[#1D1D1F]">Detail Approval</span>
         </div>
+
+        {/* Success feedback */}
+        {actionSuccess && (() => {
+          const config = {
+            approve: { Icon: CheckCircle2, border: 'border-[#1E8E3E]/30', bg: 'bg-[#1E8E3E]/5', text: 'text-[#1E8E3E]', bar: 'bg-[#1E8E3E]' },
+            reject: { Icon: XCircle, border: 'border-[#D93025]/30', bg: 'bg-[#D93025]/5', text: 'text-[#D93025]', bar: 'bg-[#D93025]' },
+            revise: { Icon: RotateCcw, border: 'border-[#B26A00]/30', bg: 'bg-[#B26A00]/5', text: 'text-[#B26A00]', bar: 'bg-[#B26A00]' },
+            number: { Icon: FileCheck, border: 'border-[#0071E3]/30', bg: 'bg-[#0071E3]/5', text: 'text-[#0071E3]', bar: 'bg-[#0071E3]' },
+          };
+          const { Icon, border, bg, text, bar } = config[actionSuccess.kind];
+          return (
+            <div
+              className={`relative overflow-hidden rounded-xl border ${border} ${bg} px-4 py-3 flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300 mb-6`}
+              role="status"
+              aria-live="polite"
+            >
+              <Icon className={`w-5 h-5 shrink-0 ${text} animate-in zoom-in duration-300`} />
+              <p className={`font-semibold text-[15px] ${text}`}>{actionSuccess.message}</p>
+              <div className={`absolute bottom-0 left-0 right-0 h-0.5 ${bar} opacity-40 rounded-b-xl animate-success-bar-shrink`} />
+            </div>
+          );
+        })()}
 
         {/* Header */}
         <div className="mb-[32px]">
@@ -842,7 +899,20 @@ export default function ApprovalDetailPage() {
               </CardContent>
             </Card>
 
-            {viewOnly ? (
+            {isCompleted ? (
+              <Card className="bg-white border-[#E5E5E7] shadow-sm">
+                <CardContent className="p-6">
+                  <Alert className="border-[#E7F9EE] bg-[#E7F9EE]/50 text-[#1E8E3E]">
+                    <CheckCircle2 className="h-4 w-4" />
+                    <AlertDescription>
+                      Surat telah diterbitkan
+                      {letterNumber ? ` (${letterNumber})` : ''}.
+                      Gunakan tombol &quot;Lihat Final&quot; di atas untuk melihat atau mengunduh surat.
+                    </AlertDescription>
+                  </Alert>
+                </CardContent>
+              </Card>
+            ) : viewOnly ? (
               <Card className="bg-white border-[#E5E5E7] shadow-sm">
                 <CardContent className="p-6">
                   <Alert className="border-[#E7F9EE] bg-[#E7F9EE]/50 text-[#1E8E3E]">
@@ -862,65 +932,51 @@ export default function ApprovalDetailPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
-                  {numberError && (
+                  <p className="text-sm text-[#86868B] mb-4">
+                    Masuk ke halaman proses penomoran untuk mengisi nomor surat dan menerbitkannya.
+                  </p>
+                  <Button
+                    onClick={() => router.push(`/dashboard/approval/${letter.id}/proses`)}
+                    className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3]"
+                  >
+                    Proses Penomoran
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : isWD1 ? (
+              <Card className="bg-white border-[#E5E5E7] shadow-sm">
+                <CardHeader className="border-b border-[#E5E5E7]">
+                  <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">Tindakan Approval</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  {submitError && (
                     <Alert variant="destructive" className="mb-6">
                       <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>{numberError}</AlertDescription>
+                      <AlertDescription>{submitError}</AlertDescription>
                     </Alert>
                   )}
-                  <div className="space-y-5">
+                  <div className="space-y-6">
                     <div>
-                      <label className="block text-sm font-medium text-[#1D1D1F] mb-2">
-                        Tanggal
-                      </label>
-                      <Input
-                        type="date"
-                        value={numberDate}
-                        onChange={(e) => setNumberDate(e.target.value)}
-                        className="bg-white border-[#E5E5E7] focus:border-[#0071E3]"
+                      <label className="block text-sm font-medium text-[#1D1D1F] mb-2">Komentar (opsional)</label>
+                      <Textarea
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        placeholder="Tambahkan komentar untuk reject/revisi (wajib min. 10 karakter)"
+                        className="min-h-[100px] bg-white border-[#E5E5E7] focus:border-[#0071E3]"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-[#1D1D1F] mb-2">
-                        Nomor Surat
-                      </label>
-                      <div className="flex gap-2">
-                        <Input
-                          value={numberInput}
-                          onChange={(e) => setNumberInput(e.target.value.toUpperCase())}
-                          placeholder="AK15-01/DD/MM/YYYY"
-                          className="bg-white border-[#E5E5E7] focus:border-[#0071E3]"
-                        />
-                        <Button
-                          variant="outline"
-                          type="button"
-                          onClick={() => setNumberInput(numberSuggestion)}
-                          disabled={!numberSuggestion}
-                          className="bg-white border-[#E5E5E7] text-[#1D1D1F] hover:bg-[#F5F5F7]"
-                        >
-                          Gunakan Saran
-                        </Button>
-                      </div>
-                      {numberSuggestion && (
-                        <p className="text-xs text-[#86868B] mt-2">
-                          Saran: {numberSuggestion}
-                        </p>
-                      )}
-                    </div>
-                    <Button
-                      onClick={handleAssignNumber}
-                      disabled={isAssigningNumber || !numberInput.trim()}
-                      className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3] disabled:opacity-50"
-                    >
-                      {isAssigningNumber ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Menetapkan...
-                        </>
-                      ) : (
-                        'Tetapkan Nomor'
-                      )}
+                    <p className="text-sm text-[#86868B]">Masuk ke halaman proses tanda tangan untuk menandatangani dan menyetujui surat.</p>
+                    <Button onClick={() => router.push(`/dashboard/approval/${letter.id}/proses`)} className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3]">
+                      Proses TTD
                     </Button>
+                    <div className="flex flex-col gap-3 pt-2 border-t border-[#E5E5E7]">
+                      <Button onClick={() => handleAction('reject')} disabled={isSubmitting} variant="destructive" className="w-full">
+                        {isSubmitting && actionType === 'reject' ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Memproses...</> : <><XCircle className="w-4 h-4 mr-2" /> Tolak</>}
+                      </Button>
+                      <Button onClick={() => handleAction('revise')} disabled={isSubmitting} variant="outline" className="w-full bg-white border-[#E5E5E7] text-[#1D1D1F] hover:bg-[#F5F5F7]">
+                        {isSubmitting && actionType === 'revise' ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Memproses...</> : <><Edit className="w-4 h-4 mr-2" /> Revisi</>}
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

@@ -165,7 +165,17 @@
   .animate-slide-up {
     animation: slide-up 0.5s ease-out;
   }
-  
+
+  @keyframes success-bar-shrink {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0); }
+  }
+
+  .animate-success-bar-shrink {
+    animation: success-bar-shrink 2.8s linear forwards;
+    transform-origin: right;
+  }
+
   /* Glassmorphism utility */
   .glass {
     background: rgba(255, 255, 255, 0.8);

@@ -7,10 +7,15 @@ import type { LetterInstance } from "@backend/db/index.ts";
  */
 export class DocumentService {
 	/**
-	 * Generate HTML dari letter values
+	 * Generate HTML dari letter values.
+	 * overrides.numberString: optional override for "Nomor" (e.g. UPA preview sebelum nomor diterbitkan).
 	 */
-	public static async generateHTML(letter: LetterInstance): Promise<string> {
+	public static async generateHTML(
+		letter: LetterInstance,
+		overrides?: { numberString?: string },
+	): Promise<string> {
 		const values = letter.values as Record<string, any>;
+		const numberDisplay = overrides?.numberString ?? (letter as { numbering?: { numberString?: string } }).numbering?.numberString ?? "-";
 		
 		// Get dosen pembimbing name if dosenPembimbingId exists
 		let dosenPembimbingName = values.dosenPembimbingId || "-";
@@ -125,7 +130,7 @@ export class DocumentService {
 
 	<div class="content">
 		<p style="text-align: right; margin-bottom: 30px;">
-			Nomor: ${letter.numbering?.numberString || "-"}<br>
+			Nomor: ${numberDisplay}<br>
 			Lampiran: -<br>
 			Perihal: ${values.jenisSurat || "Surat Pengantar PKL"}
 		</p>

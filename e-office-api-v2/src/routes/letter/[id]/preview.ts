@@ -8,7 +8,7 @@ export default new Elysia()
 	.use(authGuardPlugin)
 	.get(
 		"/",
-		async ({ params: { id }, user }) => {
+		async ({ params: { id }, query, user }) => {
 			const letter = await Prisma.letterInstance.findUnique({
 			where: { id },
 			include: {
@@ -60,11 +60,14 @@ export default new Elysia()
 				isEditable: boolean;
 			}> | null;
 
-			// Jika belum ada document version atau storageKey null, generate HTML on-the-fly
-			if (!documentVersions || documentVersions.length === 0 || 
+			const overrides = query.previewNumber
+				? { numberString: query.previewNumber }
+				: undefined;
+
+			// Jika previewNumber disediakan (e.g. UPA) atau belum ada document version, generate HTML on-the-fly
+			if (overrides || !documentVersions || documentVersions.length === 0 ||
 				!documentVersions.some(v => v.storageKey)) {
-			// Generate HTML on-the-fly
-			const html = await DocumentService.generateHTML(letter);
+			const html = await DocumentService.generateHTML(letter, overrides);
 			
 			// Return HTML langsung (base64 encoded untuk response)
 			const htmlBase64 = Buffer.from(html).toString("base64");
@@ -101,9 +104,8 @@ export default new Elysia()
 
 		const latestVersion = latestPDF || latestEditable || documentVersions.find(v => v.storageKey);
 
-		if (!latestVersion || !latestVersion.storageKey) {
-			// Fallback: generate HTML on-the-fly
-			const html = await DocumentService.generateHTML(letter);
+		if (overrides || !latestVersion || !latestVersion.storageKey) {
+			const html = await DocumentService.generateHTML(letter, overrides);
 			const htmlBase64 = Buffer.from(html).toString("base64");
 			
 			return {
@@ -155,6 +157,9 @@ export default new Elysia()
 		{
 			params: t.Object({
 				id: t.String(),
+			}),
+			query: t.Object({
+				previewNumber: t.Optional(t.String()),
 			}),
 		},
 	);
