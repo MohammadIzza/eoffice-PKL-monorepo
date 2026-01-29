@@ -8,8 +8,11 @@ export default new Elysia()
 	.get(
 		"/all",
 		async () => {
-			MahasiswaService.getAll();
-			return;
+			const data = await MahasiswaService.getAll();
+			return {
+				success: true,
+				data,
+			};
 		},
 		{
 			...requirePermission("mahasiswa", "read"),
@@ -108,7 +111,7 @@ export default new Elysia()
 			};
 		},
 		{
-			...requirePermission("mahasiswa", "write"),
+			...requirePermission("mahasiswa", "update"),
 			body: t.Object({
 				id: t.String(),
 				noHp: t.Optional(t.String()),

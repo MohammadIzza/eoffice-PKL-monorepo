@@ -59,7 +59,7 @@ export default new Elysia()
 			};
 		},
 		{
-			...requirePermission("user", "write"),
+			...requirePermission("user", "update"),
 			body: t.Object({
 				id: t.String(),
 				name: t.Optional(t.String()),

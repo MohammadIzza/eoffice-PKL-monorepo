@@ -208,172 +208,101 @@ async function main() {
 
 	console.log("User Upserted");
 
-	// 2. Create Permissions
-	const permissions = await Promise.all([
-		Prisma.permission.create({
-			data: { resource: "departemen", action: "create" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "departemen", action: "read" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "departemen", action: "update" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "departemen", action: "delete" },
-		}),
+	// 2. Upsert Permissions (idempotent)
+	const permissionData: { resource: string; action: string }[] = [
+		{ resource: "departemen", action: "create" },
+		{ resource: "departemen", action: "read" },
+		{ resource: "departemen", action: "update" },
+		{ resource: "departemen", action: "delete" },
+		{ resource: "prodi", action: "create" },
+		{ resource: "prodi", action: "read" },
+		{ resource: "prodi", action: "update" },
+		{ resource: "prodi", action: "delete" },
+		{ resource: "role", action: "create" },
+		{ resource: "role", action: "read" },
+		{ resource: "role", action: "update" },
+		{ resource: "role", action: "delete" },
+		{ resource: "user", action: "create" },
+		{ resource: "user", action: "read" },
+		{ resource: "user", action: "update" },
+		{ resource: "user", action: "delete" },
+		{ resource: "letterType", action: "create" },
+		{ resource: "letterType", action: "read" },
+		{ resource: "letterType", action: "update" },
+		{ resource: "letterType", action: "delete" },
+		{ resource: "letterTemplate", action: "create" },
+		{ resource: "letterTemplate", action: "read" },
+		{ resource: "letterTemplate", action: "update" },
+		{ resource: "letterTemplate", action: "delete" },
+		{ resource: "letter", action: "create" },
+		{ resource: "letter", action: "read" },
+		{ resource: "letter", action: "update" },
+		{ resource: "letter", action: "delete" },
+		{ resource: "letter", action: "approve" },
+		{ resource: "letter", action: "reject" },
+		{ resource: "letter", action: "revise" },
+		{ resource: "letter", action: "cancel" },
+		{ resource: "letter", action: "file" },
+		{ resource: "letter", action: "disposition" },
+		{ resource: "letter", action: "forward" },
+		{ resource: "letter", action: "editOverlay" },
+		{ resource: "letter", action: "numbering" },
+		{ resource: "mahasiswa", action: "create" },
+		{ resource: "mahasiswa", action: "read" },
+		{ resource: "mahasiswa", action: "update" },
+		{ resource: "mahasiswa", action: "delete" },
+	];
 
-		Prisma.permission.create({
-			data: { resource: "prodi", action: "create" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "prodi", action: "read" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "prodi", action: "update" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "prodi", action: "delete" },
-		}),
-
-		Prisma.permission.create({
-			data: { resource: "role", action: "create" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "role", action: "read" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "role", action: "update" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "role", action: "delete" },
-		}),
-
-		Prisma.permission.create({
-			data: { resource: "user", action: "create" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "user", action: "read" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "user", action: "update" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "user", action: "delete" },
-		}),
-
-		Prisma.permission.create({
-			data: { resource: "letterType", action: "create" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "letterType", action: "read" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "letterType", action: "update" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "letterType", action: "delete" },
-		}),
-
-		Prisma.permission.create({
-			data: { resource: "letterTemplate", action: "create" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "letterTemplate", action: "read" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "letterTemplate", action: "update" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "letterTemplate", action: "delete" },
-		}),
-
-		Prisma.permission.create({
-			data: { resource: "letter", action: "create" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "letter", action: "read" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "letter", action: "update" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "letter", action: "delete" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "letter", action: "approve" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "letter", action: "reject" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "letter", action: "revise" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "letter", action: "cancel" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "letter", action: "file" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "letter", action: "disposition" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "letter", action: "forward" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "letter", action: "editOverlay" },
-		}),
-		Prisma.permission.create({
-			data: { resource: "letter", action: "numbering" },
-		}),
-	]);
+	const permissions = await Promise.all(
+		permissionData.map(({ resource, action }) =>
+			Prisma.permission.upsert({
+				where: { resource_action: { resource, action } },
+				create: { resource, action },
+				update: {},
+			}),
+		),
+	);
 
 	console.log("Permissions upserted");
 
 	await Promise.all(
 		permissions.map((permission) =>
-			Prisma.rolePermission.create({
-				data: {
+			Prisma.rolePermission.upsert({
+				where: {
+					roleId_permissionId: {
+						roleId: superAdminRole.id,
+						permissionId: permission.id,
+					},
+				},
+				create: {
 					roleId: superAdminRole.id,
 					permissionId: permission.id,
 				},
+				update: {},
 			}),
 		),
 	);
 
-	// // Dosen gets letter approval permissions
-	// await Promise.all(
-	// 	permissions
-	// 		.filter((p) =>
-	// 			["letter:read", "letter:approve", "letter:reject"].includes(
-	// 				`${p.resource}:${p.action}`,
-	// 			),
-	// 		)
-	// 		.map((permission) =>
-	// 			Prisma.rolePermission.create({
-	// 				data: {
-	// 					roleId: dosenRole.id,
-	// 					permissionId: permission.id,
-	// 				},
-	// 			}),
-	// 		),
-	// );
-
-	// Mahasiswa gets letter create and read
+	// Mahasiswa gets letter create and read (idempotent)
+	const mahasiswaPerms = permissions.filter((p) =>
+		["letter:create", "letter:read"].includes(`${p.resource}:${p.action}`),
+	);
 	await Promise.all(
-		permissions
-			.filter((p) =>
-				["letter:create", "letter:read"].includes(`${p.resource}:${p.action}`),
-			)
-			.map((permission) =>
-				Prisma.rolePermission.create({
-					data: {
+		mahasiswaPerms.map((permission) =>
+			Prisma.rolePermission.upsert({
+				where: {
+					roleId_permissionId: {
 						roleId: mahasiswaRole.id,
 						permissionId: permission.id,
 					},
-				}),
-			),
+				},
+				create: {
+					roleId: mahasiswaRole.id,
+					permissionId: permission.id,
+				},
+				update: {},
+			}),
+		),
 	);
 
 	console.log("Assigned permissions to roles");

@@ -19,7 +19,8 @@ export default new Elysia()
 	.get(
 		"/:id",
 		async ({ params: { id } }) => {
-			return DepartemenService.get(id);
+			const data = await DepartemenService.get(id);
+			return { success: true, data };
 		},
 		{
 			...requirePermission("departemen", "read"),
@@ -61,7 +62,7 @@ export default new Elysia()
 			};
 		},
 		{
-			...requirePermission("departemen", "write"),
+			...requirePermission("departemen", "update"),
 			body: t.Object({
 				id: t.String(),
 				name: t.String(),
