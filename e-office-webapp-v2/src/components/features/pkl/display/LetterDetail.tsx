@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
@@ -12,7 +11,6 @@ import {
   Loader2,
   File,
   Download,
-  Image as ImageIcon
 } from "lucide-react";
 import { useLetter } from "@/hooks/api";
 import { useAuthStore } from "@/stores";
@@ -21,13 +19,11 @@ import { formatDate, formatDateTime } from "@/lib/utils/date.utils";
 import { API_URL } from "@/lib/constants";
 
 interface LetterDetailProps {
-  id?: string;
+  id: string;
 }
 
-export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
-  const searchParams = useSearchParams();
-  const idFromQuery = searchParams.get('id');
-  const letterId = idProp || idFromQuery || null;
+export default function LetterDetail({ id }: LetterDetailProps) {
+  const letterId = id;
   const { letter, isLoading, error, isForbidden, refetch } = useLetter(letterId);
   const { user } = useAuthStore();
   const [expandedAttachments, setExpandedAttachments] = useState<Record<string, boolean>>({});
@@ -45,7 +41,6 @@ export default function LetterDetail({ id: idProp }: LetterDetailProps = {}) {
       </div>
     </div>
   );
-
 
   const getActionLabel = (action: string): string => {
     const actionMap: Record<string, string> = {

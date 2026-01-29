@@ -96,8 +96,7 @@ export function useFormSubmission(options?: UseFormSubmissionOptions) {
       // Call success callback
       options?.onSuccess?.();
       
-      // Redirect to status page
-      router.push('/dashboard/pengajuan/pkl/status');
+      router.push(`/dashboard/surat/${result.letterId}`);
     } catch (err) {
       const apiError = handleApiError(err);
       const errorMessage = apiError.message || 'Gagal mengajukan surat. Silakan coba lagi.';

@@ -8,7 +8,6 @@ import {
   FileText, 
   Paperclip, 
   Eye, 
-  CheckCircle,
   LayoutDashboard,
   ClipboardList,
   ChevronLeft,
@@ -89,11 +88,6 @@ export default function PKLSidebar() {
             href: '/dashboard/pengajuan/pkl/review',
             label: 'Review',
             icon: Eye,
-          },
-          {
-            href: '/dashboard/pengajuan/pkl/status',
-            label: 'Status',
-            icon: CheckCircle,
           },
         ],
       });

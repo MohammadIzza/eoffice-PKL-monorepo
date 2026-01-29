@@ -3,6 +3,5 @@ export { default as Step2Detail } from './Step2Detail';
 export { default as Step3Lampiran } from './Step3Lampiran';
 export { default as Step4Review } from './Step4Review';
 export { ReviewRow } from './ReviewRow';
-export { AttachmentPreview } from './AttachmentPreview';
 export { ReviewSection } from './ReviewSection';
 export { ReviewChecklist } from './ReviewChecklist';
