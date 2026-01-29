@@ -16,6 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Empty } from '@/components/ui/empty';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useApprovalQueue } from '@/hooks/api/useApprovalQueue';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
@@ -24,8 +25,11 @@ import {
   AlertCircle, 
   Search,
   Eye,
+  CheckCircle2,
+  Clock,
+  Filter,
 } from 'lucide-react';
-import { useAuthStore } from '@/stores';
+import type { QueueLetter } from '@/services';
 
 const getStepLabel = (step: number | null): string => {
   if (!step) return '-';
@@ -45,10 +49,10 @@ const getStepLabel = (step: number | null): string => {
 export default function ApprovalQueuePage() {
   const router = useRouter();
   const { letters, isLoading, error, activeRole, refetch } = useApprovalQueue();
-  const { user } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved'>('all');
 
-  const filteredLetters = useMemo(() => {
+  const searchFiltered = useMemo(() => {
     return letters.filter((letter) => {
       const v = letter.values as Record<string, any> | undefined;
       const matchesSearch =
@@ -60,6 +64,21 @@ export default function ApprovalQueuePage() {
       return matchesSearch;
     });
   }, [letters, searchQuery]);
+
+  const filteredLetters = useMemo(() => {
+    if (statusFilter === 'pending') {
+      return searchFiltered.filter((l) => (l as QueueLetter).approvalStatus !== 'approved_by_me');
+    }
+    if (statusFilter === 'approved') {
+      return searchFiltered.filter((l) => (l as QueueLetter).approvalStatus === 'approved_by_me');
+    }
+    return searchFiltered;
+  }, [searchFiltered, statusFilter]);
+
+  const totalPending = useMemo(
+    () => searchFiltered.filter((l) => (l as QueueLetter).approvalStatus !== 'approved_by_me').length,
+    [searchFiltered]
+  );
 
   if (isLoading) {
     return (
@@ -127,47 +146,56 @@ export default function ApprovalQueuePage() {
             Antrian Approval
           </h1>
           <p className="font-lexend font-normal text-[16px] leading-[24px] text-[#86868B]">
-            Daftar surat yang menunggu persetujuan Anda{activeRole && letters.length > 0 && ` sebagai ${getStepLabel(letters[0]?.currentStep || null)}`}
+            Semua surat yang melewati Anda{activeRole && letters.length > 0 && ` sebagai ${getStepLabel(letters[0]?.currentStep ?? null)}`} — menunggu persetujuan dan sudah disetujui
           </p>
         </div>
 
-        {/* Search */}
-        <div className="mb-6">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
-            <Input
-              placeholder="Cari surat, nama, atau NIM..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-11 text-sm rounded-xl bg-white border-[#E5E5E7] focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3]/20"
-            />
-          </div>
-        </div>
-
-        {/* Table */}
-        {filteredLetters.length === 0 ? (
-          <Card className="bg-white border border-[#E5E5E7] shadow-sm rounded-2xl overflow-hidden">
-            <CardContent className="p-12">
-              <Empty
-                icon={<FileText className="w-12 h-12 text-[#86868B]/50" />}
-                title="Tidak ada surat"
-                description={searchQuery ? "Tidak ada surat yang sesuai dengan pencarian Anda." : "Tidak ada surat yang menunggu persetujuan Anda saat ini."}
-              />
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="bg-white border border-[#E5E5E7] shadow-sm rounded-2xl overflow-hidden">
-            <CardHeader className="border-b border-[#E5E5E7] bg-white py-5 px-6">
-              <div className="flex items-center gap-3">
+        <Card className="bg-white border border-[#E5E5E7] shadow-sm rounded-2xl overflow-hidden">
+          <CardHeader className="border-b border-[#E5E5E7] bg-white py-5 px-6 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-baseline gap-2">
                 <CardTitle className="text-[18px] font-semibold text-[#1D1D1F] tracking-tight">
-                  Surat Menunggu Approval
+                  Daftar Surat
                 </CardTitle>
-                <span className="inline-flex items-center justify-center min-w-[28px] h-7 px-2.5 rounded-full bg-[#0071E3] text-white text-sm font-semibold">
-                  {filteredLetters.length}
+                <span className="text-[#E5E5E7]">·</span>
+                <span className="text-sm text-[#86868B]">
+                  Menunggu <span className="font-semibold tabular-nums text-[#0071E3]">{totalPending}</span>
                 </span>
               </div>
-            </CardHeader>
-            <CardContent className="p-0">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-2">
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                  <Input
+                    placeholder="Cari surat, nama, atau NIM..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 h-10 text-sm rounded-xl bg-[#F5F5F7] border-[#E5E5E7] focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3]/20"
+                  />
+                </div>
+                <Select value={statusFilter} onValueChange={(v: 'all' | 'pending' | 'approved') => setStatusFilter(v)}>
+                  <SelectTrigger className="w-full sm:w-[180px] h-10 text-sm rounded-xl bg-[#F5F5F7] border-[#E5E5E7]">
+                    <Filter className="w-4 h-4 mr-2 text-[#86868B]" />
+                    <SelectValue placeholder="Filter status" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-[#E5E5E7]">
+                    <SelectItem value="all">Semua</SelectItem>
+                    <SelectItem value="pending">Menunggu</SelectItem>
+                    <SelectItem value="approved">Sudah disetujui</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {filteredLetters.length === 0 ? (
+              <div className="p-12">
+                <Empty
+                  icon={<FileText className="w-12 h-12 text-[#86868B]/50" />}
+                  title="Tidak ada surat"
+                  description={searchQuery || statusFilter !== 'all' ? "Tidak ada surat yang sesuai dengan pencarian atau filter." : "Tidak ada surat (menunggu atau sudah disetujui) yang melewati Anda saat ini."}
+                />
+              </div>
+            ) : (
               <div className="overflow-x-auto">
                 <Table className="table-fixed">
                   <TableHeader>
@@ -185,6 +213,9 @@ export default function ApprovalQueuePage() {
                         Step
                       </TableHead>
                       <TableHead className="font-semibold text-[#1D1D1F] text-xs tracking-tight py-4 px-4 w-[140px]">
+                        Status
+                      </TableHead>
+                      <TableHead className="font-semibold text-[#1D1D1F] text-xs tracking-tight py-4 px-4 w-[140px]">
                         Tanggal
                       </TableHead>
                       <TableHead className="font-semibold text-[#1D1D1F] text-xs tracking-tight py-4 pl-4 pr-6 w-[140px]">
@@ -196,21 +227,16 @@ export default function ApprovalQueuePage() {
                     {filteredLetters.map((letter) => {
                       const values = letter.values as Record<string, any>;
                       const name = values?.namaLengkap || letter.createdBy?.name || '-';
-                      const initial = typeof name === 'string' ? name.charAt(0).toUpperCase() : '-';
+                      const isApproved = (letter as QueueLetter).approvalStatus === 'approved_by_me';
                       return (
                         <TableRow
                           key={letter.id}
                           className="border-b border-[#E5E5E7] hover:bg-[#F5F5F7] transition-colors duration-200"
                         >
                           <TableCell className="py-4 pl-6 pr-4">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-9 h-9 rounded-full bg-[#0071E3]/10 flex items-center justify-center shrink-0">
-                                <span className="text-[#0071E3] text-sm font-semibold">{initial}</span>
-                              </div>
-                              <span className="font-medium text-[#1D1D1F] text-sm truncate tracking-tight">
-                                {name}
-                              </span>
-                            </div>
+                            <span className="font-medium text-[#1D1D1F] text-sm truncate tracking-tight block">
+                              {name}
+                            </span>
                           </TableCell>
                           <TableCell className="py-4 px-4">
                             <span className="font-mono text-[#636366] text-sm tracking-tight">
@@ -228,6 +254,19 @@ export default function ApprovalQueuePage() {
                             </span>
                           </TableCell>
                           <TableCell className="py-4 px-4">
+                            {isApproved ? (
+                              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1E8E3E]">
+                                <CheckCircle2 className="w-4 h-4" />
+                                Sudah disetujui
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0071E3]">
+                                <Clock className="w-4 h-4" />
+                                Menunggu
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="py-4 px-4">
                             <div className="flex flex-col gap-0.5">
                               <span className="font-medium text-[#1D1D1F] text-sm tracking-tight">
                                 {format(new Date(letter.createdAt), 'dd MMM yyyy', { locale: id })}
@@ -241,11 +280,11 @@ export default function ApprovalQueuePage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => router.push(`/dashboard/approval/${letter.id}`)}
+                              onClick={() => router.push(`/dashboard/approval/${letter.id}${isApproved ? '?view=1' : ''}`)}
                               className="h-8 gap-1.5 rounded-full border border-[#E5E5E7] text-sm font-medium text-[#1D1D1F] hover:bg-[#0071E3] hover:border-[#0071E3] hover:text-white transition-colors duration-200"
                             >
                               <Eye className="w-4 h-4" />
-                              Review
+                              {isApproved ? 'Lihat' : 'Review'}
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -254,9 +293,9 @@ export default function ApprovalQueuePage() {
                   </TableBody>
                 </Table>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

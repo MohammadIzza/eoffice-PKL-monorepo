@@ -80,6 +80,25 @@ export interface LetterListResponse {
 	data: Letter[];
 }
 
+export type ApprovalStatus = 'pending' | 'approved_by_me';
+
+export interface QueueLetter extends Letter {
+	approvalStatus?: ApprovalStatus;
+	approvedAt?: string | null;
+}
+
+export interface QueueResponse {
+	success: boolean;
+	data: QueueLetter[];
+	meta?: {
+		total: number;
+		step: number;
+		role: string;
+		totalPending: number;
+		totalApproved: number;
+	};
+}
+
 export interface LetterDetailResponse {
 	success: boolean;
 	data: Letter;
@@ -243,14 +262,14 @@ export const letterService = {
 		}
 	},
 
-	getQueue: async (activeRole: string): Promise<Letter[]> => {
+	getQueue: async (activeRole: string, includeApproved = true): Promise<QueueLetter[]> => {
 		try {
 			const response = await client.letter.queue.get({
-				query: { activeRole },
+				query: { activeRole, includeApproved },
 			});
 			
 			if (response.data && typeof response.data === 'object') {
-				const data = response.data as LetterListResponse;
+				const data = response.data as QueueResponse;
 				return data.data || [];
 			}
 			

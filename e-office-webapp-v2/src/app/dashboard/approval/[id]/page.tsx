@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLetter, useApprovalQueue } from '@/hooks/api';
 import { letterService } from '@/services';
+import { useAuthStore } from '@/stores';
 import { 
   Loader2, 
   FileText, 
@@ -21,11 +22,33 @@ import {
   Clock,
   Download,
   File,
-  Image as ImageIcon
+  Image as ImageIcon,
+  ChevronDown,
+  ChevronUp,
+  RotateCcw,
+  Send,
+  FileCheck,
+  type LucideIcon,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { formatDate, formatDateTime } from '@/lib/utils/date.utils';
 import { API_URL } from '@/lib/constants';
+
+const ROLE_TO_STEP: Record<string, number> = {
+  dosen_pembimbing: 1,
+  dosen_koordinator: 2,
+  ketua_program_studi: 3,
+  admin_fakultas: 4,
+  supervisor_akademik: 5,
+  manajer_tu: 6,
+  wakil_dekan_1: 7,
+  upa: 8,
+};
+
+const APPROVER_ROLES = [
+  'dosen_pembimbing', 'dosen_koordinator', 'ketua_program_studi', 'admin_fakultas',
+  'supervisor_akademik', 'manajer_tu', 'wakil_dekan_1', 'upa',
+] as const;
 
 const getStepLabel = (step: number | null): string => {
   if (!step) return '-';
@@ -96,20 +119,32 @@ const getAttachmentCategoryLabel = (category?: string | null): string => {
   return category;
 };
 
-const getTimelineBadgeClass = (action: string): string => {
+const getTimelineStatusColor = (action: string): string => {
   const key = action.toUpperCase();
-  if (key === 'APPROVED') return 'bg-[#E7F9EE] text-[#1E8E3E] border-[#BFEBD1]';
-  if (key === 'REJECTED' || key === 'CANCELLED') return 'bg-[#FFECEC] text-[#D93025] border-[#F9BDB9]';
-  if (key === 'REVISED' || key === 'SELF_REVISED') return 'bg-[#FFF7E6] text-[#B26A00] border-[#F7D9A6]';
-  if (key === 'SIGNED' || key === 'NUMBERED') return 'bg-[#EAF2FF] text-[#1B5BD7] border-[#C7DAFF]';
-  if (key === 'SUBMITTED' || key === 'RESUBMITTED') return 'bg-[#EEF4FF] text-[#1D4ED8] border-[#C7DAFF]';
-  return 'bg-[#F5F5F7] text-[#636366] border-[#E5E5E7]';
+  if (key === 'APPROVED') return 'text-[#1E8E3E]';
+  if (key === 'REJECTED' || key === 'CANCELLED') return 'text-[#D93025]';
+  if (key === 'REVISED' || key === 'SELF_REVISED') return 'text-[#B26A00]';
+  if (key === 'SIGNED' || key === 'NUMBERED') return 'text-[#1B5BD7]';
+  if (key === 'SUBMITTED' || key === 'RESUBMITTED') return 'text-[#1D4ED8]';
+  return 'text-[#636366]';
+};
+
+const getTimelineIcon = (action: string): LucideIcon => {
+  const key = action.toUpperCase();
+  if (key === 'APPROVED') return CheckCircle2;
+  if (key === 'REJECTED' || key === 'CANCELLED') return XCircle;
+  if (key === 'REVISED' || key === 'SELF_REVISED') return RotateCcw;
+  if (key === 'SIGNED' || key === 'NUMBERED') return FileCheck;
+  if (key === 'SUBMITTED' || key === 'RESUBMITTED') return Send;
+  return Clock;
 };
 
 export default function ApprovalDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const id = params.id as string;
+  const { user } = useAuthStore();
   const { letter, isLoading, error, refetch } = useLetter(id);
   const { refetch: refetchQueue } = useApprovalQueue();
   
@@ -150,6 +185,7 @@ export default function ApprovalDetailPage() {
     createdAt: Date;
   } | null>(null);
   const [showDocumentPreview, setShowDocumentPreview] = useState(false);
+  const [historyExpanded, setHistoryExpanded] = useState(false);
 
   const isWD1 = letter?.currentStep === 7;
   const isSupervisor = letter?.currentStep === 5; // Supervisor Akademik
@@ -489,6 +525,22 @@ export default function ApprovalDetailPage() {
   const letterNumber = letter.letterNumber || letter.numbering?.numberString || null;
   const isFinalDocument = !!letterNumber;
 
+  const activeRole = user?.roles?.map((r: { name?: string }) => r.name).find((n) =>
+    APPROVER_ROLES.includes(n as typeof APPROVER_ROLES[number])
+  ) ?? null;
+  const myStep = activeRole ? ROLE_TO_STEP[activeRole] : null;
+  const approvedEntry = myStep != null && user?.id
+    ? stepHistory.find(
+        (h) =>
+          h.action === 'APPROVED' &&
+          h.step === myStep &&
+          (h.actorUserId === user.id || (h.actor as { id?: string } | undefined)?.id === user.id)
+      )
+    : undefined;
+  const approvedByMe = !!approvedEntry;
+  const approvedAt = approvedEntry?.createdAt;
+  const viewOnly = searchParams.get('view') === '1' || approvedByMe;
+
   const SummaryItem = ({ label, value }: { label: string; value?: string | null }) => (
     <div className="flex flex-col gap-1">
       <span className="text-xs text-[#86868B]">{label}</span>
@@ -511,6 +563,7 @@ export default function ApprovalDetailPage() {
     action,
     isLatest,
     isLast,
+    animDelay = 0,
   }: {
     role: string;
     time: string;
@@ -519,51 +572,55 @@ export default function ApprovalDetailPage() {
     action: string;
     isLatest?: boolean;
     isLast?: boolean;
-  }) => (
-    <div className="relative pl-6">
-      {!isLast && (
-        <div className="absolute left-[6px] top-3 h-full border-l-2 border-dashed border-[#E5E5E7]" />
-      )}
+    animDelay?: number;
+  }) => {
+    const StatusIcon = getTimelineIcon(action);
+    const colorClass = getTimelineStatusColor(action);
+    return (
       <div
-        className={`absolute left-[1px] top-3 h-3 w-3 rounded-full border-2 ${
-          isLatest
-            ? 'border-[#0071E3] bg-[#E8F1FF]'
-            : 'border-[#CBD5E1] bg-white'
-        }`}
-      />
-      <div className="flex flex-col gap-1">
-        <div className="flex items-start justify-between gap-3">
+        className="group relative pl-7 animate-in fade-in slide-in-from-left-2 duration-300"
+        style={{ animationDelay: `${animDelay}ms`, animationFillMode: 'both' }}
+      >
+        {!isLast && (
+          <div
+            className={`absolute left-[6px] top-5 bottom-0 w-px transition-colors duration-200 ${
+              isLatest ? 'bg-[#0071E3]' : 'bg-[#E5E5E7] group-hover:bg-[#0071E3]'
+            }`}
+          />
+        )}
+        <div
+          className={`absolute left-0 top-4 w-3 h-3 rounded-full border-2 transition-all duration-200 ${
+            isLatest ? 'border-[#0071E3] bg-[#0071E3]' : 'border-[#E5E5E7] bg-white'
+          }`}
+        />
+        <div
+          className={`relative -ml-1 rounded-xl px-4 py-3 transition-colors duration-200 ${isLast ? 'pb-0' : 'pb-4'} ${
+            isLatest ? '' : 'hover:bg-[#F5F5F7]/80'
+          }`}
+        >
           <div>
-            <p className="text-sm font-semibold text-[#1D1D1F]">{role}</p>
-            <div className="mt-1 flex items-center gap-1 text-xs text-[#86868B]">
-              <Clock className="w-3 h-3" />
+            <p className="text-[15px] font-semibold text-[#1D1D1F] tracking-tight">{role}</p>
+            <div className="mt-1 flex items-center gap-2 text-xs text-[#86868B]">
+              <Clock className="w-3.5 h-3.5 shrink-0" />
               <span>{time}</span>
             </div>
           </div>
-          {isLatest && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#0071E3]/10 text-[#0071E3] font-semibold">
-              Terbaru
-            </span>
+          <div className={`mt-2.5 flex items-center gap-2 ${colorClass}`}>
+            <StatusIcon className="w-4 h-4 shrink-0" />
+            <span className="text-sm font-semibold">{status}</span>
+          </div>
+          {note && (
+            <div className="mt-3 rounded-r-lg border-l-2 border-[#E5E5E7] bg-[#F5F5F7]/90 py-2.5 pl-3.5 pr-1">
+              <p className="text-[11px] font-semibold text-[#86868B] uppercase tracking-wider mb-1">Catatan</p>
+              <p className="text-sm text-[#1D1D1F] leading-relaxed whitespace-pre-line">
+                {note}
+              </p>
+            </div>
           )}
         </div>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <span
-            className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${getTimelineBadgeClass(action)}`}
-          >
-            {status}
-          </span>
-        </div>
-        {note && (
-          <div className="mt-3 rounded-lg border border-[#E5E5E7] bg-[#FAFAFC] p-3">
-            <p className="text-[11px] font-semibold text-[#86868B] mb-1">Catatan</p>
-            <p className="text-sm text-[#1D1D1F] leading-relaxed whitespace-pre-line">
-              {note}
-            </p>
-          </div>
-        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="flex-1 px-[40px] py-[32px] overflow-y-auto bg-white">
@@ -742,7 +799,7 @@ export default function ApprovalDetailPage() {
             <Card className="bg-white border-[#E5E5E7] shadow-sm">
               <CardHeader className="border-b border-[#E5E5E7]">
                 <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
-                  Dokumen
+                  Surat
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-4">
@@ -752,22 +809,22 @@ export default function ApprovalDetailPage() {
                     className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3]"
                   >
                     <Edit className="w-4 h-4 mr-2" />
-                    Edit Dokumen
+                    Edit Surat
                   </Button>
                 )}
                 <div className={isSupervisor ? 'pt-4 border-t border-[#E5E5E7]' : ''}>
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-sm font-semibold text-[#1D1D1F]">
-                        {isFinalDocument ? 'Dokumen Final' : 'Preview Dokumen Sementara'}
+                        {isFinalDocument ? 'Surat Final' : 'Preview Surat Sementara'}
                       </p>
                       <p className="text-xs text-[#86868B]">
                         {isLoadingPreview
                           ? 'Memuat preview...'
                           : previewData
                             ? isFinalDocument
-                              ? 'Dokumen final sudah tersedia.'
-                              : 'Dokumen masih sementara. Final tersedia setelah penomoran.'
+                              ? 'Surat final sudah tersedia.'
+                              : 'Surat masih sementara. Final tersedia setelah penomoran.'
                             : 'Preview tidak tersedia.'}
                       </p>
                     </div>
@@ -785,7 +842,19 @@ export default function ApprovalDetailPage() {
               </CardContent>
             </Card>
 
-            {isUPA ? (
+            {viewOnly ? (
+              <Card className="bg-white border-[#E5E5E7] shadow-sm">
+                <CardContent className="p-6">
+                  <Alert className="border-[#E7F9EE] bg-[#E7F9EE]/50 text-[#1E8E3E]">
+                    <CheckCircle2 className="h-4 w-4" />
+                    <AlertDescription>
+                      Anda telah menyetujui surat ini
+                      {approvedAt ? ` pada ${formatDateTime(approvedAt)}` : ''}.
+                    </AlertDescription>
+                  </Alert>
+                </CardContent>
+              </Card>
+            ) : isUPA ? (
               <Card className="bg-white border-[#E5E5E7] shadow-sm">
                 <CardHeader className="border-b border-[#E5E5E7]">
                   <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
@@ -1025,30 +1094,63 @@ export default function ApprovalDetailPage() {
               </Card>
             )}
 
-            <Card className="bg-white border-[#E5E5E7] shadow-sm">
-              <CardHeader className="border-b border-[#E5E5E7]">
-                <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
-                  Riwayat Proses ({sortedHistory.length})
+            <Card className="bg-white border border-[#E5E5E7] shadow-sm rounded-2xl overflow-hidden">
+              <CardHeader className="border-b border-[#E5E5E7] py-5 px-6">
+                <CardTitle className="text-[18px] font-semibold text-[#1D1D1F] tracking-tight">
+                  Riwayat Proses
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
                 {sortedHistory.length === 0 ? (
-                  <p className="text-sm text-[#86868B] text-center">Belum ada riwayat</p>
+                  <p className="text-sm text-[#86868B] text-center py-4">Belum ada riwayat</p>
                 ) : (
-                  <div className="flex flex-col gap-6">
-                    {sortedHistory.map((history, index) => (
-                      <TimelineItem
-                        key={history.id}
-                        role={history.actor?.name || history.actorRole || 'System'}
-                        time={formatDateTime(history.createdAt)}
-                        status={getStatusLabel(history.action, history.step)}
-                        note={history.comment}
-                        action={history.action}
-                        isLatest={index === 0}
-                        isLast={index === sortedHistory.length - 1}
-                      />
-                    ))}
-                  </div>
+                  <>
+                    {(() => {
+                      const limit = 3;
+                      const expanded = historyExpanded;
+                      const displayed = expanded ? sortedHistory : sortedHistory.slice(0, limit);
+                      const hasMore = sortedHistory.length > limit;
+                      return (
+                        <>
+                          <div className="flex flex-col gap-0">
+                            {displayed.map((history, index) => (
+                              <TimelineItem
+                                key={history.id}
+                                role={history.actor?.name || history.actorRole || 'System'}
+                                time={formatDateTime(history.createdAt)}
+                                status={getStatusLabel(history.action, history.step)}
+                                note={history.comment}
+                                action={history.action}
+                                isLatest={index === 0}
+                                isLast={index === displayed.length - 1}
+                                animDelay={index * 50}
+                              />
+                            ))}
+                          </div>
+                          {hasMore && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setHistoryExpanded(!expanded)}
+                              className="mt-4 w-full rounded-xl py-2 text-[#0071E3] hover:bg-[#0071E3]/5 hover:text-[#0051A3] font-medium transition-colors"
+                            >
+                              {expanded ? (
+                                <>
+                                  <ChevronUp className="w-4 h-4 mr-2" />
+                                  Tutup
+                                </>
+                              ) : (
+                                <>
+                                  <ChevronDown className="w-4 h-4 mr-2" />
+                                  Tampilkan {sortedHistory.length - limit} lagi
+                                </>
+                              )}
+                            </Button>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </>
                 )}
               </CardContent>
             </Card>
@@ -1159,12 +1261,12 @@ export default function ApprovalDetailPage() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <DialogTitle className="text-lg">
-                  {isFinalDocument ? 'Dokumen Final' : 'Preview Dokumen Sementara'}
+                  {isFinalDocument ? 'Surat Final' : 'Preview Surat Sementara'}
                 </DialogTitle>
                 <DialogDescription className="text-xs text-[#86868B]">
                   {isFinalDocument
-                    ? 'Dokumen final sudah bernomor dan siap didistribusikan.'
-                    : 'Dokumen ini masih draft. Dokumen final tersedia setelah penomoran.'}
+                    ? 'Surat final sudah bernomor dan siap didistribusikan.'
+                    : 'Surat ini masih draft. Surat final tersedia setelah penomoran.'}
                 </DialogDescription>
               </div>
               {previewData?.isPDF && (

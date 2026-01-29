@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { letterService, type Letter } from '@/services';
+import { letterService, type QueueLetter } from '@/services';
 import { useAuthStore } from '@/stores';
 
 export function useApprovalQueue() {
   const { user } = useAuthStore();
-  const [letters, setLetters] = useState<Letter[]>([]);
+  const [letters, setLetters] = useState<QueueLetter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

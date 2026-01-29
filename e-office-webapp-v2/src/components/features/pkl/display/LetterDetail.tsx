@@ -25,6 +25,14 @@ import {
   ArrowLeft,
   AlertCircle,
   Image as ImageIcon,
+  ChevronDown,
+  ChevronUp,
+  CheckCircle2,
+  XCircle,
+  RotateCcw,
+  Send,
+  FileCheck,
+  type LucideIcon,
 } from "lucide-react";
 import { useLetter } from "@/hooks/api";
 import { useAuthStore } from "@/stores";
@@ -106,14 +114,24 @@ const getAttachmentCategoryLabel = (category?: string | null): string => {
   return category;
 };
 
-const getTimelineBadgeClass = (action: string): string => {
+const getTimelineStatusColor = (action: string): string => {
   const key = action.toUpperCase();
-  if (key === "APPROVED") return "bg-[#E7F9EE] text-[#1E8E3E] border-[#BFEBD1]";
-  if (key === "REJECTED" || key === "CANCELLED") return "bg-[#FFECEC] text-[#D93025] border-[#F9BDB9]";
-  if (key === "REVISED" || key === "SELF_REVISED") return "bg-[#FFF7E6] text-[#B26A00] border-[#F7D9A6]";
-  if (key === "SIGNED" || key === "NUMBERED") return "bg-[#EAF2FF] text-[#1B5BD7] border-[#C7DAFF]";
-  if (key === "SUBMITTED" || key === "RESUBMITTED") return "bg-[#EEF4FF] text-[#1D4ED8] border-[#C7DAFF]";
-  return "bg-[#F5F5F7] text-[#636366] border-[#E5E5E7]";
+  if (key === "APPROVED") return "text-[#1E8E3E]";
+  if (key === "REJECTED" || key === "CANCELLED") return "text-[#D93025]";
+  if (key === "REVISED" || key === "SELF_REVISED") return "text-[#B26A00]";
+  if (key === "SIGNED" || key === "NUMBERED") return "text-[#1B5BD7]";
+  if (key === "SUBMITTED" || key === "RESUBMITTED") return "text-[#1D4ED8]";
+  return "text-[#636366]";
+};
+
+const getTimelineIcon = (action: string): LucideIcon => {
+  const key = action.toUpperCase();
+  if (key === "APPROVED") return CheckCircle2;
+  if (key === "REJECTED" || key === "CANCELLED") return XCircle;
+  if (key === "REVISED" || key === "SELF_REVISED") return RotateCcw;
+  if (key === "SIGNED" || key === "NUMBERED") return FileCheck;
+  if (key === "SUBMITTED" || key === "RESUBMITTED") return Send;
+  return Clock;
 };
 
 export default function LetterDetail({ id }: LetterDetailProps) {
@@ -142,6 +160,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
     category: string | null;
     createdAt: Date;
   } | null>(null);
+  const [historyExpanded, setHistoryExpanded] = useState(false);
 
   const isMahasiswa = user?.roles?.some((r: { name?: string }) => r.name === "mahasiswa") ?? false;
 
@@ -291,6 +310,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
     action,
     isLatest,
     isLast,
+    animDelay = 0,
   }: {
     role: string;
     time: string;
@@ -299,47 +319,53 @@ export default function LetterDetail({ id }: LetterDetailProps) {
     action: string;
     isLatest?: boolean;
     isLast?: boolean;
-  }) => (
-    <div className="relative pl-6">
-      {!isLast && (
-        <div className="absolute left-[6px] top-3 h-full border-l-2 border-dashed border-[#E5E5E7]" />
-      )}
+    animDelay?: number;
+  }) => {
+    const StatusIcon = getTimelineIcon(action);
+    const colorClass = getTimelineStatusColor(action);
+    return (
       <div
-        className={`absolute left-[1px] top-3 h-3 w-3 rounded-full border-2 ${
-          isLatest ? "border-[#0071E3] bg-[#E8F1FF]" : "border-[#CBD5E1] bg-white"
-        }`}
-      />
-      <div className="flex flex-col gap-1">
-        <div className="flex items-start justify-between gap-3">
+        className="group relative pl-7 animate-in fade-in slide-in-from-left-2 duration-300"
+        style={{ animationDelay: `${animDelay}ms`, animationFillMode: "both" }}
+      >
+        {!isLast && (
+          <div
+            className={`absolute left-[6px] top-5 bottom-0 w-px transition-colors duration-200 ${
+              isLatest ? "bg-[#0071E3]" : "bg-[#E5E5E7] group-hover:bg-[#0071E3]"
+            }`}
+          />
+        )}
+        <div
+          className={`absolute left-0 top-4 w-3 h-3 rounded-full border-2 transition-all duration-200 ${
+            isLatest ? "border-[#0071E3] bg-[#0071E3]" : "border-[#E5E5E7] bg-white"
+          }`}
+        />
+        <div
+          className={`relative -ml-1 rounded-xl px-4 py-3 transition-colors duration-200 ${isLast ? "pb-0" : "pb-4"} ${
+            isLatest ? "" : "hover:bg-[#F5F5F7]/80"
+          }`}
+        >
           <div>
-            <p className="text-sm font-semibold text-[#1D1D1F]">{role}</p>
-            <div className="mt-1 flex items-center gap-1 text-xs text-[#86868B]">
-              <Clock className="w-3 h-3" />
+            <p className="text-[15px] font-semibold text-[#1D1D1F] tracking-tight">{role}</p>
+            <div className="mt-1 flex items-center gap-2 text-xs text-[#86868B]">
+              <Clock className="w-3.5 h-3.5 shrink-0" />
               <span>{time}</span>
             </div>
           </div>
-          {isLatest && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#0071E3]/10 text-[#0071E3] font-semibold">
-              Terbaru
-            </span>
+          <div className={`mt-2.5 flex items-center gap-2 ${colorClass}`}>
+            <StatusIcon className="w-4 h-4 shrink-0" />
+            <span className="text-sm font-semibold">{status}</span>
+          </div>
+          {note && (
+            <div className="mt-3 rounded-r-lg border-l-2 border-[#E5E5E7] bg-[#F5F5F7]/90 py-2.5 pl-3.5 pr-1">
+              <p className="text-[11px] font-semibold text-[#86868B] uppercase tracking-wider mb-1">Catatan</p>
+              <p className="text-sm text-[#1D1D1F] leading-relaxed whitespace-pre-line">{note}</p>
+            </div>
           )}
         </div>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <span
-            className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${getTimelineBadgeClass(action)}`}
-          >
-            {status}
-          </span>
-        </div>
-        {note && (
-          <div className="mt-3 rounded-lg border border-[#E5E5E7] bg-[#FAFAFC] p-3">
-            <p className="text-[11px] font-semibold text-[#86868B] mb-1">Catatan</p>
-            <p className="text-sm text-[#1D1D1F] leading-relaxed whitespace-pre-line">{note}</p>
-          </div>
-        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   const handleOpenAttachmentPreview = (attachment: {
     id: string;
@@ -671,30 +697,61 @@ export default function LetterDetail({ id }: LetterDetailProps) {
             )}
 
             {/* Riwayat Proses */}
-            <Card className="bg-white border-[#E5E5E7] shadow-sm">
-              <CardHeader className="border-b border-[#E5E5E7]">
-                <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
-                  Riwayat Proses ({sortedHistory.length})
+            <Card className="bg-white border border-[#E5E5E7] shadow-sm rounded-2xl overflow-hidden">
+              <CardHeader className="border-b border-[#E5E5E7] py-5 px-6">
+                <CardTitle className="text-[18px] font-semibold text-[#1D1D1F] tracking-tight">
+                  Riwayat Proses
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
                 {sortedHistory.length === 0 ? (
-                  <p className="text-sm text-[#86868B] text-center">Belum ada riwayat</p>
+                  <p className="text-sm text-[#86868B] text-center py-4">Belum ada riwayat</p>
                 ) : (
-                  <div className="flex flex-col gap-6">
-                    {sortedHistory.map((h, i) => (
-                      <TimelineItem
-                        key={h.id}
-                        role={h.actor?.name || h.actorRole || "System"}
-                        time={formatDateTime(h.createdAt)}
-                        status={getStatusLabel(h.action, h.step)}
-                        note={h.action !== "RESUBMITTED" ? h.comment : undefined}
-                        action={h.action}
-                        isLatest={i === 0}
-                        isLast={i === sortedHistory.length - 1}
-                      />
-                    ))}
-                  </div>
+                  (() => {
+                    const limit = 3;
+                    const expanded = historyExpanded;
+                    const displayed = expanded ? sortedHistory : sortedHistory.slice(0, limit);
+                    const hasMore = sortedHistory.length > limit;
+                    return (
+                      <>
+                        <div className="flex flex-col gap-0">
+                          {displayed.map((h, i) => (
+                            <TimelineItem
+                              key={h.id}
+                              role={h.actor?.name || h.actorRole || "System"}
+                              time={formatDateTime(h.createdAt)}
+                              status={getStatusLabel(h.action, h.step)}
+                              note={h.action !== "RESUBMITTED" ? h.comment : undefined}
+                              action={h.action}
+                              isLatest={i === 0}
+                              isLast={i === displayed.length - 1}
+                              animDelay={i * 50}
+                            />
+                          ))}
+                        </div>
+                        {hasMore && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setHistoryExpanded(!expanded)}
+                            className="mt-4 w-full rounded-xl py-2 text-[#0071E3] hover:bg-[#0071E3]/5 hover:text-[#0051A3] font-medium transition-colors"
+                          >
+                            {expanded ? (
+                              <>
+                                <ChevronUp className="w-4 h-4 mr-2" />
+                                Tutup
+                              </>
+                            ) : (
+                              <>
+                                <ChevronDown className="w-4 h-4 mr-2" />
+                                Tampilkan {sortedHistory.length - limit} lagi
+                              </>
+                            )}
+                          </Button>
+                        )}
+                      </>
+                    );
+                  })()
                 )}
               </CardContent>
             </Card>
