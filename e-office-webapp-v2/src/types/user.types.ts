@@ -47,7 +47,8 @@ export interface User {
   pegawai: Pegawai | null;
 }
 
-export type UserRoleName = 
+export type UserRoleName =
+  | 'superadmin'
   | 'mahasiswa'
   | 'dosen_pembimbing'
   | 'dosen_koordinator'

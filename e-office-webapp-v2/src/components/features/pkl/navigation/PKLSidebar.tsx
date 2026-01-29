@@ -3,15 +3,16 @@
 import { useState } from 'react';
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  User, 
-  FileText, 
-  Paperclip, 
-  Eye, 
+import {
+  User,
+  FileText,
+  Paperclip,
+  Eye,
   LayoutDashboard,
   ClipboardList,
+  Database,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores";
@@ -30,21 +31,23 @@ export default function PKLSidebar() {
 
   const formDisabled = !!user?.roles?.some(r => r.name === 'mahasiswa') && hasLetterInProgress && !revisiLetterId;
 
-  const userRoles = user?.roles?.map(r => r.name as UserRoleName) || [];
-  const isMahasiswa = userRoles.includes('mahasiswa');
-  const isApprover = userRoles.some(role => 
+  const userRoles = user?.roles?.map((r) => r.name as UserRoleName) || [];
+  const isSuperAdmin = userRoles.includes("superadmin");
+  const isMahasiswa = userRoles.includes("mahasiswa");
+  const isApprover = userRoles.some((role) =>
     [
-      'dosen_pembimbing',
-      'dosen_koordinator',
-      'ketua_program_studi',
-      'admin_fakultas',
-      'supervisor_akademik',
-      'supervisor_kemahasiswaan',
-      'manajer_tu',
-      'wakil_dekan_1',
-      'upa'
+      "dosen_pembimbing",
+      "dosen_koordinator",
+      "ketua_program_studi",
+      "admin_fakultas",
+      "supervisor_akademik",
+      "supervisor_kemahasiswaan",
+      "manajer_tu",
+      "wakil_dekan_1",
+      "upa",
     ].includes(role)
   );
+
   const getMenuItems = () => {
     const items: Array<{
       title: string;
@@ -55,64 +58,47 @@ export default function PKLSidebar() {
       }>;
     }> = [];
 
-    if (isMahasiswa) {
+    if (isSuperAdmin) {
       items.push({
-        title: 'MENU UTAMA',
+        title: "MENU UTAMA",
         items: [
-          {
-            href: '/dashboard',
-            label: 'Dasbor',
-            icon: LayoutDashboard,
-          },
-          {
-            href: '/dashboard/surat',
-            label: 'Daftar Surat Saya',
-            icon: FileText,
-          },
+          { href: "/dashboard", label: "Dasbor", icon: LayoutDashboard },
         ],
       });
-
       items.push({
-        title: 'PENGAJUAN PKL',
+        title: "MASTER DATA",
         items: [
-          {
-            href: '/dashboard/pengajuan/pkl/identitas',
-            label: 'Identitas Pemohon',
-            icon: User,
-          },
-          {
-            href: '/dashboard/pengajuan/pkl/detail-pengajuan',
-            label: 'Detail Pengajuan',
-            icon: FileText,
-          },
-          {
-            href: '/dashboard/pengajuan/pkl/lampiran',
-            label: 'Lampiran',
-            icon: Paperclip,
-          },
-          {
-            href: '/dashboard/pengajuan/pkl/review',
-            label: 'Review',
-            icon: Eye,
-          },
+          { href: "/dashboard/master", label: "Master Data", icon: Database },
+        ],
+      });
+      return items;
+    }
+
+    if (isMahasiswa) {
+      items.push({
+        title: "MENU UTAMA",
+        items: [
+          { href: "/dashboard", label: "Dasbor", icon: LayoutDashboard },
+          { href: "/dashboard/surat", label: "Daftar Surat Saya", icon: FileText },
+        ],
+      });
+      items.push({
+        title: "PENGAJUAN PKL",
+        items: [
+          { href: "/dashboard/pengajuan/pkl/identitas", label: "Identitas Pemohon", icon: User },
+          { href: "/dashboard/pengajuan/pkl/detail-pengajuan", label: "Detail Pengajuan", icon: FileText },
+          { href: "/dashboard/pengajuan/pkl/lampiran", label: "Lampiran", icon: Paperclip },
+          { href: "/dashboard/pengajuan/pkl/review", label: "Review", icon: Eye },
         ],
       });
     }
 
     if (isApprover) {
       items.push({
-        title: 'MENU UTAMA',
+        title: "MENU UTAMA",
         items: [
-          {
-            href: '/dashboard',
-            label: 'Dasbor',
-            icon: LayoutDashboard,
-          },
-          {
-            href: '/dashboard/approval/queue',
-            label: 'Antrian Approval',
-            icon: ClipboardList,
-          },
+          { href: "/dashboard", label: "Dasbor", icon: LayoutDashboard },
+          { href: "/dashboard/approval/queue", label: "Antrian Approval", icon: ClipboardList },
         ],
       });
     }
