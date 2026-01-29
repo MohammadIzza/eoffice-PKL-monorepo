@@ -10,7 +10,12 @@ import {
   Eye,
   LayoutDashboard,
   ClipboardList,
-  Database,
+  Building2,
+  GraduationCap,
+  Users,
+  UserCog,
+  Briefcase,
+  Shield,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -68,7 +73,12 @@ export default function PKLSidebar() {
       items.push({
         title: "MASTER DATA",
         items: [
-          { href: "/dashboard/master", label: "Master Data", icon: Database },
+          { href: "/dashboard/master/departemen", label: "Departemen", icon: Building2 },
+          { href: "/dashboard/master/program-studi", label: "Program Studi", icon: GraduationCap },
+          { href: "/dashboard/master/user", label: "User", icon: Users },
+          { href: "/dashboard/master/mahasiswa", label: "Mahasiswa", icon: UserCog },
+          { href: "/dashboard/master/pegawai", label: "Pegawai", icon: Briefcase },
+          { href: "/dashboard/master/role", label: "Role", icon: Shield },
         ],
       });
       return items;
