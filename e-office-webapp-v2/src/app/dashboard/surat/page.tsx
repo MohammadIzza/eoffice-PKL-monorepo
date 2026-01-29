@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import * as React from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -103,8 +104,10 @@ const getStatusLabel = (status: string) => {
 };
 
 export default function SuratListPage() {
+  const searchParams = useSearchParams();
   const { user } = useAuthStore();
   const isMahasiswa = user?.roles?.some(r => r.name === 'mahasiswa');
+  const blocked = searchParams.get('blocked') === '1';
   const isApprover = user?.roles?.some(role => 
     ['dosen_pembimbing', 'dosen_koordinator', 'ketua_program_studi', 'admin_fakultas', 
      'supervisor_akademik', 'manajer_tu', 'wakil_dekan_1', 'upa'].includes(role.name)
@@ -115,9 +118,9 @@ export default function SuratListPage() {
   const approvalQueueData = useApprovalQueue();
   
   // Select data based on role
-  const { letters, isLoading, error, refetch } = isMahasiswa 
+  const { letters, isLoading, error, refetch, hasLetterInProgress } = isMahasiswa 
     ? myLettersData 
-    : approvalQueueData;
+    : { ...approvalQueueData, hasLetterInProgress: false };
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -204,6 +207,15 @@ export default function SuratListPage() {
 
   return (
     <div className="container mx-auto px-8 py-10 space-y-8 bg-white min-h-screen">
+      {blocked && isMahasiswa && (
+        <Alert className="border-[#FF9500] bg-[#FFF7E6] text-[#B26A00]">
+          <AlertCircle className="h-3.5 w-3.5" />
+          <AlertTitle className="text-sm">Form pengajuan dinonaktifkan</AlertTitle>
+          <AlertDescription className="mt-1.5 text-xs">
+            Ada surat Anda yang masih diproses. Gunakan <strong>Revisi Mandiri</strong> dari detail surat jika perlu perbaikan, atau tunggu hingga surat selesai.
+          </AlertDescription>
+        </Alert>
+      )}
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="space-y-1">
@@ -216,12 +228,19 @@ export default function SuratListPage() {
           </p>
         </div>
         {isMahasiswa && (
-          <Link href="/dashboard/pengajuan/pkl/identitas">
-            <Button size="default" className="gap-2">
+          hasLetterInProgress ? (
+            <Button size="default" className="gap-2" disabled variant="secondary" title="Ada surat sedang diproses">
               <Plus className="w-4 h-4" />
               Buat Pengajuan Baru
             </Button>
-          </Link>
+          ) : (
+            <Link href="/dashboard/pengajuan/pkl/identitas">
+              <Button size="default" className="gap-2">
+                <Plus className="w-4 h-4" />
+                Buat Pengajuan Baru
+              </Button>
+            </Link>
+          )
         )}
       </div>
 
@@ -238,12 +257,19 @@ export default function SuratListPage() {
             }
             action={
               isMahasiswa ? (
-                <Link href="/dashboard/pengajuan/pkl/identitas">
-                  <Button size="default" className="gap-2">
+                hasLetterInProgress ? (
+                  <Button size="default" className="gap-2" disabled variant="secondary" title="Ada surat sedang diproses">
                     <Plus className="w-3.5 h-3.5" />
                     Buat Pengajuan Baru
                   </Button>
-                </Link>
+                ) : (
+                  <Link href="/dashboard/pengajuan/pkl/identitas">
+                    <Button size="default" className="gap-2">
+                      <Plus className="w-3.5 h-3.5" />
+                      Buat Pengajuan Baru
+                    </Button>
+                  </Link>
+                )
               ) : null
             }
           />

@@ -14,16 +14,28 @@ import {
 } from "@/components/ui/dialog";
 import { usePKLFormStore } from "@/stores/pklFormStore";
 import { useAuthStore } from "@/stores";
+import { useMyLetters } from "@/hooks/api";
 import { formatDate } from "@/lib/utils/date.utils";
 import { ReviewRow, ReviewSection, ReviewChecklist } from "./index";
 import { useFormSubmission } from "@/hooks";
 
 export default function Step4Review() {
   const router = useRouter();
-  const { formData, attachments, restoreAttachments, _hasHydrated } = usePKLFormStore();
+  const { formData, attachments, restoreAttachments, _hasHydrated, revisiLetterId } = usePKLFormStore();
+  const isRevisi = !!revisiLetterId;
   const { user } = useAuthStore();
+  const { hasLetterInProgress, isLoading: lettersLoading } = useMyLetters();
   const [expandedAttachments, setExpandedAttachments] = useState<Record<number, boolean>>({});
   const { submit, isSubmitting, error, setError } = useFormSubmission();
+
+  const isMahasiswa = user?.roles?.some((r: { name?: string }) => r.name === "mahasiswa") ?? false;
+
+  useEffect(() => {
+    if (!isMahasiswa || lettersLoading) return;
+    if (hasLetterInProgress && !isRevisi) {
+      router.replace("/dashboard/surat?blocked=1");
+    }
+  }, [isMahasiswa, lettersLoading, hasLetterInProgress, isRevisi, router]);
 
   useEffect(() => {
     const storedMetadata = JSON.parse(localStorage.getItem('pkl-attachments-metadata') || '[]');
@@ -56,10 +68,7 @@ export default function Step4Review() {
       label: 'Data inti lengkap',
       checked: !!(formData.namaLengkap && formData.nim && formData.email)
     },
-    {
-      label: 'Lampiran utama ada',
-      checked: utamaFiles.length > 0
-    }
+    ...(isRevisi ? [] : [{ label: 'Lampiran utama ada', checked: utamaFiles.length > 0 }])
   ];
 
   return (
@@ -266,8 +275,10 @@ export default function Step4Review() {
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin inline" />
-                  Mengajukan...
+                  {isRevisi ? 'Mengirim ulang...' : 'Mengajukan...'}
                 </>
+              ) : isRevisi ? (
+                'Kirim Ulang'
               ) : (
                 'Ajukan Permohonan'
               )}

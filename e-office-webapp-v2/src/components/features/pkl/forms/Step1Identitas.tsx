@@ -1,6 +1,6 @@
 "use client";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Calendar } from "lucide-react";
@@ -19,13 +19,29 @@ import {
 import { FormInputWithInfo } from "@/components/ui/form-input-with-info";
 import { useAuthStore } from "@/stores";
 import { usePKLFormStore } from "@/stores/pklFormStore";
+import { useMyLetters } from "@/hooks/api";
+import { letterService } from "@/services";
 import { step1IdentitasSchema, type Step1IdentitasFormData } from "@/lib/validations";
 import { normalizeDateValue, formatTanggalLahir } from "@/lib/utils/date.utils";
 
 export default function Step1Identitas() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuthStore();
-  const { formData, setFormData } = usePKLFormStore();
+  const { formData, setFormData, setRevisiLetterId, setCurrentStep } = usePKLFormStore();
+  const { hasLetterInProgress, isLoading: lettersLoading } = useMyLetters();
+  const revisiPreFilledRef = useRef(false);
+
+  const isMahasiswa = user?.roles?.some((r: { name?: string }) => r.name === "mahasiswa") ?? false;
+  const isRevisi = !!searchParams.get("revisi");
+
+  useEffect(() => {
+    if (!isMahasiswa || lettersLoading) return;
+    if (hasLetterInProgress && !isRevisi) {
+      router.replace("/dashboard/surat?blocked=1");
+      return;
+    }
+  }, [isMahasiswa, lettersLoading, hasLetterInProgress, isRevisi, router]);
 
   const form = useForm<Step1IdentitasFormData>({
     resolver: zodResolver(step1IdentitasSchema as any),
@@ -46,7 +62,40 @@ export default function Step1Identitas() {
   });
 
   useEffect(() => {
-    if (user?.mahasiswa) {
+    const revisiId = searchParams.get("revisi");
+    if (revisiId && !revisiPreFilledRef.current) {
+      revisiPreFilledRef.current = true;
+      letterService
+        .getLetterDetail(revisiId)
+        .then((letter) => {
+          const v = (letter.values || {}) as Record<string, unknown>;
+          const patch: Record<string, unknown> = { ...v };
+          if (user?.mahasiswa?.programStudi?.id) patch.programStudiId = user.mahasiswa.programStudi.id;
+          if (user?.mahasiswa?.departemen?.id) patch.departemenId = user.mahasiswa.departemen.id;
+          setFormData(patch);
+          setRevisiLetterId(revisiId);
+          setCurrentStep(1);
+          form.reset({
+            namaLengkap: (v.namaLengkap as string) || "",
+            role: "Mahasiswa",
+            nim: (v.nim as string) || "",
+            email: (v.email as string) || "",
+            departemen: (v.departemen as string) || "",
+            programStudi: (v.programStudi as string) || "",
+            tempatLahir: (v.tempatLahir as string) || "",
+            tanggalLahir: normalizeDateValue((v.tanggalLahir as string) || ""),
+            noHp: (v.noHp as string) || "",
+            alamat: (v.alamat as string) || "",
+            ipk: (v.ipk as string) || "",
+            sks: (v.sks as string) || "",
+          });
+        })
+        .catch(() => {
+          revisiPreFilledRef.current = false;
+        });
+      return;
+    }
+    if (user?.mahasiswa && !searchParams.get("revisi")) {
       const mahasiswa = user.mahasiswa;
       form.reset({
         namaLengkap: user.name || "",
@@ -63,7 +112,7 @@ export default function Step1Identitas() {
         sks: formData.sks || "",
       });
     }
-  }, [user, form, formData]);
+  }, [user, form, formData, searchParams, setFormData, setRevisiLetterId, setCurrentStep]);
 
   const onSubmit = (data: Step1IdentitasFormData) => {
     setFormData({

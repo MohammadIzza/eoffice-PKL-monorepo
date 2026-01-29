@@ -45,9 +45,9 @@ export default function DashboardPage() {
   const approvalQueueData = useApprovalQueue();
   
   // Select data based on role
-  const { letters, isLoading: lettersLoading } = isMahasiswa 
+  const { letters, isLoading: lettersLoading, hasLetterInProgress } = isMahasiswa 
     ? myLettersData 
-    : approvalQueueData;
+    : { ...approvalQueueData, hasLetterInProgress: false };
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -155,12 +155,19 @@ export default function DashboardPage() {
             </div>
             <div className="flex gap-3">
               {isMahasiswa && (
-                <Link href="/dashboard/pengajuan/pkl/identitas">
-                  <Button className="gap-2" size="default">
+                hasLetterInProgress ? (
+                  <Button className="gap-2" size="default" disabled variant="secondary" title="Ada surat sedang diproses">
                     <Plus className="w-4 h-4" />
                     Buat Pengajuan Baru
                   </Button>
-                </Link>
+                ) : (
+                  <Link href="/dashboard/pengajuan/pkl/identitas">
+                    <Button className="gap-2" size="default">
+                      <Plus className="w-4 h-4" />
+                      Buat Pengajuan Baru
+                    </Button>
+                  </Link>
+                )
               )}
               {isApprover && (
                 <Link href="/dashboard/approval/queue">

@@ -315,9 +315,11 @@ export const letterService = {
 		}
 	},
 
-	selfRevise: async (id: string): Promise<void> => {
+	selfRevise: async (id: string, comment?: string): Promise<void> => {
 		try {
-			const response = await client.letter[id]['self-revise'].post({});
+			const response = await client.letter[id]['self-revise'].post({
+				...(comment != null && comment.trim() !== '' ? { comment: comment.trim() } : {}),
+			});
 			
 			if (!response.data || typeof response.data !== 'object') {
 				throw new Error('Invalid response from /letter/:id/self-revise endpoint');

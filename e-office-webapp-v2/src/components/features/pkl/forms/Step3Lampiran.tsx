@@ -14,14 +14,28 @@ import {
 import { UploadCloud, FileText, Image as ImageIcon, Eye, Trash2, X, ChevronDown, CheckCircle2, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePKLFormStore } from "@/stores/pklFormStore";
+import { useAuthStore } from "@/stores";
+import { useMyLetters } from "@/hooks/api";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
 
 export default function Step3Lampiran() {
   const router = useRouter();
-  const { attachments, addAttachment, removeAttachment, updateAttachmentCategory, restoreAttachments, _hasHydrated } = usePKLFormStore();
-  
+  const { user } = useAuthStore();
+  const { attachments, addAttachment, removeAttachment, updateAttachmentCategory, restoreAttachments, _hasHydrated, revisiLetterId } = usePKLFormStore();
+  const { hasLetterInProgress, isLoading: lettersLoading } = useMyLetters();
+
+  const isMahasiswa = user?.roles?.some((r: { name?: string }) => r.name === "mahasiswa") ?? false;
+  const isRevisi = !!revisiLetterId;
+
+  useEffect(() => {
+    if (!isMahasiswa || lettersLoading) return;
+    if (hasLetterInProgress && !isRevisi) {
+      router.replace("/dashboard/surat?blocked=1");
+    }
+  }, [isMahasiswa, lettersLoading, hasLetterInProgress, isRevisi, router]);
+
   useEffect(() => {
     const storedMetadata = JSON.parse(localStorage.getItem('pkl-attachments-metadata') || '[]');
     const hasMetadata = storedMetadata.length > 0;

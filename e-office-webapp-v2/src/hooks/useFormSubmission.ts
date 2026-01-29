@@ -11,53 +11,66 @@ interface UseFormSubmissionOptions {
 
 export function useFormSubmission(options?: UseFormSubmissionOptions) {
   const router = useRouter();
-  const { formData, attachments, resetForm } = usePKLFormStore();
+  const { formData, attachments, resetForm, revisiLetterId } = usePKLFormStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const submit = useCallback(async () => {
-    // Validation
-    if (!formData.programStudiId || !formData.dosenPembimbingId) {
-      const errorMsg = 'Data tidak lengkap. Silakan kembali ke step sebelumnya.';
-      setError(errorMsg);
-      options?.onError?.(errorMsg);
-      return;
-    }
+    const isRevisi = !!revisiLetterId;
 
-    const proposalFile = attachments.find(att => att.category === 'proposal');
-    const ktmFile = attachments.find(att => att.category === 'ktm');
-    
-    if (!proposalFile || !ktmFile) {
-      const errorMsg = 'File Proposal dan File KTM wajib diunggah.';
-      setError(errorMsg);
-      options?.onError?.(errorMsg);
-      return;
+    if (!isRevisi) {
+      if (!formData.programStudiId || !formData.dosenPembimbingId) {
+        const errorMsg = 'Data tidak lengkap. Silakan kembali ke step sebelumnya.';
+        setError(errorMsg);
+        options?.onError?.(errorMsg);
+        return;
+      }
+      const proposalFile = attachments.find(att => att.category === 'proposal');
+      const ktmFile = attachments.find(att => att.category === 'ktm');
+      if (!proposalFile || !ktmFile) {
+        const errorMsg = 'File Proposal dan File KTM wajib diunggah.';
+        setError(errorMsg);
+        options?.onError?.(errorMsg);
+        return;
+      }
+    } else {
+      if (!formData || Object.keys(formData).length === 0) {
+        const errorMsg = 'Data tidak lengkap. Silakan kembali ke step sebelumnya.';
+        setError(errorMsg);
+        options?.onError?.(errorMsg);
+        return;
+      }
     }
 
     setIsSubmitting(true);
     setError(null);
 
     try {
+      if (isRevisi) {
+        await letterService.resubmit(revisiLetterId, formData);
+        resetForm();
+        options?.onSuccess?.();
+        router.push(`/dashboard/surat/${revisiLetterId}`);
+        return;
+      }
+
       const submitPayload = {
         prodiId: formData.programStudiId,
         dosenPembimbingUserId: formData.dosenPembimbingId,
         formData: {
           ...formData,
-          // Remove IDs that shouldn't be in formData
           programStudiId: undefined,
           departemenId: undefined,
           dosenPembimbingId: undefined,
         },
       };
 
-      // Submit letter first
       const result = await letterService.submitLetter({
         prodiId: submitPayload.prodiId,
         dosenPembimbingUserId: submitPayload.dosenPembimbingUserId,
         formData: submitPayload.formData,
       });
 
-      // Upload attachments if any
       if (attachments.length > 0) {
         const proposalFiles = attachments.filter(att => att.category === 'proposal');
         const ktmFiles = attachments.filter(att => att.category === 'ktm');
@@ -71,7 +84,6 @@ export function useFormSubmission(options?: UseFormSubmissionOptions) {
             true
           );
         }
-
         if (ktmFiles.length > 0) {
           await letterService.uploadAttachments(
             result.letterId,
@@ -80,7 +92,6 @@ export function useFormSubmission(options?: UseFormSubmissionOptions) {
             true
           );
         }
-
         if (tambahanFiles.length > 0) {
           await letterService.uploadAttachments(
             result.letterId,
@@ -90,12 +101,8 @@ export function useFormSubmission(options?: UseFormSubmissionOptions) {
         }
       }
 
-      // Reset form on success
       resetForm();
-      
-      // Call success callback
       options?.onSuccess?.();
-      
       router.push(`/dashboard/surat/${result.letterId}`);
     } catch (err) {
       const apiError = handleApiError(err);
@@ -106,7 +113,7 @@ export function useFormSubmission(options?: UseFormSubmissionOptions) {
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, attachments, resetForm, router, options]);
+  }, [formData, attachments, resetForm, router, options, revisiLetterId]);
 
   return {
     submit,

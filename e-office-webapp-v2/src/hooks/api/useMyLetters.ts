@@ -26,10 +26,15 @@ export function useMyLetters() {
     fetchLetters();
   }, []);
 
+  const hasLetterInProgress = letters.some((l) =>
+    ['PENDING', 'PROCESSING', 'REVISION'].includes(l.status)
+  );
+
   return {
     letters,
     isLoading,
     error,
+    hasLetterInProgress,
     refetch: async () => {
       setIsLoading(true);
       setError(null);

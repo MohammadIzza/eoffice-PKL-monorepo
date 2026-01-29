@@ -7,7 +7,7 @@ export default new Elysia()
 	.use(authGuardPlugin)
 	.post(
 		"/",
-		async ({ params: { id }, user }) => {
+		async ({ params: { id }, body, user }) => {
 			const letter = await Prisma.letterInstance.findUnique({
 				where: { id },
 			});
@@ -34,6 +34,11 @@ export default new Elysia()
 
 			const rollbackToStep = calculateRollbackStep(currentStep);
 
+			const comment =
+				typeof body.comment === "string" && body.comment.trim().length > 0
+					? body.comment.trim()
+					: "Mahasiswa mengajukan revisi sendiri";
+
 			await Prisma.letterInstance.update({
 				where: { id },
 				data: {
@@ -48,7 +53,7 @@ export default new Elysia()
 					step: null,
 					actorUserId: user.id,
 					actorRole: "mahasiswa",
-					comment: "Mahasiswa mengajukan revisi sendiri",
+					comment,
 					fromStep: currentStep,
 					toStep: rollbackToStep,
 				},
@@ -67,6 +72,9 @@ export default new Elysia()
 		{
 			params: t.Object({
 				id: t.String(),
+			}),
+			body: t.Object({
+				comment: t.Optional(t.String()),
 			}),
 		},
 	);

@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores";
+import { usePKLFormStore } from "@/stores/pklFormStore";
+import { useMyLetters } from "@/hooks/api";
 import type { UserRoleName } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -22,7 +24,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 export default function PKLSidebar() {
   const pathname = usePathname();
   const { user } = useAuthStore();
+  const { revisiLetterId } = usePKLFormStore();
+  const { hasLetterInProgress } = useMyLetters();
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const formDisabled = !!user?.roles?.some(r => r.name === 'mahasiswa') && hasLetterInProgress && !revisiLetterId;
 
   const userRoles = user?.roles?.map(r => r.name as UserRoleName) || [];
   const isMahasiswa = userRoles.includes('mahasiswa');
@@ -183,25 +189,42 @@ export default function PKLSidebar() {
                 {section.items.map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.href);
-                  
-                  const menuItem = (
-                    <Link
+                  const isFormLink = item.href.startsWith('/dashboard/pengajuan/pkl');
+                  const disabled = isFormLink && formDisabled;
+
+                  const baseClass = cn(
+                    "flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 relative group overflow-hidden",
+                    isCollapsed ? "justify-center w-12 h-12" : "",
+                    active && !disabled
+                      ? "bg-[#0071E3] text-white shadow-sm font-semibold"
+                      : "text-[#86868B] hover:bg-[rgba(0,0,0,0.04)] hover:text-[#1D1D1F] hover:font-semibold",
+                    disabled && "opacity-50 cursor-not-allowed pointer-events-none"
+                  );
+
+                  const menuItem = disabled ? (
+                    <span
                       key={item.href}
-                      href={item.href}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 relative group overflow-hidden",
-                        isCollapsed ? "justify-center w-12 h-12" : "",
-                        active
-                          ? "bg-[#0071E3] text-white shadow-sm font-semibold"
-                          : "text-[#86868B] hover:bg-[rgba(0,0,0,0.04)] hover:text-[#1D1D1F] hover:font-semibold"
-                      )}
+                      className={baseClass}
+                      title="Ada surat sedang diproses. Gunakan revisi dari detail surat jika perlu."
                     >
+                      <Icon className="shrink-0 w-5 h-5" />
+                      <span
+                        className={cn(
+                          "flex-1 transition-all duration-500 ease-in-out whitespace-nowrap tracking-tight",
+                          isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
+                        )}
+                      >
+                        {item.label}
+                      </span>
+                    </span>
+                  ) : (
+                    <Link key={item.href} href={item.href} className={baseClass}>
                       <Icon className={cn(
                         "shrink-0 transition-all duration-200",
                         active ? "w-5 h-5" : "w-5 h-5",
                         !active && "group-hover:scale-110 group-hover:text-[#0071E3]"
                       )} />
-                      <span 
+                      <span
                         className={cn(
                           "flex-1 transition-all duration-500 ease-in-out whitespace-nowrap tracking-tight",
                           !active && "group-hover:text-[#1D1D1F]",
@@ -222,6 +245,11 @@ export default function PKLSidebar() {
                           </TooltipTrigger>
                           <TooltipContent side="right" className="ml-2">
                             <p className="font-semibold">{item.label}</p>
+                            {disabled && (
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                Ada surat sedang diproses
+                              </p>
+                            )}
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>

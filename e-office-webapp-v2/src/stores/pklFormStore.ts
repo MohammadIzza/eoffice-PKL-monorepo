@@ -25,8 +25,10 @@ interface PKLFormState {
   formData: Record<string, any>;
   attachments: AttachmentFile[];
   _hasHydrated: boolean;
+  revisiLetterId: string | null;
   setCurrentStep: (step: number) => void;
   setFormData: (data: Record<string, any>) => void;
+  setRevisiLetterId: (id: string | null) => void;
   addAttachment: (file: File, category: 'proposal' | 'ktm' | 'tambahan') => Promise<void>;
   removeAttachment: (id: string) => void;
   updateAttachmentCategory: (id: string, category: 'proposal' | 'ktm' | 'tambahan') => void;
@@ -65,10 +67,12 @@ export const usePKLFormStore = create<PKLFormState>()(
       formData: {},
       attachments: [],
       _hasHydrated: false,
+      revisiLetterId: null,
       setCurrentStep: (step) => set({ currentStep: step }),
       setFormData: (data) => set((state) => ({ 
         formData: { ...state.formData, ...data } 
       })),
+      setRevisiLetterId: (id) => set({ revisiLetterId: id }),
       addAttachment: async (file, category) => {
         const id = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
         const preview = file.type.startsWith('image/') || file.type === 'application/pdf' 
@@ -234,7 +238,7 @@ export const usePKLFormStore = create<PKLFormState>()(
           IndexedDB.clearAllFiles().catch(error => {
             console.error('[PKL Store] Error clearing IndexedDB:', error);
           });
-          return { currentStep: 1, formData: {}, attachments: [], _hasHydrated: false };
+          return { currentStep: 1, formData: {}, attachments: [], _hasHydrated: false, revisiLetterId: null };
         });
       },
       cleanupOldAttachments: () => {

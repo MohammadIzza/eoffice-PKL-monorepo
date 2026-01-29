@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FormInputWithInfo } from "@/components/ui/form-input-with-info";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
-import { useDosenPembimbing, useKoordinatorKaprodi } from "@/hooks/api";
+import { useDosenPembimbing, useKoordinatorKaprodi, useMyLetters } from "@/hooks/api";
 import { usePKLFormStore } from "@/stores/pklFormStore";
 import { useAuthStore } from "@/stores";
 
@@ -20,7 +20,18 @@ import { step2DetailSchema, type Step2DetailFormData } from "@/lib/validations";
 export default function Step2Detail() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const { formData, setFormData } = usePKLFormStore();
+  const { formData, setFormData, revisiLetterId } = usePKLFormStore();
+  const { hasLetterInProgress, isLoading: lettersLoading } = useMyLetters();
+
+  const isMahasiswa = user?.roles?.some((r: { name?: string }) => r.name === "mahasiswa") ?? false;
+  const isRevisi = !!revisiLetterId;
+
+  useEffect(() => {
+    if (!isMahasiswa || lettersLoading) return;
+    if (hasLetterInProgress && !isRevisi) {
+      router.replace("/dashboard/surat?blocked=1");
+    }
+  }, [isMahasiswa, lettersLoading, hasLetterInProgress, isRevisi, router]);
   const prodiId = user?.mahasiswa?.programStudi?.id || formData.programStudiId || null;
   const { dosen, isLoading: isLoadingDosen, error: dosenError } = useDosenPembimbing(prodiId);
   const { data: koordinatorKaprodi, isLoading: isLoadingKoordinatorKaprodi } = useKoordinatorKaprodi(prodiId);
