@@ -80,6 +80,11 @@ export default function MasterPegawaiPage() {
 		await fetchData();
 	};
 
+	const handleDelete = async (id: string) => {
+		await pegawaiService.delete(id);
+		await fetchData();
+	};
+
 	return (
 		<MasterCRUDTable
 			title="Pegawai"
@@ -90,6 +95,7 @@ export default function MasterPegawaiPage() {
 			error={error}
 			onCreate={handleCreate}
 			onUpdate={handleUpdate}
+			onDelete={handleDelete}
 			getId={(item) => item.id}
 			formFields={[
 				{ key: 'name', label: 'Nama', required: true },

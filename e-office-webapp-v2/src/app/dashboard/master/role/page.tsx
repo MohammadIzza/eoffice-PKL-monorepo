@@ -45,6 +45,11 @@ export default function MasterRolePage() {
 		await fetchData();
 	};
 
+	const handleDelete = async (id: string) => {
+		await roleService.delete(id);
+		await fetchData();
+	};
+
 	return (
 		<MasterCRUDTable
 			title="Role"
@@ -55,6 +60,7 @@ export default function MasterRolePage() {
 			error={error}
 			onCreate={handleCreate}
 			onUpdate={handleUpdate}
+			onDelete={handleDelete}
 			getId={(item) => item.id}
 			formFields={[
 				{ key: 'name', label: 'Nama Role', required: true },

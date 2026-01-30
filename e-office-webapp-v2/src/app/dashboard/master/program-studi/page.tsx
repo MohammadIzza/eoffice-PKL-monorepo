@@ -61,6 +61,11 @@ export default function MasterProgramStudiPage() {
 		await fetchData();
 	};
 
+	const handleDelete = async (id: string) => {
+			await programStudiService.delete(id);
+			await fetchData();
+	};
+
 	return (
 		<MasterCRUDTable
 			title="Program Studi"
@@ -71,6 +76,7 @@ export default function MasterProgramStudiPage() {
 			error={error}
 			onCreate={handleCreate}
 			onUpdate={handleUpdate}
+			onDelete={handleDelete}
 			getId={(item) => item.id}
 			formFields={[
 				{ key: 'name', label: 'Nama Program Studi', required: true },
