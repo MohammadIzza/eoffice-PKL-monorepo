@@ -20,8 +20,9 @@ import {
   CheckCircle2,
   XCircle,
   Loader2
-} from 'lucide-react';
+} from 'lucide-react'; 
 import type { User as UserType } from '@/types';
+import { EditProfileDialog } from '@/components/features/profile/EditProfileDialog';
 
 export default function ProfilePage() {
   const { user, checkSession } = useAuthStore();
@@ -138,9 +139,12 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 animate-fade-in">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-semibold text-[#1D1D1F] tracking-tight mb-2">Profil Pengguna</h1>
-          <p className="text-sm text-[#86868B]">Informasi lengkap tentang akun dan data Anda</p>
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold text-[#1D1D1F] tracking-tight mb-2">Profil Pengguna</h1>
+            <p className="text-sm text-[#86868B]">Informasi lengkap tentang akun dan data Anda</p>
+          </div>
+          <EditProfileDialog user={userData} />
         </div>
 
         {/* Profile Header Card */}

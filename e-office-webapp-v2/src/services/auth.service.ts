@@ -11,6 +11,7 @@ export const authService = {
 			});
 
       const responseData = response.data as any;
+
       const fullUser = await authService.getMe();
       return { user: fullUser };
 		} catch (error) {
@@ -46,4 +47,23 @@ export const authService = {
       throw handleApiError(error);
 		}
 	},
+
+  updateProfile: async (data: {
+    name: string;
+    noHp?: string;
+    alamat?: string;
+    tempatLahir?: string;
+    tanggalLahir?: string;
+  }): Promise<void> => {
+    try {
+      const api = client as any;
+      const response = await api.me.patch(data);
+
+      if (response.error) {
+        throw new Error(response.error.value || 'Gagal memperbarui profil');
+      }
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
 };

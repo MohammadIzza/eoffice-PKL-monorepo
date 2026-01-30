@@ -1,6 +1,6 @@
 import { authGuardPlugin } from "@backend/middlewares/auth.ts";
 import { Prisma } from "@backend/db/index.ts";
-import { Elysia } from "elysia";
+import { Elysia, t } from "elysia";
 
 export default new Elysia().use(authGuardPlugin).get(
 	"/",
@@ -92,4 +92,55 @@ export default new Elysia().use(authGuardPlugin).get(
 		};
 	},
 	{},
-);
+)
+.patch(
+		"/",
+		async ({ user, body }) => {
+			await Prisma.user.update({
+				where: { id: user.id },
+				data: { name: body.name },
+			});
+
+			const mahasiswa = await Prisma.mahasiswa.findUnique({
+				where: { userId: user.id },
+			});
+
+			if (mahasiswa) {
+				await Prisma.mahasiswa.update({
+					where: { id: mahasiswa.id },
+					data: {
+						noHp: body.noHp,
+						alamat: body.alamat,
+						tempatLahir: body.tempatLahir,
+						tanggalLahir: body.tanggalLahir
+							? new Date(body.tanggalLahir)
+							: undefined,
+					},
+				});
+			}
+
+			const pegawai = await Prisma.pegawai.findUnique({
+				where: { userId: user.id },
+			});
+
+			if (pegawai) {
+				await Prisma.pegawai.update({
+					where: { id: pegawai.id },
+					data: {
+						noHp: body.noHp,
+					},
+				});
+			}
+
+			return { success: true, message: "Profil berhasil diperbarui" };
+		},
+		{
+			body: t.Object({
+				name: t.String(),
+				noHp: t.Optional(t.String()),
+				alamat: t.Optional(t.String()),
+				tempatLahir: t.Optional(t.String()),
+				tanggalLahir: t.Optional(t.String()),
+			}),
+		},
+	);
