@@ -173,7 +173,7 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 			<Input
 				id={field.key}
 				type={field.type || 'text'}
-				value={value || ''}
+				value={getInputValue(field, value)}
 				onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
 				required={field.required}
 			/>
@@ -236,14 +236,26 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 												</TableCell>
 											))}
 											<TableCell className="text-right">
-												<Button
-													variant="ghost"
-													size="sm"
-													onClick={() => handleEdit(item)}
-													className="text-[#0071E3] hover:text-[#0051A3]"
-												>
-													<Edit className="w-4 h-4" />
-												</Button>
+												<div className="flex justify-end gap-2">
+													<Button
+														variant="ghost"
+														size="sm"
+														onClick={() => handleEdit(item)}
+														className="text-[#0071E3] hover:text-[#0051A3]"
+													>
+														<Edit className="w-4 h-4" />
+													</Button>
+													{onDelete && (
+														<Button
+															variant="ghost"
+															size="sm"
+															onClick={() => handleDeleteClick(item)}
+															className="text-red-600 hover:text-red-700 hover:bg-red-50"
+														>
+															<Trash2 className="w-4 h-4" />
+														</Button>
+													)}
+												</div>
 											</TableCell>
 										</TableRow>
 									))
@@ -255,7 +267,7 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 
 				{/* Create Dialog */}
 				<Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-					<DialogContent className="max-w-md">
+					<DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
 						<DialogHeader>
 							<DialogTitle>Tambah {title}</DialogTitle>
 							<DialogDescription>{description}</DialogDescription>
@@ -295,9 +307,35 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 					</DialogContent>
 				</Dialog>
 
+			{/* Delete Dialog */}
+			<Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+				<DialogContent className="max-w-sm">
+					<DialogHeader>
+						<DialogTitle>Hapus Data</DialogTitle>
+						<DialogDescription>
+							Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.
+						</DialogDescription>
+					</DialogHeader>
+					{submitError && (
+						<Alert variant="destructive">
+							<AlertCircle className="h-4 w-4" />
+							<AlertDescription>{submitError}</AlertDescription>
+						</Alert>
+					)}
+					<DialogFooter>
+						<Button variant="outline" onClick={() => setIsDeleteOpen(false)} disabled={isSubmitting}>
+							Batal
+						</Button>
+						<Button variant="destructive" onClick={handleConfirmDelete} disabled={isSubmitting}>
+							{isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : 'Hapus'}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
 				{/* Edit Dialog */}
 				<Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-					<DialogContent className="max-w-md">
+					<DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
 						<DialogHeader>
 							<DialogTitle>Edit {title}</DialogTitle>
 							<DialogDescription>{description}</DialogDescription>
