@@ -69,4 +69,19 @@ export default new Elysia()
 				code: t.String(),
 			}),
 		},
+	)
+	.delete(
+		"/:id",
+		async ({ params: { id } }) => {
+			await DepartemenService.delete(id);
+			return {
+				message: "Departemen deleted successfully",
+			};
+		},
+		{
+			...requirePermission("departemen", "delete"),
+			params: t.Object({
+				id: t.String(),
+			}),
+		},
 	);

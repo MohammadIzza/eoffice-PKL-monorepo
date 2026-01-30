@@ -14,7 +14,7 @@ export abstract class ProgramStudiService extends CRUD<
 	ProgramStudi,
 	ProgramStudiDelegate,
 	ProgramStudiInclude
->(Prisma.programStudi) {
+>(Prisma.programStudi, { departemen: true }) {
 	public static create(data: ProgramStudiCreateInput) {
 		return Prisma.programStudi.create({ data: data });
 	}

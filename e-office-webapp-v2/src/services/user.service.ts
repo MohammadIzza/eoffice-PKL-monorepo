@@ -69,4 +69,15 @@ export const userService = {
 			throw handleApiError(error);
 		}
 	},
+
+	delete: async (id: string): Promise<void> => {
+		try {
+			const response = await client.master.user[id].delete();
+			if (!response.data || typeof response.data !== 'object') {
+				throw new Error('Invalid response from /master/user endpoint');
+			}
+		} catch (error) {
+			throw handleApiError(error);
+		}
+	},
 };

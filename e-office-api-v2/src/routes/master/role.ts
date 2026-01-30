@@ -72,4 +72,19 @@ export default new Elysia()
 				name: t.String(),
 			}),
 		},
+	)
+	.delete(
+		"/:id",
+		async ({ params: { id } }) => {
+			await RoleService.delete(id);
+			return {
+				message: "Role deleted successfully",
+			};
+		},
+		{
+			...requirePermission("role", "delete"),
+			params: t.Object({
+				id: t.String(),
+			}),
+		},
 	);

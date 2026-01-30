@@ -65,4 +65,19 @@ export default new Elysia()
 				name: t.Optional(t.String()),
 			}),
 		},
+	)
+	.delete(
+		"/:id",
+		async ({ params: { id } }) => {
+			await UserService.delete(id);
+			return {
+				message: "User deleted successfully",
+			};
+		},
+		{
+			...requirePermission("user", "delete"),
+			params: t.Object({
+				id: t.String(),
+			}),
+		},
 	);

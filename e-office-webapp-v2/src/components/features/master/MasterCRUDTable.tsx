@@ -22,7 +22,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, Edit, Loader2, AlertCircle } from 'lucide-react';
+import { Plus, Edit, Loader2, AlertCircle, Trash2 } from 'lucide-react';
 
 export interface Column<T> {
 	key: keyof T | string;
@@ -39,6 +39,7 @@ export interface MasterCRUDTableProps<T> {
 	error: string | null;
 	onCreate: (data: Record<string, any>) => Promise<void>;
 	onUpdate: (id: string, data: Record<string, any>) => Promise<void>;
+	onDelete?: (id: string) => Promise<void>;
 	getId: (item: T) => string;
 	formFields: Array<{
 		key: string;
@@ -58,6 +59,7 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 	error,
 	onCreate,
 	onUpdate,
+	onDelete,
 	getId,
 	formFields,
 	editFormFields,
@@ -65,6 +67,8 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 	const effectiveEditFields = editFormFields || formFields;
 	const [isCreateOpen, setIsCreateOpen] = useState(false);
 	const [isEditOpen, setIsEditOpen] = useState(false);
+	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+	const [deletingItem, setDeletingItem] = useState<T | null>(null);
 	const [editingItem, setEditingItem] = useState<T | null>(null);
 	const [formData, setFormData] = useState<Record<string, any>>({});
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -85,6 +89,35 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 		setFormData(initialData);
 		setSubmitError(null);
 		setIsEditOpen(true);
+	};
+
+	const handleDeleteClick = (item: T) => {
+		setDeletingItem(item);
+		setSubmitError(null);
+		setIsDeleteOpen(true);
+	};
+
+	const handleConfirmDelete = async () => {
+		if (!deletingItem || !onDelete) return;
+		setIsSubmitting(true);
+		setSubmitError(null);
+		try {
+			await onDelete(getId(deletingItem));
+			setIsDeleteOpen(false);
+			setDeletingItem(null);
+		} catch (err) {
+			setSubmitError(err instanceof Error ? err.message : 'Gagal menghapus data');
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
+
+	const getInputValue = (field: typeof formFields[0], value: any) => {
+		if (field.type === 'date' && value) {
+			if (typeof value === 'string') return value.split('T')[0];
+			if (value instanceof Date) return value.toISOString().split('T')[0];
+		}
+		return value || '';
 	};
 
 	const handleSubmitCreate = async () => {

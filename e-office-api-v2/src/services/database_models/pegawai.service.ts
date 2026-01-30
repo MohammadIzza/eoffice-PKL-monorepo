@@ -11,4 +11,4 @@ export abstract class PegawaiService extends CRUD<
 	Pegawai,
 	PegawaiDelegate,
 	PegawaiInclude
->(Prisma.pegawai) {}
+>(Prisma.pegawai, { user: true, departemen: true, programStudi: true }) {}

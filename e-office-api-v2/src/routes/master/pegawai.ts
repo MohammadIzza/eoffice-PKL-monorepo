@@ -117,4 +117,19 @@ export default new Elysia()
 				programStudiId: t.Optional(t.String()),
 			}),
 		},
+	)
+	.delete(
+		"/:id",
+		async ({ params: { id } }) => {
+			await PegawaiService.delete(id);
+			return {
+				message: "Pegawai deleted successfully",
+			};
+		},
+		{
+			...requirePermission("pegawai", "delete"),
+			params: t.Object({
+				id: t.String(),
+			}),
+		},
 	);
