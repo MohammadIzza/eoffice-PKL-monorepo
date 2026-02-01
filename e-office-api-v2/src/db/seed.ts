@@ -576,6 +576,31 @@ async function main() {
 		},
 	});
 
+	// 2. Another Mahasiswa (S1 Informatika)
+	const mahasiswaUser2 = await auth.api.signUpEmail({
+		body: {
+			email: "mahasiswa2.test@students.undip.ac.id",
+			password: "password1234",
+			name: "Siti Aminah",
+		},
+	});
+	await Prisma.userRole.create({
+		data: { userId: mahasiswaUser2.user.id, roleId: mahasiswaRole.id },
+	});
+	await Prisma.mahasiswa.create({
+		data: {
+			userId: mahasiswaUser2.user.id,
+			nim: "24060122140124",
+			tahunMasuk: "2022",
+			noHp: "08123456790",
+			alamat: "Semarang",
+			tempatLahir: "Semarang",
+			tanggalLahir: new Date("2004-06-20"),
+			departemenId: departemenInformatika.id,
+			programStudiId: prodiInformatika.id,
+		},
+	});
+
 	const dospemUser = await auth.api.signUpEmail({
 		body: {
 			email: "dospem.test@lecturer.undip.ac.id",
