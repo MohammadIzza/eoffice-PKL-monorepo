@@ -79,4 +79,19 @@ export default new Elysia()
 				departemenId: t.Optional(t.String()),
 			}),
 		},
+	)
+	.delete(
+		"/:id",
+		async ({ params: { id } }) => {
+			await ProgramStudiService.delete(id);
+			return {
+				message: "Program Studi deleted successfully",
+			};
+		},
+		{
+			...requirePermission("prodi", "delete"),
+			params: t.Object({
+				id: t.String(),
+			}),
+		},
 	);

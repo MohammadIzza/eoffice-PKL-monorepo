@@ -96,4 +96,15 @@ export const pegawaiService = {
 			throw handleApiError(error);
 		}
 	},
+
+	delete: async (id: string): Promise<void> => {
+		try {
+			const response = await client.master.pegawai[id].delete();
+			if (!response.data || typeof response.data !== 'object') {
+				throw new Error('Invalid response from /master/pegawai endpoint');
+			}
+		} catch (error) {
+			throw handleApiError(error);
+		}
+	},
 };

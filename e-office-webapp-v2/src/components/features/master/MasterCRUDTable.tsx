@@ -22,7 +22,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, Edit, Loader2, AlertCircle } from 'lucide-react';
+import { Plus, Edit, Loader2, AlertCircle, Trash2 } from 'lucide-react';
 
 export interface Column<T> {
 	key: keyof T | string;
@@ -39,6 +39,7 @@ export interface MasterCRUDTableProps<T> {
 	error: string | null;
 	onCreate: (data: Record<string, any>) => Promise<void>;
 	onUpdate: (id: string, data: Record<string, any>) => Promise<void>;
+	onDelete?: (id: string) => Promise<void>;
 	getId: (item: T) => string;
 	formFields: Array<{
 		key: string;
@@ -58,6 +59,7 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 	error,
 	onCreate,
 	onUpdate,
+	onDelete,
 	getId,
 	formFields,
 	editFormFields,
@@ -65,6 +67,8 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 	const effectiveEditFields = editFormFields || formFields;
 	const [isCreateOpen, setIsCreateOpen] = useState(false);
 	const [isEditOpen, setIsEditOpen] = useState(false);
+	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+	const [deletingItem, setDeletingItem] = useState<T | null>(null);
 	const [editingItem, setEditingItem] = useState<T | null>(null);
 	const [formData, setFormData] = useState<Record<string, any>>({});
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -85,6 +89,35 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 		setFormData(initialData);
 		setSubmitError(null);
 		setIsEditOpen(true);
+	};
+
+	const handleDeleteClick = (item: T) => {
+		setDeletingItem(item);
+		setSubmitError(null);
+		setIsDeleteOpen(true);
+	};
+
+	const handleConfirmDelete = async () => {
+		if (!deletingItem || !onDelete) return;
+		setIsSubmitting(true);
+		setSubmitError(null);
+		try {
+			await onDelete(getId(deletingItem));
+			setIsDeleteOpen(false);
+			setDeletingItem(null);
+		} catch (err) {
+			setSubmitError(err instanceof Error ? err.message : 'Gagal menghapus data');
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
+
+	const getInputValue = (field: typeof formFields[0], value: any) => {
+		if (field.type === 'date' && value) {
+			if (typeof value === 'string') return value.split('T')[0];
+			if (value instanceof Date) return value.toISOString().split('T')[0];
+		}
+		return value || '';
 	};
 
 	const handleSubmitCreate = async () => {
@@ -140,7 +173,7 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 			<Input
 				id={field.key}
 				type={field.type || 'text'}
-				value={value || ''}
+				value={getInputValue(field, value)}
 				onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
 				required={field.required}
 			/>
@@ -203,14 +236,26 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 												</TableCell>
 											))}
 											<TableCell className="text-right">
-												<Button
-													variant="ghost"
-													size="sm"
-													onClick={() => handleEdit(item)}
-													className="text-[#0071E3] hover:text-[#0051A3]"
-												>
-													<Edit className="w-4 h-4" />
-												</Button>
+												<div className="flex justify-end gap-2">
+													<Button
+														variant="ghost"
+														size="sm"
+														onClick={() => handleEdit(item)}
+														className="text-[#0071E3] hover:text-[#0051A3]"
+													>
+														<Edit className="w-4 h-4" />
+													</Button>
+													{onDelete && (
+														<Button
+															variant="ghost"
+															size="sm"
+															onClick={() => handleDeleteClick(item)}
+															className="text-red-600 hover:text-red-700 hover:bg-red-50"
+														>
+															<Trash2 className="w-4 h-4" />
+														</Button>
+													)}
+												</div>
 											</TableCell>
 										</TableRow>
 									))
@@ -222,7 +267,7 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 
 				{/* Create Dialog */}
 				<Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-					<DialogContent className="max-w-md">
+					<DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
 						<DialogHeader>
 							<DialogTitle>Tambah {title}</DialogTitle>
 							<DialogDescription>{description}</DialogDescription>
@@ -262,9 +307,35 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 					</DialogContent>
 				</Dialog>
 
+			{/* Delete Dialog */}
+			<Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+				<DialogContent className="max-w-sm">
+					<DialogHeader>
+						<DialogTitle>Hapus Data</DialogTitle>
+						<DialogDescription>
+							Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.
+						</DialogDescription>
+					</DialogHeader>
+					{submitError && (
+						<Alert variant="destructive">
+							<AlertCircle className="h-4 w-4" />
+							<AlertDescription>{submitError}</AlertDescription>
+						</Alert>
+					)}
+					<DialogFooter>
+						<Button variant="outline" onClick={() => setIsDeleteOpen(false)} disabled={isSubmitting}>
+							Batal
+						</Button>
+						<Button variant="destructive" onClick={handleConfirmDelete} disabled={isSubmitting}>
+							{isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : 'Hapus'}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
 				{/* Edit Dialog */}
 				<Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-					<DialogContent className="max-w-md">
+					<DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
 						<DialogHeader>
 							<DialogTitle>Edit {title}</DialogTitle>
 							<DialogDescription>{description}</DialogDescription>

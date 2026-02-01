@@ -40,6 +40,7 @@ export default new Elysia()
 				tahunMasuk,
 				alamat,
 				tempatLahir,
+				tanggalLahir,
 				departemenId,
 				programStudiId,
 			},
@@ -56,6 +57,7 @@ export default new Elysia()
 				tahunMasuk: tahunMasuk,
 				alamat: alamat,
 				tempatLahir: tempatLahir,
+				tanggalLahir: tanggalLahir && tanggalLahir.trim() !== "" ? new Date(tanggalLahir) : null,
 				departemenId: departemenId,
 				programStudiId: programStudiId,
 			});
@@ -91,22 +93,30 @@ export default new Elysia()
 				tahunMasuk,
 				alamat,
 				tempatLahir,
+				tanggalLahir,
 				departemenId,
 				programStudiId,
 			},
+		
 		}) => {
-			const mahasiswa = await MahasiswaService.update(id, {
-				noHp: noHp,
-				nim: nim,
-				tahunMasuk: tahunMasuk,
-				alamat: alamat,
-				tempatLahir: tempatLahir,
-				departemenId: departemenId,
-				programStudiId: programStudiId,
-			});
+			const updateData: any = {
+				noHp,
+				nim,
+				tahunMasuk,
+				alamat,
+				tempatLahir,
+				departemenId,
+				programStudiId,
+			};
+			
+			if (tanggalLahir !== undefined) {
+				updateData.tanggalLahir = tanggalLahir && tanggalLahir.trim() !== "" ? new Date(tanggalLahir) : null;
+			}
+
+			const mahasiswa = await MahasiswaService.update(id, updateData);
 
 			return {
-				message: "Mahasiswa update successfully",
+				message: "Mahasiswa updated successfully",
 				mahasiswa,
 			};
 		},
@@ -122,6 +132,21 @@ export default new Elysia()
 				tanggalLahir: t.Optional(t.String()),
 				departemenId: t.Optional(t.String()),
 				programStudiId: t.Optional(t.String()),
+			}),
+		},
+	)
+	.delete(
+		"/:id",
+		async ({ params: { id } }) => {
+			await MahasiswaService.delete(id);
+			return {
+				message: "Mahasiswa deleted successfully",
+			};
+		},
+		{
+			...requirePermission("mahasiswa", "delete"),
+			params: t.Object({
+				id: t.String(),
 			}),
 		},
 	);

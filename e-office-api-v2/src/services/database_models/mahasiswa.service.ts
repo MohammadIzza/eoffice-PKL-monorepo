@@ -13,7 +13,7 @@ export abstract class MahasiswaService extends CRUD<
 	Mahasiswa,
 	MahasiswaDelegate,
 	MahasiswaInclude
->(Prisma.mahasiswa) {
+>(Prisma.mahasiswa, { user: true, departemen: true, programStudi: true }) {
 	public static create(data: MahasiswaUncheckedCreateInput) {
 		return Prisma.mahasiswa.create({
 			data: data,

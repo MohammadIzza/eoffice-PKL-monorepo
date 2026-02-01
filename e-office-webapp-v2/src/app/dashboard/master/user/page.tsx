@@ -52,6 +52,11 @@ export default function MasterUserPage() {
 		await fetchData();
 	};
 
+	const handleDelete = async (id: string) => {
+		await userService.delete(id);
+		await fetchData();
+	};
+
 	return (
 		<MasterCRUDTable
 			title="User"
@@ -62,6 +67,7 @@ export default function MasterUserPage() {
 			error={error}
 			onCreate={handleCreate}
 			onUpdate={handleUpdate}
+			onDelete={handleDelete}
 			getId={(item) => item.id}
 			formFields={[
 				{ key: 'name', label: 'Nama', required: true },
