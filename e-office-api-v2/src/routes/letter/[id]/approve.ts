@@ -2,188 +2,185 @@ import { authGuardPlugin } from "@backend/middlewares/auth.ts";
 import { Prisma } from "@backend/db/index.ts";
 import { MinioService } from "@backend/services/minio.service.ts";
 import {
-	validateUserIsAssignee,
-	PKL_WORKFLOW_STEPS,
-	STEP_TO_ROLE,
+    validateUserIsAssignee,
+    PKL_WORKFLOW_STEPS,
+    STEP_TO_ROLE,
 } from "@backend/services/workflow/pkl.workflow.service.ts";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()
-	.use(authGuardPlugin)
-	.post(
-		"/",
-		async ({ params: { id }, body, user }) => {
-			const { comment, signatureData } = body;
-			const MAX_SIGNATURE_BYTES = 2 * 1024 * 1024;
-			const ALLOWED_SIGNATURE_MIME = new Set(["image/png", "image/jpeg", "image/jpg"]);
+    .use(authGuardPlugin)
+    .post(
+        "/",
+        async ({ params: { id }, body, user }) => {
+            const { comment, signatureData } = body;
+            const MAX_SIGNATURE_BYTES = 2 * 1024 * 1024;
+            const ALLOWED_SIGNATURE_MIME = new Set(["image/png", "image/jpeg", "image/jpg"]);
 
-			const letter = await Prisma.letterInstance.findUnique({
-				where: { id },
-			});
+            const letter = await Prisma.letterInstance.findUnique({
+                where: { id },
+            });
 
-			if (!letter) {
-				throw new Error("Surat tidak ditemukan");
-			}
+            if (!letter) {
+                throw new Error("Surat tidak ditemukan");
+            }
 
-			if (letter.status !== "PROCESSING") {
-				throw new Error("Surat tidak dalam status PROCESSING");
-			}
+            if (letter.status !== "PROCESSING") {
+                throw new Error("Surat tidak dalam status PROCESSING");
+            }
 
-			const currentStep = letter.currentStep!;
+            const currentStep = letter.currentStep!;
 
-			validateUserIsAssignee(letter, user.id, currentStep);
+            validateUserIsAssignee(letter, user.id, currentStep);
 
-		// Enforce mandatory attachments before first approval
-		if (currentStep === PKL_WORKFLOW_STEPS.DOSEN_PEMBIMBING) {
-			const attachments = await Prisma.attachment.findMany({
-				where: {
-					letterId: letter.id,
-					isActive: true,
-				},
-				select: { category: true },
-			});
+            if (currentStep === PKL_WORKFLOW_STEPS.DOSEN_PEMBIMBING) {
+                const attachments = await Prisma.attachment.findMany({
+                    where: {
+                        letterId: letter.id,
+                        isActive: true,
+                    },
+                    select: { category: true },
+                });
 
-			const hasProposal = attachments.some((a) => a.category === "proposal");
-			const hasKtm = attachments.some((a) => a.category === "ktm");
-			const utamaCount = attachments.filter((a) => a.category === "utama").length;
+                const hasProposal = attachments.some((a) => a.category === "proposal");
+                const hasKtm = attachments.some((a) => a.category === "ktm");
+                const utamaCount = attachments.filter((a) => a.category === "utama").length;
 
-			if ((!hasProposal || !hasKtm) && utamaCount < 2) {
-				throw new Error(
-					"Lampiran Proposal dan KTM wajib diunggah sebelum approval",
-				);
-			}
-		}
+                if ((!hasProposal || !hasKtm) && utamaCount < 2) {
+                    throw new Error(
+                        "Lampiran Proposal dan KTM wajib diunggah sebelum approval",
+                    );
+                }
+            }
 
-			const userRoles = await Prisma.userRole.findFirst({
-				where: { userId: user.id },
-				include: { role: true },
-			});
+            const userRoles = await Prisma.userRole.findFirst({
+                where: { userId: user.id },
+                include: { role: true },
+            });
 
-			const actorRole = userRoles?.role.name || "unknown";
+            const actorRole = userRoles?.role.name || "unknown";
 
-			if (currentStep === PKL_WORKFLOW_STEPS.WAKIL_DEKAN_1) {
-				if (!signatureData) {
-					throw new Error("Tanda tangan diperlukan untuk Wakil Dekan");
-				}
+            if (currentStep === PKL_WORKFLOW_STEPS.WAKIL_DEKAN_1) {
+                if (!signatureData) {
+                    throw new Error("Tanda tangan diperlukan untuk Wakil Dekan");
+                }
 
-				if (!signatureData.data || typeof signatureData.data !== "string") {
-					throw new Error("Data tanda tangan tidak valid");
-				}
+                if (!signatureData.data || typeof signatureData.data !== "string") {
+                    throw new Error("Data tanda tangan tidak valid");
+                }
 
-				const dataUrl = signatureData.data;
-				const dataUrlMatch = dataUrl.match(/^data:(.+);base64,(.+)$/);
-				if (!dataUrlMatch) {
-					throw new Error("Format tanda tangan tidak valid. Gunakan data URL base64.");
-				}
+                const dataUrl = signatureData.data;
+                const dataUrlMatch = dataUrl.match(/^data:(.+);base64,(.+)$/);
+                if (!dataUrlMatch) {
+                    throw new Error("Format tanda tangan tidak valid. Gunakan data URL base64.");
+                }
 
-				const mimeType = dataUrlMatch[1];
-				if (!ALLOWED_SIGNATURE_MIME.has(mimeType)) {
-					throw new Error("Format tanda tangan harus PNG atau JPG");
-				}
+                const mimeType = dataUrlMatch[1];
+                if (!ALLOWED_SIGNATURE_MIME.has(mimeType)) {
+                    throw new Error("Format tanda tangan harus PNG atau JPG");
+                }
 
-				const base64Data = dataUrlMatch[2];
-				const buffer = Buffer.from(base64Data, "base64");
-				if (!buffer.length) {
-					throw new Error("Data tanda tangan tidak valid");
-				}
-				if (buffer.length > MAX_SIGNATURE_BYTES) {
-					throw new Error("Ukuran tanda tangan maksimal 2MB");
-				}
+                const base64Data = dataUrlMatch[2];
+                const buffer = Buffer.from(base64Data, "base64");
+                if (!buffer.length) {
+                    throw new Error("Data tanda tangan tidak valid");
+                }
+                if (buffer.length > MAX_SIGNATURE_BYTES) {
+                    throw new Error("Ukuran tanda tangan maksimal 2MB");
+                }
 
-				const extension =
-					mimeType === "image/jpeg" || mimeType === "image/jpg" ? "jpg" : "png";
+                const extension =
+                    mimeType === "image/jpeg" || mimeType === "image/jpg" ? "jpg" : "png";
 
-				const fileName = `signature_${letter.id}_${Date.now()}.${extension}`;
-				const signatureFile = new File([buffer], fileName, { type: mimeType });
-				const { url, nameReplace } = await MinioService.uploadFile(
-					signatureFile,
-					`signatures/${letter.id}/`,
-					mimeType,
-				);
+                const fileName = `signature_${letter.id}_${Date.now()}.${extension}`;
+                const signatureFile = new File([buffer], fileName, { type: mimeType });
+                const { url, nameReplace } = await MinioService.uploadFile(
+                    signatureFile,
+                    `signatures/${letter.id}/`,
+                    mimeType,
+                );
 
-				const signatureUrl = url;
-				const signatureStorageKey = `signatures/${letter.id}/${nameReplace}`;
+                const signatureUrl = url;
+                const signatureStorageKey = `signatures/${letter.id}/${nameReplace}`;
 
-				await Prisma.letterInstance.update({
-					where: { id },
-					data: {
-						signedAt: new Date(),
-						signatureUrl: signatureUrl,
-					},
-				});
+                await Prisma.letterInstance.update({
+                    where: { id },
+                    data: {
+                        signedAt: new Date(),
+                        signatureUrl: signatureUrl,
+                    },
+                });
 
-				await Prisma.letterStepHistory.create({
-					data: {
-						letterId: letter.id,
-						action: "SIGNED",
-						step: currentStep,
-						actorUserId: user.id,
-						actorRole: actorRole,
-						comment: null,
-						metadata: {
-							signatureUrl,
-							signatureStorageKey,
-							method: signatureData.method || "UPLOAD",
-							mimeType,
-							sizeBytes: buffer.length,
-							fileName,
-						},
-					},
-				});
-			}
+                await Prisma.letterStepHistory.create({
+                    data: {
+                        letterId: letter.id,
+                        action: "SIGNED",
+                        step: currentStep,
+                        actorUserId: user.id,
+                        actorRole: actorRole,
+                        comment: null,
+                        metadata: {
+                            signatureUrl,
+                            signatureStorageKey,
+                            method: signatureData.method || "UPLOAD",
+                            mimeType,
+                            sizeBytes: buffer.length,
+                            fileName,
+                        },
+                    },
+                });
+            }
 
-		const nextStep =
-			currentStep < PKL_WORKFLOW_STEPS.UPA ? currentStep + 1 : null;
+            const nextStep = currentStep < PKL_WORKFLOW_STEPS.UPA ? currentStep + 1 : 9;
 
-		// Jika step terakhir (UPA), set status ke COMPLETED
-		const updateData: any = {
-			currentStep: nextStep,
-		};
+            const updateData: any = {
+                currentStep: nextStep,
+            };
 
-		if (currentStep === PKL_WORKFLOW_STEPS.UPA) {
-			updateData.status = "COMPLETED";
-		}
+            if (currentStep === PKL_WORKFLOW_STEPS.UPA) {
+                updateData.status = "COMPLETED";
+            }
 
-		await Prisma.letterInstance.update({
-			where: { id },
-			data: updateData,
-		});
+            await Prisma.letterInstance.update({
+                where: { id },
+                data: updateData,
+            });
 
-			await Prisma.letterStepHistory.create({
-				data: {
-					letterId: letter.id,
-					action: "APPROVED",
-					step: currentStep,
-					actorUserId: user.id,
-					actorRole: actorRole,
-					comment: comment || null,
-					fromStep: currentStep,
-					toStep: nextStep,
-				},
-			});
+            await Prisma.letterStepHistory.create({
+                data: {
+                    letterId: letter.id,
+                    action: "APPROVED",
+                    step: currentStep,
+                    actorUserId: user.id,
+                    actorRole: actorRole,
+                    comment: comment || null,
+                    fromStep: currentStep,
+                    toStep: nextStep,
+                },
+            });
 
-			return {
-				success: true,
-				message: "Surat berhasil disetujui",
-				data: {
-					letterId: letter.id,
-					currentStep: nextStep,
-					nextStepRole: nextStep ? STEP_TO_ROLE[nextStep] : "COMPLETED",
-				},
-			};
-		},
-		{
-			params: t.Object({
-				id: t.String(),
-			}),
-			body: t.Object({
-				comment: t.Optional(t.String()),
-				signatureData: t.Optional(
-					t.Object({
-						method: t.String(),
-						data: t.String(),
-					}),
-				),
-			}),
-		},
-	);
+            return {
+                success: true,
+                message: "Surat berhasil disetujui",
+                data: {
+                    letterId: letter.id,
+                    currentStep: nextStep,
+                    nextStepRole: nextStep <= PKL_WORKFLOW_STEPS.UPA ? STEP_TO_ROLE[nextStep as keyof typeof STEP_TO_ROLE] : "COMPLETED",
+                },
+            };
+        },
+        {
+            params: t.Object({
+                id: t.String(),
+            }),
+            body: t.Object({
+                comment: t.Optional(t.String()),
+                signatureData: t.Optional(
+                    t.Object({
+                        method: t.String(),
+                        data: t.String(),
+                    }),
+                ),
+            }),
+        },
+    );

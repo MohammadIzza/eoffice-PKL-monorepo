@@ -76,21 +76,9 @@ export default function ProfilePage() {
     }
   };
 
+  // MODIFIKASI: Mengembalikan warna biru solid untuk semua role agar sesuai gambar
   const getRoleBadgeColor = (roleName: string): string => {
-    const roleColors: Record<string, string> = {
-      'mahasiswa': 'bg-[#0071E3] text-white',
-      'dosen_pembimbing': 'bg-[#34C759] text-white',
-      'dosen_koordinator': 'bg-[#0A84FF] text-white',
-      'ketua_program_studi': 'bg-[#FF9500] text-white',
-      'admin_fakultas': 'bg-[#AF52DE] text-white',
-      'supervisor_akademik': 'bg-[#5856D6] text-white',
-      'supervisor_kemahasiswaan': 'bg-[#FF2D55] text-white',
-      'manajer_tu': 'bg-[#FF9500] text-white',
-      'wakil_dekan_1': 'bg-[#0071E3] text-white',
-      'upa': 'bg-[#34C759] text-white',
-      'pegawai_ukt': 'bg-[#86868B] text-white',
-    };
-    return roleColors[roleName] || 'bg-[#86868B] text-white';
+    return 'bg-[#0071E3] text-white hover:bg-[#0071E3]/90';
   };
 
   const formatRoleName = (roleName: string): string => {
@@ -194,10 +182,6 @@ export default function ProfilePage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1">
-              <p className="text-xs font-medium text-[#86868B] uppercase tracking-wide">ID Pengguna</p>
-              <p className="text-sm text-[#1D1D1F] font-mono">{userData.id}</p>
-            </div>
-            <div className="space-y-1">
               <p className="text-xs font-medium text-[#86868B] uppercase tracking-wide">Nama Lengkap</p>
               <p className="text-sm text-[#1D1D1F]">{userData.name}</p>
             </div>
@@ -278,7 +262,6 @@ export default function ProfilePage() {
                     <BookOpen className="h-4 w-4 text-[#86868B]" />
                     <div>
                       <p className="text-sm text-[#1D1D1F] font-medium">{userData.mahasiswa.programStudi.name}</p>
-                      <p className="text-xs text-[#86868B]">Kode: {userData.mahasiswa.programStudi.code}</p>
                     </div>
                   </div>
                 </div>
@@ -290,7 +273,6 @@ export default function ProfilePage() {
                     <Building2 className="h-4 w-4 text-[#86868B]" />
                     <div>
                       <p className="text-sm text-[#1D1D1F] font-medium">{userData.mahasiswa.departemen.name}</p>
-                      <p className="text-xs text-[#86868B]">Kode: {userData.mahasiswa.departemen.code}</p>
                     </div>
                   </div>
                 </div>
@@ -334,7 +316,6 @@ export default function ProfilePage() {
                     <BookOpen className="h-4 w-4 text-[#86868B]" />
                     <div>
                       <p className="text-sm text-[#1D1D1F] font-medium">{userData.pegawai.programStudi.name}</p>
-                      <p className="text-xs text-[#86868B]">Kode: {userData.pegawai.programStudi.code}</p>
                     </div>
                   </div>
                 </div>
@@ -346,7 +327,6 @@ export default function ProfilePage() {
                     <Building2 className="h-4 w-4 text-[#86868B]" />
                     <div>
                       <p className="text-sm text-[#1D1D1F] font-medium">{userData.pegawai.departemen.name}</p>
-                      <p className="text-xs text-[#86868B]">Kode: {userData.pegawai.departemen.code}</p>
                     </div>
                   </div>
                 </div>
@@ -365,15 +345,13 @@ export default function ProfilePage() {
             <div className="space-y-4">
               <div className="flex flex-wrap gap-3">
                 {userData.roles.map((role) => (
-                  <div
+                  // MODIFIKASI: Menghapus div pembungkus yang berwarna abu-abu dan ID Role
+                  <Badge 
                     key={role.id}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[rgba(0,0,0,0.02)] border border-[rgba(0,0,0,0.08)]"
+                    className={`${getRoleBadgeColor(role.name)} rounded-full px-4 py-2 text-sm font-medium border-none`}
                   >
-                    <Badge className={`${getRoleBadgeColor(role.name)} rounded-full px-2 py-0.5 text-xs`}>
-                      {formatRoleName(role.name)}
-                    </Badge>
-                    <span className="text-xs text-[#86868B] font-mono">ID: {role.id}</span>
-                  </div>
+                    {formatRoleName(role.name)}
+                  </Badge>
                 ))}
               </div>
             </div>
