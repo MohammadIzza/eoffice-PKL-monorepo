@@ -48,6 +48,11 @@ export default function MasterDepartemenPage() {
 		await fetchData();
 	};
 
+	const handleDelete = async (id: string) => {
+		await departemenService.delete(id);
+		await fetchData();
+	};
+
 	return (
 		<MasterCRUDTable
 			title="Departemen"
@@ -58,6 +63,7 @@ export default function MasterDepartemenPage() {
 			error={error}
 			onCreate={handleCreate}
 			onUpdate={handleUpdate}
+			onDelete={handleDelete}
 			getId={(item) => item.id}
 			formFields={[
 				{ key: 'name', label: 'Nama Departemen', required: true },

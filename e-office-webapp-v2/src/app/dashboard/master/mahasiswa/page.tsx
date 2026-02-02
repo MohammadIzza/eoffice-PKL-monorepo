@@ -85,6 +85,11 @@ export default function MasterMahasiswaPage() {
 		await fetchData();
 	};
 
+	const handleDelete = async (id: string) => {
+		await mahasiswaService.delete(id);
+		await fetchData();
+	};
+
 	return (
 		<MasterCRUDTable
 			title="Mahasiswa"
@@ -95,6 +100,7 @@ export default function MasterMahasiswaPage() {
 			error={error}
 			onCreate={handleCreate}
 			onUpdate={handleUpdate}
+			onDelete={handleDelete}
 			getId={(item) => item.id}
 			formFields={[
 				{ key: 'name', label: 'Nama', required: true },
@@ -104,7 +110,7 @@ export default function MasterMahasiswaPage() {
 				{ key: 'noHp', label: 'No. HP', required: true },
 				{ key: 'alamat', label: 'Alamat' },
 				{ key: 'tempatLahir', label: 'Tempat Lahir' },
-				{ key: 'tanggalLahir', label: 'Tanggal Lahir', type: 'text' },
+				{ key: 'tanggalLahir', label: 'Tanggal Lahir', type: 'date' },
 				{
 					key: 'departemenId',
 					label: 'Departemen',
@@ -126,7 +132,7 @@ export default function MasterMahasiswaPage() {
 				{ key: 'noHp', label: 'No. HP', required: true },
 				{ key: 'alamat', label: 'Alamat' },
 				{ key: 'tempatLahir', label: 'Tempat Lahir' },
-				{ key: 'tanggalLahir', label: 'Tanggal Lahir', type: 'text' },
+				{ key: 'tanggalLahir', label: 'Tanggal Lahir', type: 'date' },
 				{
 					key: 'departemenId',
 					label: 'Departemen',
