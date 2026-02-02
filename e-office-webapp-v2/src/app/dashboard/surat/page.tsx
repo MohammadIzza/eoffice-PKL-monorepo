@@ -363,7 +363,7 @@ export default function SuratListPage() {
                         ? format(new Date(letter.createdAt), 'dd MMM yyyy', { locale: id })
                         : '-';
                       const currentStep = letter.currentStep || 0;
-                      const totalSteps = 10;
+                      const totalSteps = 9;
                       const letterNumber = letter.letterNumber || letter.numbering?.numberString || '-';
                       const applicantName = letter.values?.namaLengkap || letter.createdBy?.name || '-';
                       const progressPercentage = (currentStep / totalSteps) * 100;
