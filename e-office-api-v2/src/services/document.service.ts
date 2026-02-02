@@ -2060,10 +2060,10 @@ export class DocumentService {
     
     <!-- TUJUAN SURAT -->
     <div class="tujuan">
-        Yth. ${values.namaTujuan || "Bapak Erick Handoyo"}<br>
-        ${values.jabatanTujuan || "CEO Teknik Utama Raya"}<br>
-        ${values.instansiTujuan || "PT Insan Membangun Negeri"}<br>
-        ${values.alamatTujuan || "Jl. Merdeka Belajar No.70 Semarang"}
+        Yth. ${values.tujuanSurat || values.namaTujuan || "-"}<br>
+        ${values.jabatan || values.jabatanTujuan || "-"}<br>
+        ${values.namaInstansi || values.instansiTujuan || "-"}<br>
+        ${values.alamatInstansi || values.alamatTujuan || "-"}
     </div>
     
     <!-- ISI SURAT: PARAGRAF PEMBUKA -->
