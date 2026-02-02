@@ -37,16 +37,9 @@ export default function DashboardNavbar() {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // Clear auth store
       logout();
-      
-      // Clear cookie explicitly (in case backend didn't)
       document.cookie = 'better-auth.session_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
-      
-      // Clear localStorage
       localStorage.removeItem('auth-storage');
-      
-      // Redirect to login
       router.push('/login');
     }
   };
@@ -54,20 +47,19 @@ export default function DashboardNavbar() {
   const notificationCount = 3;
 
   return (
-    <header className="w-full h-16 bg-white/95 backdrop-blur-xl sticky top-0 z-50 border-b border-[rgba(0,0,0,0.08)] shadow-sm">
+    <header className="w-full h-16 bg-blue-600/90 backdrop-blur-md sticky top-0 z-[100] border-b border-blue-700/50 shadow-lg">
       <div className="container mx-auto h-full px-6 flex items-center justify-between">
         {/* Logo Section */}
         <div className="flex items-center h-8">
           <img 
             src="/logofsm.svg" 
             alt="FSM Undip" 
-            className="h-full w-auto object-contain"
+            className="h-full w-auto object-contain brightness-0 invert"
           />
         </div>
 
-        {/* Center: Spotlight-style Search (optional - can be added later) */}
+        {/* Center Section */}
         <div className="flex-1 max-w-xl mx-8 hidden md:block">
-          {/* Search bar can be added here */}
         </div>
 
         {/* Right Section */}
@@ -76,73 +68,74 @@ export default function DashboardNavbar() {
           <Button
             variant="ghost"
             size="icon"
-            className="relative text-[#1D1D1F] hover:bg-[#F5F5F7]"
+            className="relative text-white hover:bg-white/20 transition-colors"
           >
             <Bell className="h-5 w-5" />
             {notificationCount > 0 && (
               <Badge 
                 variant="destructive" 
-                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] border-2 border-white rounded-full"
+                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] border-2 border-blue-600 rounded-full"
               >
                 {notificationCount > 9 ? '9+' : notificationCount}
               </Badge>
             )}
           </Button>
 
-          <Separator orientation="vertical" className="h-6 bg-[rgba(0,0,0,0.1)]" />
+          <Separator orientation="vertical" className="h-6 bg-white/20" />
 
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="flex items-center gap-3 h-auto p-2 text-[#1D1D1F] hover:bg-[#F5F5F7] rounded-full"
+                className="flex items-center gap-3 h-auto p-2 text-white hover:bg-white/20 rounded-full transition-colors"
               >
-                <div className="flex flex-col items-end mr-1 hidden sm:block">
-                  <span className="text-sm font-semibold leading-tight text-[#1D1D1F]">
+                <div className="flex flex-col items-end mr-1 hidden sm:flex gap-1">
+                  <span className="text-sm font-semibold leading-none text-white">
                     {user?.name || 'Pengguna'}
                   </span>
                   {user?.email && (
-                    <span className="text-xs text-[#86868B] leading-tight">
+                    <span className="text-[11px] text-blue-100/90 leading-none font-medium">
                       {user.email}
                     </span>
                   )}
                 </div>
-                <Avatar className="h-9 w-9 border-2 border-[rgba(0,0,0,0.1)] rounded-full">
+                <Avatar className="h-9 w-9 border-2 border-white/30 rounded-full">
                   <AvatarImage src={user?.image || undefined} />
-                  <AvatarFallback className="bg-[#F5F5F7] text-[#0071E3] text-xs font-semibold">
+                  <AvatarFallback className="bg-blue-100 text-blue-600 text-xs font-semibold">
                     {getInitials(user?.name)}
                   </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 rounded-2xl shadow-apple-lg border border-[rgba(0,0,0,0.1)] bg-white">
-              <DropdownMenuLabel>
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-semibold leading-none text-[#1D1D1F]">
+            
+            <DropdownMenuContent align="end" className="min-w-[14rem] w-auto max-w-[20rem] rounded-2xl shadow-xl border border-gray-200 bg-white p-2">
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1.5 py-1 px-1">
+                  <p className="text-sm font-semibold leading-none text-gray-900 break-words">
                     {user?.name || 'Pengguna'}
                   </p>
                   {user?.email && (
-                    <p className="text-xs leading-none text-[#86868B]">
+                    <p className="text-xs leading-relaxed text-gray-500 break-all">
                       {user.email}
                     </p>
                   )}
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-[rgba(0,0,0,0.1)]" />
-              <DropdownMenuItem className="cursor-pointer rounded-lg" asChild>
-                <Link href="/dashboard/profile" className="flex items-center">
-                  <User className="mr-2 h-4 w-4" />
+              <DropdownMenuSeparator className="my-1" />
+              <DropdownMenuItem className="cursor-pointer rounded-lg py-2" asChild>
+                <Link href="/dashboard/profile" className="flex items-center w-full">
+                  <User className="mr-2 h-4 w-4 text-gray-500" />
                   <span>Profil</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer rounded-lg">
-                <Settings className="mr-2 h-4 w-4" />
+              <DropdownMenuItem className="cursor-pointer rounded-lg py-2">
+                <Settings className="mr-2 h-4 w-4 text-gray-500" />
                 <span>Pengaturan</span>
               </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-[rgba(0,0,0,0.1)]" />
+              <DropdownMenuSeparator className="my-1" />
               <DropdownMenuItem 
-                className="cursor-pointer text-[#FF3B30] focus:text-[#FF3B30] rounded-lg"
+                className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 rounded-lg py-2"
                 onClick={handleLogout}
               >
                 <LogOut className="mr-2 h-4 w-4" />
