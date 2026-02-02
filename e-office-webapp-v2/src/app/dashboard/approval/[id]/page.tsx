@@ -563,6 +563,8 @@ export default function ApprovalDetailPage() {
     APPROVER_ROLES.includes(n as typeof APPROVER_ROLES[number])
   ) ?? null;
   const myStep = activeRole ? ROLE_TO_STEP[activeRole] : null;
+  
+  // Cek approval dengan validasi: hanya valid jika tidak ada revisi/resubmit setelahnya
   const approvedEntry = myStep != null && user?.id
     ? stepHistory.find(
         (h) =>
@@ -571,7 +573,18 @@ export default function ApprovalDetailPage() {
           (h.actorUserId === user.id || (h.actor as { id?: string } | undefined)?.id === user.id)
       )
     : undefined;
-  const approvedByMe = !!approvedEntry;
+  
+  // Cek apakah ada revisi/resubmit setelah approval
+  const hasLaterRevision = approvedEntry
+    ? stepHistory.some(
+        (h) =>
+          ['REVISED', 'SELF_REVISED', 'RESUBMITTED'].includes(h.action) &&
+          new Date(h.createdAt).getTime() > new Date(approvedEntry.createdAt).getTime()
+      )
+    : false;
+  
+  // Approval hanya valid jika tidak ada revisi setelahnya
+  const approvedByMe = !!approvedEntry && !hasLaterRevision;
   const approvedAt = approvedEntry?.createdAt;
   const viewOnly = searchParams.get('view') === '1' || approvedByMe;
   const isCompleted = letter?.status === 'COMPLETED';

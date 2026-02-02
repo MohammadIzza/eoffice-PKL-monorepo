@@ -112,21 +112,36 @@ export default new Elysia()
 				orderBy: { createdAt: "desc" },
 			});
 
+			// Filter approval yang masih valid (tidak ada revisi/resubmit setelahnya)
 			const seen = new Set<string>();
 			const approved: Array<{
 				[key: string]: unknown;
 				approvalStatus: "approved_by_me";
 				approvedAt: Date;
 			}> = [];
+			
 			for (const h of approvedHistory) {
 				const letter = h.letter;
 				if (!letter || pendingIds.has(letter.id) || seen.has(letter.id)) continue;
-				seen.add(letter.id);
-				approved.push({
-					...letter,
-					approvalStatus: "approved_by_me",
-					approvedAt: h.createdAt,
+				
+				// Cek apakah ada revisi/resubmit setelah approval ini
+				const laterRevision = await Prisma.letterStepHistory.findFirst({
+					where: {
+						letterId: letter.id,
+						action: { in: ["REVISED", "SELF_REVISED", "RESUBMITTED"] },
+						createdAt: { gt: h.createdAt },
+					},
 				});
+				
+				// Hanya tambahkan jika approval masih valid (tidak ada revisi setelahnya)
+				if (!laterRevision) {
+					seen.add(letter.id);
+					approved.push({
+						...letter,
+						approvalStatus: "approved_by_me",
+						approvedAt: h.createdAt,
+					});
+				}
 			}
 
 			const combined = [...pending, ...approved];
