@@ -69,4 +69,15 @@ export const programStudiService = {
 			throw handleApiError(error);
 		}
 	},
+
+	delete: async (id: string): Promise<void> => {
+		try {
+			const response = await client.master.programStudi[id].delete();
+			if (!response.data || typeof response.data !== 'object') {
+				throw new Error('Invalid response from /master/programStudi endpoint');
+			}
+		} catch (error) {
+			throw handleApiError(error);
+		}
+	},
 };

@@ -63,4 +63,15 @@ export const departemenService = {
 			throw handleApiError(error);
 		}
 	},
+
+	delete: async (id: string): Promise<void> => {
+		try {
+			const response = await client.master.departemen[id].delete();
+			if (!response.data || typeof response.data !== 'object') {
+				throw new Error('Invalid response from /master/departemen endpoint');
+			}
+		} catch (error) {
+			throw handleApiError(error);
+		}
+	}
 };

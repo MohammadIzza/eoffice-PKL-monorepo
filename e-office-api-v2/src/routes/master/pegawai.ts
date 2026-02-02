@@ -1,6 +1,7 @@
 import { authGuardPlugin, requirePermission } from "@backend/middlewares/auth.ts";
 import { PegawaiService } from "@backend/services/database_models/pegawai.service.ts";
 import { UserService } from "@backend/services/database_models/user.service.ts";
+import { Prisma } from "@backend/db/index.ts";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()
@@ -48,13 +49,27 @@ export default new Elysia()
 				programStudiId,
 			},
 		}) => {
-			const user = await UserService.create({
-				name: name,
-				email: email,
+			let user = await Prisma.user.findUnique({
+				where: { email: email },
 			});
 
+			if (!user) {
+				user = await UserService.create({
+					name: name,
+					email: email,
+				});
+			}
+
+			const existingPegawai = await Prisma.pegawai.findFirst({
+				where: { userId: user.id }
+			});
+
+			if (existingPegawai) {
+				throw new Error('Pegawai dengan email ${email} sudah terdaftar.');
+			}		
+
 			const pegawai = await PegawaiService.create({
-				userId: user.id,
+				user: { connect: { id: user.id } },
 				nip: nip,
 				jabatan: jabatan,
 				noHp: noHp,
@@ -115,6 +130,21 @@ export default new Elysia()
 				noHp: t.Optional(t.String()),
 				departemenId: t.Optional(t.String()),
 				programStudiId: t.Optional(t.String()),
+			}),
+		},
+	)
+	.delete(
+		"/:id",
+		async ({ params: { id } }) => {
+			await PegawaiService.delete(id);
+			return {
+				message: "Pegawai deleted successfully",
+			};
+		},
+		{
+			...requirePermission("pegawai", "delete"),
+			params: t.Object({
+				id: t.String(),
 			}),
 		},
 	);
