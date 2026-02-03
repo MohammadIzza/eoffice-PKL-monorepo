@@ -6,7 +6,8 @@ export const config = {
 		.default("development")
 		.asEnum(["production", "test", "development"]),
 
-	PORT: env.get("PORT").default(3000).asPortNumber(),
+	PORT: env.get("PORT").default(3001).asPortNumber(),
+	FE_URL: env.get("FE_URL").default("http://localhost:3000").asString(),
 	API_URL: env
 		.get("API_URL")
 		.default(`https://${env.get("PUBLIC_DOMAIN").asString()}`)

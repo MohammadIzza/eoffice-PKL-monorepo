@@ -236,11 +236,9 @@ export class DocumentService {
             padding: 2px 8px 2px 0;
             vertical-align: top;
         }
-		</div>
-		<!-- QR CODE (pojok kanan bawah, jika tersedia) -->
-		${values.qrCodeUrl ? `<div style="width:100%;text-align:right;margin-top:32px;"><img src="${values.qrCodeUrl}" alt="QR Code" class="qr-code"></div>` : ""}
-	</body>
-	</html>
+        
+        /* ===================================
+           TANDA TANGAN
            =================================== */
         .ttd {
             width: 320px;
