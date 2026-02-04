@@ -1,6 +1,7 @@
 import { authGuardPlugin } from "@backend/middlewares/auth.ts";
 import { Prisma } from "@backend/db/index.ts";
 import { validateUserIsAssignee } from "@backend/services/workflow/pkl.workflow.service.ts";
+import { notificationService } from "@backend/services/notification.service.ts";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()
@@ -55,6 +56,19 @@ export default new Elysia()
 					toStep: null,
 				},
 			});
+
+			// Kirim notifikasi penolakan ke mahasiswa
+			try {
+				await notificationService.create(
+					letter.createdById,
+					"Surat Perlu Revisi/Ditolak",
+					`Surat PKL Anda dikembalikan dengan catatan: "${comment}". Silakan cek untuk revisi.`,
+					`/dashboard/surat/${letter.id}`,
+					"WARNING",
+				);
+			} catch (e) {
+				console.error("Gagal mengirim notifikasi rejection:", e);
+			}
 
 			return {
 				success: true,

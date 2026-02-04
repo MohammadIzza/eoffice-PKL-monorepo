@@ -52,6 +52,7 @@ export const useAuthStore = create<AuthState>()(
                   errorMessage.includes("Unauthorized") ||
                   errorMessage.includes("tidak berhak") ||
                   errorMessage.includes("session");
+                  errorMessage.includes("Invalid response");
 
                 if (!isUnauthorized) {
                   // Only log unexpected errors

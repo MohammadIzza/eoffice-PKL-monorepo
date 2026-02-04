@@ -5,6 +5,7 @@ import {
 	validateOnlyOneActiveLetter,
 	PKL_WORKFLOW_STEPS,
 } from "@backend/services/workflow/pkl.workflow.service.ts";
+import { notificationService } from "@backend/services/notification.service.ts";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()
@@ -79,7 +80,23 @@ export default new Elysia()
 				},
 			});
 
-			return {
+			// (Opsional) Kirim notifikasi ke dosen pembimbing yang ditugaskan
+		try {
+			const dospemId = assignedApprovers.dospem;
+			if (dospemId) {
+				await notificationService.create(
+					dospemId,
+					"Pengajuan Surat Baru",
+					"Seorang mahasiswa mengajukan surat PKL dan menunggu persetujuan Anda.",
+					`/dashboard/approval/${letter.id}`,
+					"INFO",
+				);
+			}
+		} catch (e) {
+			console.error("Gagal mengirim notifikasi submit:", e);
+		}
+
+		return {
 				success: true,
 				message: "Surat PKL berhasil diajukan",
 				data: {
