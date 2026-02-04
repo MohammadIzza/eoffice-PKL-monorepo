@@ -69,7 +69,7 @@ const getActionLabel = (action: string): string => {
     SELF_REVISED: "Direvisi oleh Mahasiswa",
     RESUBMITTED: "Dikirim Ulang",
     SIGNED: "Ditandatangani",
-    NUMBERED: "Diberi Nomor",
+    NUMBERED: "Diberi Nomor dan Diterbitkan",
     CANCELLED: "Dibatalkan",
   };
   return actionMap[action] || action;
@@ -255,9 +255,13 @@ export default function LetterDetail({ id }: LetterDetailProps) {
 
   const formValues = letter.values as Record<string, any>;
   const stepHistory = letter.stepHistory || [];
-  const sortedHistory = [...stepHistory].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  );
+  
+  const hasSigned = stepHistory.some((h) => h.action === "SIGNED");
+  
+  const sortedHistory = [...stepHistory]
+    .filter((h) => !(h.action === "APPROVED" && h.step === 7 && hasSigned))
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
   const attachments = letter.attachments || [];
   const letterNumber = letter.letterNumber || letter.numbering?.numberString || null;
   const isFinalDocument = !!letterNumber;
