@@ -2,8 +2,10 @@ import { useState, useEffect, useCallback } from "react";
 import { client, handleApiError } from "@/lib/api";
 import { Notification } from "@/types/notification.types";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export const useNotifications = () => {
+    const router = useRouter();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
@@ -19,11 +21,18 @@ export const useNotifications = () => {
                 setUnreadCount(data.data.unreadCount);
             }
         } catch (err) {
+            const errorData = handleApiError(err);
+
+                if (errorData.status === 401) {
+                    router.push('/login');
+                    return;
+                }
+
             console.error("Failed to fetch notifications", err);
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [router]);
 
     const markAsRead = async (id: string, link?: string | null) => {
         try {
@@ -51,6 +60,10 @@ export const useNotifications = () => {
             toast.success("Semua notifikasi ditandai sudah dibaca");
         } catch (error) {
             const err = handleApiError(error);
+            if (err.status === 401) {
+                router.push('/login');
+                return;
+            }
             toast.error(err.message);
         }
     };

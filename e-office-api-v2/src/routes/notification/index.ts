@@ -1,11 +1,11 @@
 import { Elysia, t } from "elysia";
-import { notificationService } from "@backend/services/notification.service";
-import { isAuthenticated } from "@backend/middlewares/auth";
+import { notificationService } from "@backend/services/notification.service.ts";
+import { isAuthenticated } from "@backend/middlewares/auth.ts";
 
 export const notificationRoutes = new Elysia({ prefix: "/notifications" })
     .use(isAuthenticated)
 
-    .get("/", async ({ user }) => {
+    .get("/", async ({ user }: { user: any }) => {
         const [data, unreadCount] = await Promise.all([
             notificationService.getByUser(user.id),
             notificationService.countUnread(user.id),

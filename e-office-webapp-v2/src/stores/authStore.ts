@@ -70,6 +70,16 @@ export const useAuthStore = create<AuthState>()(
             },
             logout: () => {
               set({ user: null, isLoading: false, error: null });
+              if (typeof window !== "undefined") {
+                try {
+                  // remove persisted auth storage and broadcast logout to other tabs
+                  localStorage.removeItem("auth-storage");
+                  // write a separate key to trigger storage event in other tabs
+                  localStorage.setItem("auth-logout", String(Date.now()));
+                } catch (e) {
+                  // ignore storage errors
+                }
+              }
             },
     }),
           {
@@ -78,3 +88,29 @@ export const useAuthStore = create<AuthState>()(
           }
   )
 );
+
+// Sync logout across tabs: when one tab writes `auth-logout`, clear user in others
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", (e) => {
+    try {
+      if (!e || !e.key) return;
+      if (e.key === "auth-logout") {
+        useAuthStore.getState().setUser(null);
+        // navigate to login in this tab
+        try {
+          window.location.replace('/login');
+        } catch (_) {}
+        return;
+      }
+      // If persisted auth-storage was removed or set to null, clear user and redirect
+      if (e.key === "auth-storage" && e.newValue === null) {
+        useAuthStore.getState().setUser(null);
+        try {
+          window.location.replace('/login');
+        } catch (_) {}
+      }
+    } catch (err) {
+      // ignore
+    }
+  });
+}
