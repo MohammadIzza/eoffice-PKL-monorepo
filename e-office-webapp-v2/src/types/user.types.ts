@@ -42,6 +42,7 @@ export interface User {
   email: string;
   emailVerified: boolean;
   image: string | null;
+  signatureUrl: string | null;
   roles: Role[];
   mahasiswa: Mahasiswa | null;
   pegawai: Pegawai | null;

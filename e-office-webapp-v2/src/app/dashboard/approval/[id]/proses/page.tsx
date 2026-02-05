@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLetter } from '@/hooks/api';
+import { useAuthStore } from '@/stores/authStore';
 import { letterService } from '@/services';
 import { formatDate, formatDateTime } from '@/lib/utils/date.utils';
 import {
@@ -25,6 +26,7 @@ export default function ProsesPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
+  const { user } = useAuthStore();
   const { letter, isLoading, error, refetch } = useLetter(id);
 
   const [previewData, setPreviewData] = useState<{
@@ -34,7 +36,7 @@ export default function ProsesPage() {
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
 
   // WD1: signature
-  const [signatureMode, setSignatureMode] = useState<'draw' | 'upload'>('draw');
+  const [signatureMode, setSignatureMode] = useState<'draw' | 'upload' | 'saved'>('draw');
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const [signaturePreview, setSignaturePreview] = useState<string | null>(null);
   const [signatureError, setSignatureError] = useState<string | null>(null);
@@ -204,7 +206,7 @@ export default function ProsesPage() {
     setSignaturePreview(null);
   };
 
-  const switchMode = (m: 'draw' | 'upload') => {
+  const switchMode = (m: 'draw' | 'upload' | 'saved') => {
     setSignatureMode(m);
     setSignatureError(null);
     setSignatureData(null);
@@ -241,16 +243,24 @@ export default function ProsesPage() {
   };
 
   const handleSaveAndSign = async () => {
-    if (!letter?.id || !signatureData) {
+    if (!letter?.id) return;
+    
+    if (signatureMode !== 'saved' && !signatureData) {
       setSubmitError('Tanda tangan wajib diisi.');
       return;
     }
+    
+    if (signatureMode === 'saved' && !user?.signatureUrl) {
+      setSubmitError('Anda belum memiliki tanda tangan tersimpan.');
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError(null);
     try {
       await letterService.approve(letter.id, undefined, {
-        method: signatureMode === 'draw' ? 'DRAW' : 'UPLOAD',
-        data: signatureData,
+        method: signatureMode === 'draw' ? 'DRAW' : signatureMode === 'upload' ? 'UPLOAD' : 'SAVED',
+        data: signatureMode === 'saved' ? user?.signatureUrl || '' : signatureData!,
       });
       await refetch();
       router.replace(`/dashboard/approval/${letter.id}`);
@@ -421,6 +431,15 @@ export default function ProsesPage() {
                     >
                       Upload Gambar
                     </Button>
+                    <Button
+                      type="button"
+                      variant={signatureMode === 'saved' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => switchMode('saved')}
+                      className="h-8"
+                    >
+                      Gunakan Tanda Tangan Tersimpan
+                    </Button>
                   </div>
                   {signatureError && (
                     <p className="text-sm text-[#D93025]">{signatureError}</p>
@@ -449,7 +468,7 @@ export default function ProsesPage() {
                         </Button>
                       </div>
                     </div>
-                  ) : (
+                  ) : signatureMode === 'upload' ? (
                     <div className="space-y-2">
                       <label className="flex flex-col items-center justify-center w-full h-32 rounded-xl border-2 border-dashed border-[#E5E5E7] bg-[#F5F5F7] cursor-pointer hover:bg-[#EBEBED] transition-colors">
                         <input
@@ -469,6 +488,39 @@ export default function ProsesPage() {
                           <span className="text-sm text-[#86868B]">Klik untuk upload PNG/JPG (maks. 2MB)</span>
                         )}
                       </label>
+                    </div>
+                  ) : (
+                    // Saved Mode
+                    <div className="space-y-2">
+                      {user?.signatureUrl ? (
+                        <div className="flex flex-col items-center justify-center p-4 border border-[#E5E5E7] rounded-xl bg-[#F5F5F7]">
+                          <p className="text-sm font-medium text-[#1D1D1F] mb-3">Tanda Tangan Tersimpan</p>
+                          <img
+                            src={user.signatureUrl}
+                            alt="Preview Tanda Tangan Tersimpan"
+                            className="max-h-24 object-contain mb-2 border rounded bg-white"
+                          />
+                          <p className="text-xs text-[#86868B] text-center">
+                            Tanda tangan ini akan digunakan pada dokumen.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center p-6 border border-[#E5E5E7] rounded-xl bg-[#FFF2F2] text-center">
+                          <AlertCircle className="w-8 h-8 text-[#FF3B30] mb-3" />
+                          <p className="text-sm font-medium text-[#1D1D1F] mb-1">Tanda Tangan Belum Diatur</p>
+                          <p className="text-xs text-[#86868B] mb-4 max-w-[200px]">
+                            Anda belum mengatur tanda tangan digital di profil Anda.
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => router.push('/dashboard/profile')}
+                            className="bg-white hover:bg-gray-50 text-xs h-8"
+                          >
+                            Ke Profil Saya
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </CardContent>
@@ -582,7 +634,7 @@ export default function ProsesPage() {
           {isWD1 && (
             <Button
               onClick={handleSaveAndSign}
-              disabled={isSubmitting || !signatureData}
+              disabled={isSubmitting || (signatureMode !== 'saved' && !signatureData) || (signatureMode === 'saved' && !user?.signatureUrl)}
               className="bg-[#0071E3] text-white hover:bg-[#0051A3] disabled:opacity-50"
             >
               {isSubmitting ? (
