@@ -1,5 +1,6 @@
 import { authGuardPlugin } from "@backend/middlewares/auth.ts";
 import { Prisma } from "@backend/db/index.ts";
+import { MinioService } from "@backend/services/minio.service.ts";
 import { Elysia, t } from "elysia";
 
 export default new Elysia().use(authGuardPlugin).get(
@@ -38,6 +39,7 @@ export default new Elysia().use(authGuardPlugin).get(
 			email: userWithRelations.email,
 			emailVerified: userWithRelations.emailVerified,
 			image: userWithRelations.image,
+			signatureUrl: userWithRelations.signatureUrl,
 			roles: userWithRelations.userRole.map((ur) => ({
 				id: ur.role.id,
 				name: ur.role.name,
@@ -143,4 +145,65 @@ export default new Elysia().use(authGuardPlugin).get(
 				tanggalLahir: t.Optional(t.String()),
 			}),
 		},
-	);
+	)
+	.post("/signature", async ({ user, body }) => {
+		const { signatureData } = body;
+		const MAX_SIGNATURE_BYTES = 2 * 1024 * 1024;
+		const ALLOWED_SIGNATURE_MIME = new Set(["image/png", "image/jpeg", "image/jpg"]);
+
+		if (!signatureData || typeof signatureData !== "string") {
+			throw new Error("Data tanda tangan tidak valid");
+		}
+
+		console.log("Receiving signature upload for user:", user.id);
+
+		const dataUrlMatch = signatureData.match(/^data:(.+);base64,(.+)$/);
+		if (!dataUrlMatch) {
+			throw new Error("Format tanda tangan tidak valid. Gunakan data URL base64.");
+		}
+
+		const mimeType = dataUrlMatch[1];
+		if (!ALLOWED_SIGNATURE_MIME.has(mimeType)) {
+			throw new Error("Format tanda tangan harus PNG atau JPG");
+		}
+
+		const base64Data = dataUrlMatch[2];
+		const buffer = Buffer.from(base64Data, "base64");
+		
+		if (buffer.length > MAX_SIGNATURE_BYTES) {
+			throw new Error("Ukuran tanda tangan maksimal 2MB");
+		}
+
+		const extension = mimeType === "image/jpeg" || mimeType === "image/jpg" ? "jpg" : "png";
+		const fileName = `user_sig_${user.id}_${Date.now()}.${extension}`;
+		
+		const signatureFile = new File([buffer], fileName, { type: mimeType });
+		
+		try {
+			// Upload ke Minio
+			const result = await MinioService.uploadFile(
+				signatureFile, 
+				`users/${user.id}/signature/`, 
+				mimeType
+			);
+			
+			// Update URL di database
+			await Prisma.user.update({
+				where: { id: user.id },
+				data: { signatureUrl: result.url }
+			});
+
+			return { 
+				success: true, 
+				message: "Tanda tangan berhasil disimpan", 
+				data: { signatureUrl: result.url } 
+			};
+		} catch (error) {
+			console.error("Signature upload failed:", error);
+			throw new Error("Gagal menyimpan tanda tangan ke server");
+		}
+	}, {
+		body: t.Object({
+			signatureData: t.String(), // Base64 string
+		})
+	});

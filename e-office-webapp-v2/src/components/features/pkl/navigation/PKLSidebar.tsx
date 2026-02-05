@@ -18,6 +18,7 @@ import {
   Shield,
   ChevronLeft,
   ChevronRight,
+  PenTool,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores";
@@ -109,6 +110,7 @@ export default function PKLSidebar() {
         items: [
           { href: "/dashboard", label: "Dasbor", icon: LayoutDashboard },
           { href: "/dashboard/approval/queue", label: "Antrian Approval", icon: ClipboardList },
+          { href: "/dashboard/signature", label: "Manajemen TTD", icon: PenTool },
         ],
       });
     }

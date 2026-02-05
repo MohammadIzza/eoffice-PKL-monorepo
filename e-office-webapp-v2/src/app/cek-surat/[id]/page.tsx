@@ -59,7 +59,7 @@ const getActionMeta = (action: string) => {
     case "SELF_REVISED":
       return { label: "Direvisi Mahasiswa", color: "text-blue-600", bg: "bg-blue-100", icon: FileText };
     case "SIGNED":
-      return { label: "Ditandatangani", color: "text-purple-600", bg: "bg-purple-100", icon: CheckCircle2 };
+      return { label: "Ditandatangani", color: "text-green-600", bg: "bg-green-100", icon: CheckCircle2 };
     case "NUMBERED":
       return { label: "Selesai & Bernomor", color: "text-emerald-600", bg: "bg-emerald-100", icon: CheckCircle2 };
     default:
@@ -71,15 +71,36 @@ const formatRole = (role: string) => {
     return role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 
+import fs from "fs";
+import path from "path";
+
+// ... existing code ...
+
 export default async function TrackLetterPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  
+  // Read logo from file system (public/Undip.b64)
+  const logoPath = path.join(process.cwd(), "public", "Undip.b64");
+  let logoSrc = "/Undip.b64"; // Default fallback
+  
+  try {
+    if (fs.existsSync(logoPath)) {
+        const base64Data = fs.readFileSync(logoPath, "utf-8").trim();
+        // Remove header/footer if present (e.g., -----BEGIN CERTIFICATE-----)
+        const cleanBase64 = base64Data.replace(/-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|\n|\r/g, "");
+        logoSrc = `data:image/png;base64,${cleanBase64}`;
+    }
+  } catch (e) {
+      console.error("Failed to load logo from file", e);
+  }
 
   // Fetch data
   let letter: LetterData | null = null;
+
   try {
     const res = await fetch(`${API_URL}/public/letters/${id}/history`, {
       cache: "no-store",
@@ -118,7 +139,7 @@ export default async function TrackLetterPage({
         <div className="overflow-hidden rounded-lg bg-white shadow-md mb-8">
             <div className="px-6 py-8 sm:p-10 text-center">
                 <Image 
-                    src="/Undip.b64" 
+                    src={logoSrc}
                     alt="Logo Undip" 
                     width={80} 
                     height={80} 
