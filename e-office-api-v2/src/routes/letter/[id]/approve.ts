@@ -61,47 +61,85 @@ export default new Elysia()
             const actorRole = userRoles?.role.name || "unknown";
 
             if (currentStep === PKL_WORKFLOW_STEPS.WAKIL_DEKAN_1) {
-                if (!signatureData) {
-                    throw new Error("Tanda tangan diperlukan untuk Wakil Dekan");
+                let signatureUrl = "";
+                let signatureStorageKey = "";
+
+                // Fetch fresh user data to see if they have a saved signature
+                const currentUserInfo = await Prisma.user.findUnique({
+                    where: { id: user.id },
+                    select: { signatureUrl: true }
+                });
+
+                // Case 1: User provides new signature data -> Use it & Save to Profile
+                if (signatureData && signatureData.method !== 'SAVED') {
+                    if (!signatureData.data || typeof signatureData.data !== "string") {
+                        throw new Error("Data tanda tangan tidak valid");
+                    }
+
+                    const dataUrl = signatureData.data;
+                    const dataUrlMatch = dataUrl.match(/^data:(.+);base64,(.+)$/);
+                    if (!dataUrlMatch) {
+                        throw new Error("Format tanda tangan tidak valid. Gunakan data URL base64.");
+                    }
+
+                    const mimeType = dataUrlMatch[1];
+                    if (!ALLOWED_SIGNATURE_MIME.has(mimeType)) {
+                        throw new Error("Format tanda tangan harus PNG atau JPG");
+                    }
+
+                    const base64Data = dataUrlMatch[2];
+                    const buffer = Buffer.from(base64Data, "base64");
+                    if (!buffer.length) {
+                        throw new Error("Data tanda tangan tidak valid");
+                    }
+                    if (buffer.length > MAX_SIGNATURE_BYTES) {
+                        throw new Error("Ukuran tanda tangan maksimal 2MB");
+                    }
+
+                    const extension =
+                        mimeType === "image/jpeg" || mimeType === "image/jpg" ? "jpg" : "png";
+
+                    const fileName = `signature_${letter.id}_${Date.now()}.${extension}`;
+                    const signatureFile = new File([buffer], fileName, { type: mimeType });
+                    
+                    // Upload for this specific letter
+                    const result = await MinioService.uploadFile(
+                        signatureFile,
+                        `signatures/${letter.id}/`,
+                        mimeType,
+                    );
+                    
+                    signatureUrl = result.url;
+                    signatureStorageKey = `signatures/${letter.id}/${result.nameReplace}`;
+
+                    // Update User Profile with this new signature (Auto-save)
+                    try {
+                        const userSigFileName = `user_sig_${user.id}_${Date.now()}.${extension}`;
+                        const userSigFile = new File([buffer], userSigFileName, { type: mimeType });
+                        const userSigResult = await MinioService.uploadFile(
+                             userSigFile, 
+                             `users/${user.id}/signature/`, 
+                             mimeType
+                        );
+                        
+                        await Prisma.user.update({
+                            where: { id: user.id },
+                            data: { signatureUrl: userSigResult.url }
+                        });
+                    } catch (e) {
+                        console.error("Failed to update user signature profile:", e);
+                    }
+
+                } 
+                // Case 2: No new data, but User has saved signature -> Use it
+                else if (currentUserInfo?.signatureUrl) {
+                    signatureUrl = currentUserInfo.signatureUrl;
+                    signatureStorageKey = "user-profile-signature"; // Marker 
+                } 
+                // Case 3: No signature at all -> Error
+                else {
+                     throw new Error("Tanda tangan diperlukan untuk Wakil Dekan. Silakan upload atau gambar tanda tangan Anda.");
                 }
-
-                if (!signatureData.data || typeof signatureData.data !== "string") {
-                    throw new Error("Data tanda tangan tidak valid");
-                }
-
-                const dataUrl = signatureData.data;
-                const dataUrlMatch = dataUrl.match(/^data:(.+);base64,(.+)$/);
-                if (!dataUrlMatch) {
-                    throw new Error("Format tanda tangan tidak valid. Gunakan data URL base64.");
-                }
-
-                const mimeType = dataUrlMatch[1];
-                if (!ALLOWED_SIGNATURE_MIME.has(mimeType)) {
-                    throw new Error("Format tanda tangan harus PNG atau JPG");
-                }
-
-                const base64Data = dataUrlMatch[2];
-                const buffer = Buffer.from(base64Data, "base64");
-                if (!buffer.length) {
-                    throw new Error("Data tanda tangan tidak valid");
-                }
-                if (buffer.length > MAX_SIGNATURE_BYTES) {
-                    throw new Error("Ukuran tanda tangan maksimal 2MB");
-                }
-
-                const extension =
-                    mimeType === "image/jpeg" || mimeType === "image/jpg" ? "jpg" : "png";
-
-                const fileName = `signature_${letter.id}_${Date.now()}.${extension}`;
-                const signatureFile = new File([buffer], fileName, { type: mimeType });
-                const { url, nameReplace } = await MinioService.uploadFile(
-                    signatureFile,
-                    `signatures/${letter.id}/`,
-                    mimeType,
-                );
-
-                const signatureUrl = url;
-                const signatureStorageKey = `signatures/${letter.id}/${nameReplace}`;
 
                 await Prisma.letterInstance.update({
                     where: { id },
@@ -122,10 +160,7 @@ export default new Elysia()
                         metadata: {
                             signatureUrl,
                             signatureStorageKey,
-                            method: signatureData.method || "UPLOAD",
-                            mimeType,
-                            sizeBytes: buffer.length,
-                            fileName,
+                            method: signatureData?.method || "SAVED_PROFILE",
                         },
                     },
                 });

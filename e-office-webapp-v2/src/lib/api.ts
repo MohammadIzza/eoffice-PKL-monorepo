@@ -13,6 +13,8 @@ export function handleApiError(error: unknown): {
 	message: string;
 	status?: number;
 } {
+    console.log("[API DEBUG] Handling error:", error); // Add debug log
+
 	// Try to extract error from treaty/elysia error structure
 	if (typeof error === 'object' && error !== null) {
 		const err = error as any;
@@ -20,8 +22,14 @@ export function handleApiError(error: unknown): {
 		// Check for status code
 		const status = err.status || err.statusCode || err.response?.status;
 		
+        // If it's a DOMException (AbortError)
+        if (err.name === 'AbortError') {
+             return { message: "Request timed out", status: 408 };
+        }
+
 		// Check for response data (plain text or object)
 		if (err.response) {
+            // ... rest of the code
 			// If response is a string (plain text from server)
 			if (typeof err.response === 'string') {
 				return { message: err.response, status };
