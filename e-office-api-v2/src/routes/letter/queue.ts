@@ -90,7 +90,7 @@ export default new Elysia()
 			const pendingIds = new Set(pending.map((l) => l.id));
 			const approvedHistory = await Prisma.letterStepHistory.findMany({
 				where: {
-					action: "APPROVED",
+					action: { in: ["APPROVED", "REJECTED", "NUMBERED"] },
 					actorUserId: user.id,
 					step: stepNumber,
 				},
@@ -116,7 +116,7 @@ export default new Elysia()
 			const seen = new Set<string>();
 			const approved: Array<{
 				[key: string]: unknown;
-				approvalStatus: "approved_by_me";
+				approvalStatus: "approved_by_me" | "rejected_by_me";
 				approvedAt: Date;
 			}> = [];
 			
@@ -136,9 +136,10 @@ export default new Elysia()
 				// Hanya tambahkan jika approval masih valid (tidak ada revisi setelahnya)
 				if (!laterRevision) {
 					seen.add(letter.id);
+					const status = h.action === "REJECTED" ? "rejected_by_me" : "approved_by_me";
 					approved.push({
 						...letter,
-						approvalStatus: "approved_by_me",
+						approvalStatus: status,
 						approvedAt: h.createdAt,
 					});
 				}
