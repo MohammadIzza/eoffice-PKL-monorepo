@@ -1,94 +1,219 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/hooks/api';
-import { PageLoading } from '@/components/shared';
+import Image from "next/image";
+import { useState } from "react";
+import { useRouter } from "next/navigation"; 
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Loader2, Eye, EyeOff, Lock, Mail, AlertCircle } from "lucide-react"; 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useAuth } from "@/hooks/api/useAuth";
+
+const loginSchema = z.object({
+  email: z.string().email("Format email tidak valid"),
+  password: z.string().min(1, "Password wajib diisi"),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const router = useRouter();
-  const { login, user, isLoading: authLoading, error: authError } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const { login, isLoading } = useAuth();
+  const router = useRouter(); 
 
-  useEffect(() => {
-    if (user) {
-      router.replace('/dashboard');
-    }
-  }, [user, router]);
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
-
+  const onSubmit = async (data: LoginFormValues) => {
+    setErrorMessage(null);
+    
     try {
-      await login(email, password);
-      router.replace('/dashboard');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Login gagal. Periksa email dan password Anda.';
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
+      await login(data.email, data.password);
+      router.push("/dashboard"); 
+    } catch (error: any) {
+      setErrorMessage("Email atau password yang Anda masukkan salah.");
     }
   };
 
-  if (authLoading && !user) {
-    return <PageLoading text="Memeriksa sesi..." />;
-  }
+  const backgroundImageUrl = "https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=1986&auto=format&fit=crop"; 
 
   return (
-    <Card>
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
-        <CardDescription className="text-center">
-          E-Office FSM UNDIP
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="mahasiswa@mail.undip.ac.id"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isLoading}
-            />
+    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 xl:min-h-screen">
+      <div className="hidden bg-slate-900 lg:block relative overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-overlay"
+          style={{ 
+            backgroundImage: `url('${backgroundImageUrl}')` 
+          }}
+        ></div>
+        
+        <div className="relative z-10 flex h-full flex-col justify-between p-12 text-white">
+          <div className="flex items-center gap-3">
+            <div className="bg-white/10 p-2 rounded-lg backdrop-blur-sm border border-white/20">
+               <Image 
+                 src="/Undip.png" 
+                 alt="Logo Undip" 
+                 width={40} 
+                 height={40} 
+                 className="object-contain"
+               />
+            </div>
+            <span className="text-lg font-bold tracking-tight">E-Office FSM</span>
           </div>
+
+          <div className="space-y-4 max-w-lg">
+            <h1 className="text-4xl font-extrabold leading-tight tracking-tight lg:text-5xl">
+              Sistem Informasi <br/> Persuratan Digital
+            </h1>
+            <p className="text-lg text-slate-300">
+              Fakultas Sains dan Matematika <br/> Universitas Diponegoro
+            </p>
+          </div>
+
+          <div className="text-sm text-slate-400">
+            &copy; {new Date().getFullYear()} FSM Undip. All rights reserved.
+          </div>
+        </div>
+      </div>
+
+      {/* LOGIN FORM */}
+      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-100 dark:bg-slate-950">
+        <Card className="mx-auto w-full max-w-[500px] py-12 shadow-lg border-muted/40 bg-white dark:bg-slate-900">
+
+          <CardHeader className="space-y-1 text-center pb-8">
+             <div className="flex justify-center lg:hidden mb-2">
+               <Image 
+                 src="/Undip.png" 
+                 alt="Logo Undip" 
+                 width={50} 
+                 height={50} 
+               />
+            </div>
+            <CardTitle className="text-3xl font-bold tracking-tight">Selamat Datang</CardTitle>
+            <CardDescription className="text-base mt-2">
+              Masuk untuk mengakses dashboard E-Office Anda
+            </CardDescription>
+          </CardHeader>
           
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-          </div>
+          <CardContent className="px-8">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6">
+                
+                {/* Input Email */}
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Undip / SSO</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Input 
+                            placeholder="Masukkan email Anda" 
+                            className="pl-9 h-11 bg-background" 
+                            {...field} 
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-          {(error || authError) && (
-            <p className="text-sm text-red-600">{error || authError}</p>
-          )}
+                {/* Input Password */}
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center justify-between">
+                          <FormLabel>Password</FormLabel>
+                      </div>
+                      <FormControl>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Input 
+                            type={showPassword ? "text" : "password"} 
+                            placeholder="Masukkan password Anda" 
+                            className="pl-9 pr-9 h-11 bg-background" 
+                            {...field} 
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-4 w-4 text-muted-foreground" />
+                            ) : (
+                              <Eye className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </Button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Loading...' : 'Login'}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+                {errorMessage && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Gagal Masuk</AlertTitle>
+                    <AlertDescription>
+                      {errorMessage}
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {/* Submit Button */}
+                <Button 
+                  type="submit" 
+                  className="w-full mt-2 h-11 text-base bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-500 hover:to-blue-400 transition-all duration-300 shadow-md hover:shadow-lg" 
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Memproses...
+                    </>
+                  ) : (
+                    "Masuk"
+                  )}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }
