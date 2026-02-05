@@ -3,6 +3,8 @@ import { Prisma } from "@backend/db/index.ts";
 import { DocumentService } from "@backend/services/document.service.ts";
 import { MinioService } from "@backend/services/minio.service.ts";
 import { PdfService } from "@backend/services/pdf.service.ts";
+import { config } from "@backend/config.ts";
+import { QRCodeService } from "@backend/services/qrcode.service.ts";
 import {
     validateUserIsAssignee,
     PKL_WORKFLOW_STEPS,
@@ -160,7 +162,11 @@ export default new Elysia()
                           )
                         : htmlWithNumber;
 
-                const pdfBuffer = await PdfService.generatePdfFromHtml(htmlWithSignature);
+                // Inject QR Code using Service
+                const trackingUrl = `${config.FE_URL}/cek-surat/${letter.id}`;
+                const finalHtml = await QRCodeService.injectQRCode(htmlWithSignature, trackingUrl);
+
+                const pdfBuffer = await PdfService.generatePdfFromHtml(finalHtml);
                 const pdfFile = new File(
                     [pdfBuffer],
                     `document_v${pdfVersion}.pdf`,
