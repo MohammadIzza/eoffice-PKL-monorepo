@@ -1,11 +1,18 @@
-import { ReactNode } from 'react';
+import type { Metadata } from "next";
 
-export default function AuthLayout({ children }: { children: ReactNode }) {
+export const metadata: Metadata = {
+  title: "Login - E-Office FSM Undip",
+  description: "Sistem Informasi Surat Menyurat FSM Undip",
+};
+
+export default function AuthLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="w-full max-w-md px-4">
-        {children}
-      </div>
+    <div className="min-h-screen w-full">
+      {children}
     </div>
   );
 }
