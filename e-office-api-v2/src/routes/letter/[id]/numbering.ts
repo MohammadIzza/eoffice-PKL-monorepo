@@ -162,9 +162,44 @@ export default new Elysia()
                           )
                         : htmlWithNumber;
 
-                // Inject QR Code using Service
+                // Generate QR Code as Base64 (Using Base64 is reliable for PDF generation)
                 const trackingUrl = `${config.FE_URL}/cek-surat/${letter.id}`;
-                const finalHtml = await QRCodeService.injectQRCode(htmlWithSignature, trackingUrl);
+                console.log(`[QR-DEBUG] Generating QR for URL: ${trackingUrl}`);
+                
+                const qrCodeDataUrl = await QRCodeService.generateQRCodeDataURL(trackingUrl);
+                console.log(`[QR-DEBUG] QR Data URL Length: ${qrCodeDataUrl.length}`);
+				
+                // Layout Update: Force Block Display with clear fix
+                const qrCodeHtml = `
+                <div id="qr-container" style="display: block; width: 100%; text-align: right; margin-top: 20px; clear: both; page-break-inside: avoid;">
+                    <img src="${qrCodeDataUrl}" alt="QR Check" style="width: 100px; height: 100px;" />
+                </div>
+                `;
+
+                let finalHtml = htmlWithSignature;
+                
+                // DEBUG: Check HTML content Structure
+                console.log(`[QR-DEBUG] HTML has body tag? ${/<\/body>/i.test(htmlWithSignature)}`);
+				
+                // Standardize HTML injection - Insert BEFORE </body>
+                const bodyCloseRegex = /<\/body>/i;
+                if (bodyCloseRegex.test(htmlWithSignature)) {
+                    finalHtml = htmlWithSignature.replace(bodyCloseRegex, `${qrCodeHtml}</body>`);
+                    console.log("[QR-DEBUG] Injected QR before </body>");
+                } else {
+                    // Fallback: Just append if no body tag found
+                    finalHtml = htmlWithSignature + qrCodeHtml;
+                    console.log("[QR-DEBUG] Appended QR to end of string");
+                }
+				
+                // Ensure simple wrapping if completely bare
+                if (!finalHtml.includes("<html") && !finalHtml.includes("<body")) {
+                     finalHtml = `<!DOCTYPE html><html><body style="padding: 40px;">${finalHtml}</body></html>`;
+                     console.log("[QR-DEBUG] Wrapped HTML with default structure");
+                }
+                
+                // DEBUG: Print last 500 chars to verify injection
+                console.log(`[QR-DEBUG] Final HTML Tail: ${finalHtml.slice(-500)}`);
 
                 const pdfBuffer = await PdfService.generatePdfFromHtml(finalHtml);
                 const pdfFile = new File(

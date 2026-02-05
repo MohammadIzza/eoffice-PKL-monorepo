@@ -148,6 +148,7 @@ model User {
 
   emailVerified Boolean  @default(false) // punya betterauth
   image         String? // punya betterauth
+  signatureUrl  String? // URL tanda tangan pengguna
   isAnonymous   Boolean? @default(false) // punya betterauth (untuk sso login)
 
   mahasiswa Mahasiswa?

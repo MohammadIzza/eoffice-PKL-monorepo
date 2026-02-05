@@ -29,8 +29,7 @@ export const useAuthStore = create<AuthState>()(
                 const user = await authService.getMe();
                 set({ user, isLoading: false, error: null });
               } catch (error) {
-                // Session check failed - this is expected when user is not logged in
-                // Don't log as error, just clear state
+                // Session check failed
                 const errObj = error as {
                   status?: number;
                   statusCode?: number;
@@ -45,27 +44,27 @@ export const useAuthStore = create<AuthState>()(
                     : error instanceof Error
                       ? error.message
                       : String(error);
+                
                 const isUnauthorized =
                   status === 401 ||
                   status === 403 ||
                   errorMessage.includes("401") ||
-                  errorMessage.includes("Unauthorized") ||
-                  errorMessage.includes("tidak berhak") ||
-                  errorMessage.includes("session");
-                  errorMessage.includes("Invalid response");
+                  errorMessage.toLowerCase().includes("unauthorized") ||
+                  errorMessage.toLowerCase().includes("tidak berhak") ||
+                  errorMessage.toLowerCase().includes("session expired") ||
+                  errorMessage.toLowerCase().includes("invalid session");
 
-                if (!isUnauthorized) {
-                  // Only log unexpected errors
-                  console.error("Session check failed:", error);
+                if (isUnauthorized) {
+                   // Only clear user on clear auth failures
+                   set({ user: null, isLoading: false, error: null });
+                   if (typeof window !== "undefined") {
+                      localStorage.removeItem("auth-storage");
+                   }
+                } else {
+                   // For network errors/server errors, keep the local user state but log warning
+                   console.warn("Session background check failed (keeping local state):", errorMessage);
+                   set({ isLoading: false }); // Just stops loading, doesn't clear user
                 }
-
-                // Clear user and localStorage on session failure
-                set({ user: null, isLoading: false, error: null });
-                // Clear localStorage
-                if (typeof window !== "undefined") {
-                  localStorage.removeItem("auth-storage");
-                }
-                // Don't throw - let caller check user state instead
               }
             },
             logout: () => {

@@ -38,7 +38,7 @@ export function useLetter(id: string | null) {
 				} else {
 					setError(errorMessage);
 				}
-				console.error('Error fetching letter:', err);
+				console.error('Error fetching letter:', errorMessage, err);
 			} finally {
 				setIsLoading(false);
 			}

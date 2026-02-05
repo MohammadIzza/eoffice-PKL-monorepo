@@ -132,7 +132,9 @@ export default function ProfilePage() {
             <h1 className="text-3xl font-semibold text-[#1D1D1F] tracking-tight mb-2">Profil Pengguna</h1>
             <p className="text-sm text-[#86868B]">Informasi lengkap tentang akun dan data Anda</p>
           </div>
-          <EditProfileDialog user={userData} />
+          <div className="flex gap-2">
+            <EditProfileDialog user={userData} />
+          </div>
         </div>
 
         {/* Profile Header Card */}

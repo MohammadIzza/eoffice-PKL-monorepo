@@ -144,7 +144,7 @@ export default function ApprovalDetailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = params.id as string;
-  const { user } = useAuthStore();
+  const { user, checkSession } = useAuthStore();
   const { letter, isLoading, error, refetch } = useLetter(id);
   const { refetch: refetchQueue } = useApprovalQueue();
   
@@ -163,8 +163,9 @@ export default function ApprovalDetailPage() {
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const [signaturePreview, setSignaturePreview] = useState<string | null>(null);
   const [signatureError, setSignatureError] = useState<string | null>(null);
-  const [signatureMode, setSignatureMode] = useState<'draw' | 'upload'>('draw');
-  const [signatureMethod, setSignatureMethod] = useState<'DRAW' | 'UPLOAD'>('DRAW');
+  const [signatureMode, setSignatureMode] = useState<'draw' | 'upload' | 'saved'>('draw');
+  const [signatureMethod, setSignatureMethod] = useState<'DRAW' | 'UPLOAD' | 'SAVED'>('DRAW');
+  const [useSavedSignature, setUseSavedSignature] = useState(false);
   const [hasDrawnSignature, setHasDrawnSignature] = useState(false);
   const signatureCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const signatureInputRef = useRef<HTMLInputElement | null>(null);
@@ -197,25 +198,57 @@ export default function ApprovalDetailPage() {
   const isUPA = letter?.currentStep === 8;
   const needsSignature = isWD1;
 
+  // Session is already handled by DashboardLayout and AuthGuard. 
+  // Redundant checkSession can cause race conditions or unmount loops if 401 occurs briefly.
+  // useEffect(() => {
+  //   checkSession();
+  // }, []);
+
   // Load preview
   useEffect(() => {
+    let blobUrl: string | null = null;
+
     if (letter?.id) {
       setIsLoadingPreview(true);
+      
+      // Add timeout to preview fetch
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
       letterService.getPreview(letter.id)
         .then((preview) => {
+          let finalUrl = preview.previewUrl;
+          // Optimize HTML rendering: Create Blob URL instead of storing huge string
+          if ((preview as any).htmlContent) {
+             const blob = new Blob([(preview as any).htmlContent], { type: 'text/html' });
+             blobUrl = URL.createObjectURL(blob);
+             finalUrl = blobUrl;
+          }
+
           setPreviewData({
-            previewUrl: preview.previewUrl,
-            htmlContent: (preview as any).htmlContent,
+            previewUrl: finalUrl,
+            // Don't store htmlContent to avoid lag
             isPDF: preview.isPDF,
             format: preview.format,
           });
         })
         .catch((err) => {
-          console.error('Error loading preview:', err);
+          if (err.name !== 'AbortError') {
+             console.error('Error loading preview:', err);
+             // Show user friendly error in preview area instead of keeping "Loading..."
+             setPreviewData(null); 
+          }
         })
         .finally(() => {
+          clearTimeout(timeoutId);
           setIsLoadingPreview(false);
         });
+        
+        return () => {
+            clearTimeout(timeoutId);
+            controller.abort();
+            if (blobUrl) URL.revokeObjectURL(blobUrl);
+        };
     }
   }, [letter?.id]);
 
@@ -395,14 +428,22 @@ export default function ApprovalDetailPage() {
     setSignaturePreview(null);
   };
 
-  const switchSignatureMode = (mode: 'draw' | 'upload') => {
+  const switchSignatureMode = (mode: 'draw' | 'upload' | 'saved') => {
     setSignatureMode(mode);
-    setSignatureMethod(mode === 'draw' ? 'DRAW' : 'UPLOAD');
+    setSignatureMethod(mode === 'draw' ? 'DRAW' : mode === 'upload' ? 'UPLOAD' : 'SAVED');
     setSignatureError(null);
     setSignatureData(null);
     setSignaturePreview(null);
     hasDrawnRef.current = false;
     setHasDrawnSignature(false);
+    
+    if (mode === 'saved' && user?.signatureUrl) {
+        setUseSavedSignature(true);
+        // We don't set signatureData here, backend handles logic based on empty signatureData + method/intent
+    } else {
+        setUseSavedSignature(false);
+    }
+    
     if (signatureInputRef.current) {
       signatureInputRef.current.value = '';
     }
@@ -423,9 +464,15 @@ export default function ApprovalDetailPage() {
       }
     }
 
-    if (type === 'approve' && needsSignature && !signatureData) {
-      setSubmitError('Tanda tangan diperlukan untuk Wakil Dekan 1');
-      return;
+    if (type === 'approve' && needsSignature) {
+        if (signatureMode === 'saved' && !user?.signatureUrl) {
+            setSubmitError('Anda belum memiliki tanda tangan tersimpan di profil.');
+            return;
+        }
+        if (signatureMode !== 'saved' && !signatureData) {
+             setSubmitError('Tanda tangan diperlukan untuk Wakil Dekan 1');
+             return;
+        }
     }
 
     setActionType(type);
@@ -959,7 +1006,9 @@ export default function ApprovalDetailPage() {
             ) : isWD1 ? (
               <Card className="bg-white border-[#E5E5E7] shadow-sm">
                 <CardHeader className="border-b border-[#E5E5E7]">
-                  <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">Tindakan Approval</CardTitle>
+                  <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
+                    Tindakan Approval
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
                   {submitError && (
@@ -970,7 +1019,9 @@ export default function ApprovalDetailPage() {
                   )}
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-sm font-medium text-[#1D1D1F] mb-2">Komentar (opsional)</label>
+                      <label className="block text-sm font-medium text-[#1D1D1F] mb-2">
+                        Komentar (opsional)
+                      </label>
                       <Textarea
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
@@ -978,16 +1029,51 @@ export default function ApprovalDetailPage() {
                         className="min-h-[100px] bg-white border-[#E5E5E7] focus:border-[#0071E3]"
                       />
                     </div>
-                    <p className="text-sm text-[#86868B]">Masuk ke halaman proses tanda tangan untuk menandatangani dan menyetujui surat.</p>
-                    <Button onClick={() => router.push(`/dashboard/approval/${letter.id}/proses`)} className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3]">
+                    <p className="text-sm text-[#86868B]">
+                      Masuk ke halaman proses tanda tangan untuk menandatangani dan menyetujui surat.
+                    </p>
+                    <Button
+                      onClick={() => router.push(`/dashboard/approval/${letter.id}/proses`)}
+                      className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3]"
+                    >
                       Proses TTD
                     </Button>
                     <div className="flex flex-col gap-3 pt-2 border-t border-[#E5E5E7]">
-                      <Button onClick={() => handleAction('reject')} disabled={isSubmitting} variant="destructive" className="w-full">
-                        {isSubmitting && actionType === 'reject' ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Memproses...</> : <><XCircle className="w-4 h-4 mr-2" /> Tolak</>}
+                      <Button
+                        onClick={() => handleAction('reject')}
+                        disabled={isSubmitting}
+                        variant="destructive"
+                        className="w-full"
+                      >
+                        {isSubmitting && actionType === 'reject' ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Memproses...
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="w-4 h-4 mr-2" />
+                            Tolak
+                          </>
+                        )}
                       </Button>
-                      <Button onClick={() => handleAction('revise')} disabled={isSubmitting} variant="outline" className="w-full bg-white border-[#E5E5E7] text-[#1D1D1F] hover:bg-[#F5F5F7]">
-                        {isSubmitting && actionType === 'revise' ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Memproses...</> : <><Edit className="w-4 h-4 mr-2" /> Revisi</>}
+                      <Button
+                        onClick={() => handleAction('revise')}
+                        disabled={isSubmitting}
+                        variant="outline"
+                        className="w-full bg-white border-[#E5E5E7] text-[#1D1D1F] hover:bg-[#F5F5F7]"
+                      >
+                        {isSubmitting && actionType === 'revise' ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Memproses...
+                          </>
+                        ) : (
+                          <>
+                            <Edit className="w-4 h-4 mr-2" />
+                            Revisi
+                          </>
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -1043,6 +1129,14 @@ export default function ApprovalDetailPage() {
                           >
                             Upload Gambar
                           </Button>
+                          <Button
+                            type="button"
+                            onClick={() => switchSignatureMode('saved')}
+                            variant={signatureMode === 'saved' ? 'default' : 'outline'}
+                            className="h-8 px-3 text-xs"
+                          >
+                            Gunakan Tanda Tangan Tersimpan
+                          </Button>
                         </div>
 
                         {signatureMode === 'draw' ? (
@@ -1077,7 +1171,7 @@ export default function ApprovalDetailPage() {
                               <p className="text-xs text-[#FF3B30]">{signatureError}</p>
                             )}
                           </div>
-                        ) : (
+                        ) : signatureMode === 'upload' ? (
                           <>
                             <Input
                               ref={signatureInputRef}
@@ -1099,6 +1193,37 @@ export default function ApprovalDetailPage() {
                               </div>
                             )}
                           </>
+                        ) : (
+                          // Saved Mode
+                          user?.signatureUrl ? (
+                            <div className="mt-3 p-4 border border-[#E5E5E7] rounded-lg bg-[#F5F5F7] flex flex-col items-center">
+                              <p className="text-sm text-[#1D1D1F] font-medium mb-3">Tanda Tangan Tersimpan</p>
+                              <img
+                                src={user.signatureUrl}
+                                alt="Preview Tanda Tangan Tersimpan"
+                                className="max-h-32 object-contain mb-2 border rounded bg-white"
+                              />
+                              <p className="text-xs text-[#86868B]">
+                                Tanda tangan ini akan digunakan pada dokumen.
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="mt-3 p-4 border border-[#E5E5E7] rounded-lg bg-[#FFF2F2] flex flex-col items-center text-center">
+                              <AlertCircle className="w-6 h-6 text-[#FF3B30] mb-2" />
+                              <p className="text-sm text-[#1D1D1F] font-medium mb-1">Tanda Tangan Belum Diatur</p>
+                              <p className="text-xs text-[#86868B] mb-3">
+                                Anda belum mengatur tanda tangan digital di profil Anda.
+                              </p>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => router.push('/dashboard/profile')}
+                                className="bg-white"
+                              >
+                                Ke Profil Saya
+                              </Button>
+                            </div>
+                          )
                         )}
                       </div>
                     )}
@@ -1106,7 +1231,7 @@ export default function ApprovalDetailPage() {
                     <div className="flex flex-col gap-3 pt-2">
                       <Button
                         onClick={() => handleAction('approve')}
-                        disabled={isSubmitting || (needsSignature && !signatureData)}
+                        disabled={isSubmitting || (needsSignature && signatureMode !== 'saved' && !signatureData) || (needsSignature && signatureMode === 'saved' && !user?.signatureUrl)}
                         className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3] disabled:opacity-50"
                       >
                         {isSubmitting && actionType === 'approve' ? (
