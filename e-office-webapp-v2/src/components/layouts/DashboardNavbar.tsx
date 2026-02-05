@@ -11,16 +11,26 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Bell, LogOut, User, Settings } from "lucide-react";
+import { Bell, LogOut, User, Settings, CheckCheck, Inbox } from "lucide-react";
 import { useAuthStore } from "@/stores";
 import { useRouter } from "next/navigation";
 import { authService } from "@/services/auth.service";
 import Link from "next/link";
+import { useNotifications } from "@/hooks/api/useNotifications";
+import { formatDistanceToNow } from "date-fns";
+import { id as indonesia } from "date-fns/locale";
 
 export default function DashboardNavbar() {
   const { user, logout } = useAuthStore();
   const router = useRouter();
+  const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotifications();
   
   const getInitials = (name: string | null | undefined): string => {
     if (!name) return 'U';
@@ -44,7 +54,12 @@ export default function DashboardNavbar() {
     }
   };
 
-  const notificationCount = 3;
+  const handleNotificationClick = async (notif: any) => {
+    await markAsRead(notif.id);
+    if (notif.link) {
+      router.push(notif.link);
+    }
+  };
 
   return (
     <header className="w-full h-16 bg-blue-600/90 backdrop-blur-md sticky top-0 z-[100] border-b border-blue-700/50 shadow-lg">
@@ -64,22 +79,82 @@ export default function DashboardNavbar() {
 
         {/* Right Section */}
         <div className="flex items-center gap-3">
-          {/* Notifications */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative text-white hover:bg-white/20 transition-colors"
-          >
-            <Bell className="h-5 w-5" />
-            {notificationCount > 0 && (
-              <Badge 
-                variant="destructive" 
-                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] border-2 border-blue-600 rounded-full"
+          
+          {/* [MODIFIKASI] Notifications Popover */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative text-white hover:bg-white/20 transition-colors"
               >
-                {notificationCount > 9 ? '9+' : notificationCount}
-              </Badge>
-            )}
-          </Button>
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] border-2 border-blue-600 rounded-full animate-in zoom-in"
+                  >
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-80 p-0 shadow-xl bg-white border-slate-200">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                <h4 className="font-semibold text-sm text-slate-900">Notifikasi</h4>
+                {unreadCount > 0 && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-auto p-0 text-xs text-blue-600 hover:text-blue-700 hover:bg-transparent"
+                    onClick={() => markAllAsRead()}
+                  >
+                    <CheckCheck className="w-3 h-3 mr-1" />
+                    Tandai semua dibaca
+                  </Button>
+                )}
+              </div>
+              
+              <ScrollArea className="h-[300px]">
+                {isLoading ? (
+                  <div className="p-4 text-center text-xs text-slate-500">Memuat...</div>
+                ) : notifications.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-40 text-slate-500 gap-2">
+                    <Inbox className="w-8 h-8 opacity-50" />
+                    <p className="text-sm">Tidak ada notifikasi</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col">
+                    {notifications.map((notif) => (
+                      <div 
+                        key={notif.id} 
+                        onClick={() => handleNotificationClick(notif)}
+                        className={`
+                          p-4 border-b border-slate-50 text-left hover:bg-slate-50 cursor-pointer transition-colors relative
+                          ${!notif.isRead ? 'bg-blue-50/60' : 'bg-white'}
+                        `}
+                      >
+                        {!notif.isRead && (
+                          <span className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500" />
+                        )}
+                        <div className="flex justify-between items-start mb-1 gap-2">
+                          <span className={`text-sm font-semibold line-clamp-1 ${!notif.isRead ? 'text-blue-700' : 'text-slate-700'}`}>
+                            {notif.title}
+                          </span>
+                          <span className="text-[10px] text-slate-400 whitespace-nowrap">
+                            {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true, locale: indonesia })}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                          {notif.message}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </PopoverContent>
+          </Popover>
 
           <Separator orientation="vertical" className="h-6 bg-white/20" />
 

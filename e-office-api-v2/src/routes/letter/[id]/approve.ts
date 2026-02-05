@@ -6,6 +6,7 @@ import {
     PKL_WORKFLOW_STEPS,
     STEP_TO_ROLE,
 } from "@backend/services/workflow/pkl.workflow.service.ts";
+import { notificationService } from "@backend/services/notification.service.ts";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()
@@ -194,6 +195,20 @@ export default new Elysia()
                 },
             });
 
+            // Kirim notifikasi ke pemilik surat (mahasiswa)
+            try {
+                const stepName = STEP_TO_ROLE[currentStep as keyof typeof STEP_TO_ROLE] ?? `Step ${currentStep}`;
+                await notificationService.create(
+                    letter.createdById,
+                    "Status Surat Diperbarui",
+                    `Surat PKL Anda telah disetujui pada tahap ${stepName}. Menunggu proses selanjutnya.`,
+                    `/dashboard/surat/${letter.id}`,
+                    "SUCCESS",
+                );
+            } catch (e) {
+                console.error("Gagal mengirim notifikasi approval:", e);
+            }
+
             return {
                 success: true,
                 message: "Surat berhasil disetujui",
@@ -202,7 +217,7 @@ export default new Elysia()
                     currentStep: nextStep,
                     nextStepRole: nextStep <= PKL_WORKFLOW_STEPS.UPA ? STEP_TO_ROLE[nextStep as keyof typeof STEP_TO_ROLE] : "COMPLETED",
                 },
-            };
+            }; 
         },
         {
             params: t.Object({

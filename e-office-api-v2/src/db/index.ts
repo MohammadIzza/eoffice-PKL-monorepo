@@ -15,3 +15,4 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 export * from "@backend/generated/prisma/client.ts";
+export default Prisma;

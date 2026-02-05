@@ -183,65 +183,73 @@ export default function DashboardPage() {
 
         {/* Bento Grid Stats Section */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 animate-slide-up">
-          <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden">
-            <CardContent className="p-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs font-medium text-[#86868B] mb-3">
-                  <FileText className="w-4 h-4" />
-                  Total Surat
+          <Link href="/dashboard/surat">
+            <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
+              <CardContent className="p-6">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-medium text-[#86868B] mb-3">
+                    <FileText className="w-4 h-4" />
+                    Total Surat
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-4xl font-bold text-[#1D1D1F] tracking-tight">{stats.total}</p>
+                    <span className="text-sm text-[#86868B]">surat</span>
+                  </div>
                 </div>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-4xl font-bold text-[#1D1D1F] tracking-tight">{stats.total}</p>
-                  <span className="text-sm text-[#86868B]">surat</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
           
-          <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden">
-            <CardContent className="p-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs font-medium text-[#86868B] mb-3">
-                  <Clock className="w-4 h-4 text-[#0071E3]" />
-                  Menunggu
+          <Link href="/dashboard/surat?status=PENDING,PROCESSING">
+            <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
+              <CardContent className="p-6">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-medium text-[#86868B] mb-3">
+                    <Clock className="w-4 h-4 text-[#0071E3]" />
+                    Menunggu
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-4xl font-bold text-[#0071E3] tracking-tight">{stats.pending}</p>
+                    <span className="text-sm text-[#86868B]">surat</span>
+                  </div>
                 </div>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-4xl font-bold text-[#0071E3] tracking-tight">{stats.pending}</p>
-                  <span className="text-sm text-[#86868B]">surat</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
           
-          <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden">
-            <CardContent className="p-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs font-medium text-[#86868B] mb-3">
-                  <CheckCircle2 className="w-4 h-4 text-[#34C759]" />
-                  Selesai
+          <Link href="/dashboard/surat?status=COMPLETED">
+            <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
+              <CardContent className="p-6">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-medium text-[#86868B] mb-3">
+                    <CheckCircle2 className="w-4 h-4 text-[#34C759]" />
+                    Selesai
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-4xl font-bold text-[#34C759] tracking-tight">{stats.completed}</p>
+                    <span className="text-sm text-[#86868B]">surat</span>
+                  </div>
                 </div>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-4xl font-bold text-[#34C759] tracking-tight">{stats.completed}</p>
-                  <span className="text-sm text-[#86868B]">surat</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
           
-          <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden">
-            <CardContent className="p-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs font-medium text-[#86868B] mb-3">
-                  <AlertCircle className="w-4 h-4 text-[#FF9500]" />
-                  Revisi
+          <Link href="/dashboard/surat?status=REVISION">
+            <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
+              <CardContent className="p-6">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-medium text-[#86868B] mb-3">
+                    <AlertCircle className="w-4 h-4 text-[#FF9500]" />
+                    Revisi
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-4xl font-bold text-[#FF9500] tracking-tight">{stats.revision}</p>
+                    <span className="text-sm text-[#86868B]">surat</span>
+                  </div>
                 </div>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-4xl font-bold text-[#FF9500] tracking-tight">{stats.revision}</p>
-                  <span className="text-sm text-[#86868B]">surat</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         {/* Bento Grid Charts Section - Dynamic Import */}

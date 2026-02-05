@@ -105,13 +105,19 @@ export default function PKLSidebar() {
     }
 
     if (isApprover) {
+      const approverItems = [
+        { href: "/dashboard", label: "Dasbor", icon: LayoutDashboard },
+        { href: "/dashboard/approval/queue", label: "Antrian Approval", icon: ClipboardList },
+      ];
+
+      // Hanya Wakil Dekan 1 yang bisa akses Manajemen TTD
+      if (userRoles.includes("wakil_dekan_1")) {
+        approverItems.push({ href: "/dashboard/signature", label: "Manajemen TTD", icon: PenTool });
+      }
+
       items.push({
         title: "MENU UTAMA",
-        items: [
-          { href: "/dashboard", label: "Dasbor", icon: LayoutDashboard },
-          { href: "/dashboard/approval/queue", label: "Antrian Approval", icon: ClipboardList },
-          { href: "/dashboard/signature", label: "Manajemen TTD", icon: PenTool },
-        ],
+        items: approverItems,
       });
     }
 

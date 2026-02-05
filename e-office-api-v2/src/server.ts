@@ -4,6 +4,7 @@ import { swagger } from "@elysiajs/swagger";
 import { auth } from "@backend/lib/auth.ts";
 import { Elysia } from "elysia";
 import { autoload } from "elysia-autoload";
+import { notificationRoutes } from "@backend/routes/notification";
 import env from "env-var";
 
 const FE_URL = env.get("FE_URL").asString() || "http://localhost:3000";
@@ -34,5 +35,6 @@ export const app = new Elysia()
 			},
 		}),
 	)
+	.use(notificationRoutes)
 
 export type App = typeof app;
