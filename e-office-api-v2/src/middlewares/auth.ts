@@ -181,6 +181,8 @@ export const authGuardPlugin = new Elysia({
 	})
 	.as("scoped");
 
+export const isAuthenticated = authGuardPlugin;
+
 export const requirePermission = (resource: string, action: string) => ({
 	permission: { resource, action },
 });

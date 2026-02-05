@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { letterService, type QueueLetter } from '@/services';
 import { useAuthStore } from '@/stores';
+import { useRouter } from 'next/navigation';
+import { handleApiError } from '@/lib/api';
 
 export function useApprovalQueue() {
+  const router = useRouter();
   const { user } = useAuthStore();
   const [letters, setLetters] = useState<QueueLetter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -45,8 +48,14 @@ export function useApprovalQueue() {
         const data = await letterService.getQueue(activeRole);
         setLetters(data);
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Gagal memuat antrian approval';
-        setError(errorMessage);
+        const errorData = handleApiError(err);
+
+        if (errorData.status === 401) {
+          router.push('/login');
+          return;
+        }
+
+        setError(errorData.message);
         console.error('Error fetching approval queue:', err);
       } finally {
         setIsLoading(false);
@@ -54,7 +63,7 @@ export function useApprovalQueue() {
     };
 
     fetchQueue();
-  }, [user]);
+  }, [user, router]);
 
   return {
     letters,
@@ -71,8 +80,12 @@ export function useApprovalQueue() {
         const data = await letterService.getQueue(activeRole);
         setLetters(data);
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Gagal memuat antrian approval';
-        setError(errorMessage);
+        const errorData = handleApiError(err);
+         if (errorData.status === 401) {
+             router.push('/login');
+             return;
+         }
+         setError(errorData.message);
       } finally {
         setIsLoading(false);
       }

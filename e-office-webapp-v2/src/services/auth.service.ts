@@ -7,8 +7,12 @@ export const authService = {
       const api = client as any;
       const response = await api.public['sign-in'].post({
 					username: email,
-        password,
+          password,
 			});
+
+      if (response.error) {
+        throw response.error;
+      }
 
       const responseData = response.data as any;
 
@@ -23,6 +27,11 @@ export const authService = {
 		try {
       const api = client as any;
       const response = await api.public['sign-out'].post({});
+
+      if (response.error) {
+        throw response.error;
+      }
+
       if (response.data && typeof response.data === 'object') {
         return;
       }
@@ -37,6 +46,14 @@ export const authService = {
 		try {
       const api = client as any;
       const response = await api.me.get();
+
+      if (response.error) {
+        throw {
+          ...response.error,
+          status: response.status,
+          message: response.error.value || 'Gagal mengambil data sesi'
+        };
+      }
 
       if (response.data && typeof response.data === 'object') {
         return response.data as User;

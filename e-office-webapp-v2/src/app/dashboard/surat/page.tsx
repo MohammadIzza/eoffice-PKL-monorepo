@@ -128,6 +128,14 @@ export default function SuratListPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  // Initialize status filter from URL query parameter
+  React.useEffect(() => {
+    const statusParam = searchParams.get('status');
+    if (statusParam) {
+      setStatusFilter(statusParam);
+    }
+  }, [searchParams]);
+
   // Filter letters
   const filteredLetters = useMemo(() => {
     return letters.filter((letter) => {
@@ -140,8 +148,12 @@ export default function SuratListPage() {
         letter.letterNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         letter.numbering?.numberString?.toLowerCase().includes(searchQuery.toLowerCase());
 
-      // Status filter
-      const matchesStatus = statusFilter === 'all' || letter.status === statusFilter;
+      // Status filter - support multiple status values separated by comma
+      let matchesStatus = statusFilter === 'all';
+      if (statusFilter !== 'all') {
+        const statusValues = statusFilter.split(',').map(s => s.trim());
+        matchesStatus = statusValues.includes(letter.status);
+      }
 
       return matchesSearch && matchesStatus;
     });
