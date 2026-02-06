@@ -2,6 +2,7 @@ import { authGuardPlugin } from "@backend/middlewares/auth.ts";
 import { Prisma } from "@backend/db/index.ts";
 import { MinioService } from "@backend/services/minio.service.ts";
 import { DocumentService } from "@backend/services/document.service.ts";
+import { getUserRoles } from "@backend/lib/casbin.ts";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()
@@ -28,24 +29,30 @@ export default new Elysia()
 				throw new Error("Surat tidak ditemukan");
 			}
 
-			const isCreator = letter.createdById === user.id;
+			// Check if user is superadmin - superadmin can view all letter previews
+			const userRoles = await getUserRoles(user.id);
+			const isSuperAdmin = userRoles.includes("superadmin");
 
-			const hasApproved = await Prisma.letterStepHistory.findFirst({
-				where: {
-					letterId: letter.id,
-					actorUserId: user.id,
-					action: { in: ["APPROVED", "REJECTED", "REVISED"] },
-				},
-			});
+			if (!isSuperAdmin) {
+				const isCreator = letter.createdById === user.id;
 
-			if (!isCreator && !hasApproved) {
-				const assignedApprovers = letter.assignedApprovers as Record<string, string> | null;
-				const isAssignee = assignedApprovers
-					? Object.values(assignedApprovers).includes(user.id)
-					: false;
+				const hasApproved = await Prisma.letterStepHistory.findFirst({
+					where: {
+						letterId: letter.id,
+						actorUserId: user.id,
+						action: { in: ["APPROVED", "REJECTED", "REVISED"] },
+					},
+				});
 
-				if (!isAssignee) {
-					throw new Error("Anda tidak berhak melihat preview surat ini");
+				if (!isCreator && !hasApproved) {
+					const assignedApprovers = letter.assignedApprovers as Record<string, string> | null;
+					const isAssignee = assignedApprovers
+						? Object.values(assignedApprovers).includes(user.id)
+						: false;
+
+					if (!isAssignee) {
+						throw new Error("Anda tidak berhak melihat preview surat ini");
+					}
 				}
 			}
 

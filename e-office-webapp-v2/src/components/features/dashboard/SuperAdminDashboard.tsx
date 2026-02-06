@@ -214,24 +214,28 @@ export function SuperAdminDashboard({ userName }: SuperAdminDashboardProps) {
   );
 
   // Helper for Stat Widget
-  const StatWidget = ({ icon: Icon, label, count, subLabel, color, iconBg }: any) => (
-    <div className="bg-white rounded-[32px] p-6 border border-white/60 shadow-sm relative overflow-hidden group hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300">
-       <div className="flex items-start justify-between mb-4">
-          <div className={`w-10 h-10 rounded-full ${iconBg} flex items-center justify-center`}>
-             <Icon className={`w-5 h-5 ${color}`} />
-          </div>
-          {/* Decorative blurry blob */}
-          <div className={`absolute -top-6 -right-6 w-24 h-24 ${iconBg} rounded-full blur-2xl opacity-40 group-hover:opacity-60 transition-opacity`} />
-       </div>
-       <div>
-         <div className="text-[13px] font-medium text-[#86868B] uppercase tracking-wide mb-1">{label}</div>
-         <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-bold text-[#1D1D1F] tracking-tighter">{count}</span>
-            <span className="text-xs font-medium text-[#86868B]">{subLabel}</span>
+  const StatWidget = ({ icon: Icon, label, count, subLabel, color, iconBg, href }: any) => {
+    const content = (
+      <div className="bg-white rounded-[32px] p-6 border border-white/60 shadow-sm relative overflow-hidden group hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 cursor-pointer">
+         <div className="flex items-start justify-between mb-4">
+            <div className={`w-10 h-10 rounded-full ${iconBg} flex items-center justify-center`}>
+               <Icon className={`w-5 h-5 ${color}`} />
+            </div>
+            {/* Decorative blurry blob */}
+            <div className={`absolute -top-6 -right-6 w-24 h-24 ${iconBg} rounded-full blur-2xl opacity-40 group-hover:opacity-60 transition-opacity`} />
          </div>
-       </div>
-    </div>
-  );
+         <div>
+           <div className="text-[13px] font-medium text-[#86868B] uppercase tracking-wide mb-1">{label}</div>
+           <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-bold text-[#1D1D1F] tracking-tighter">{count}</span>
+              <span className="text-xs font-medium text-[#86868B]">{subLabel}</span>
+           </div>
+         </div>
+      </div>
+    );
+
+    return href ? <Link href={href}>{content}</Link> : content;
+  };
 
   return (
     <div className="min-h-screen bg-[#F5F5F7] font-sans selection:bg-blue-100 selection:text-blue-900 pb-20">
@@ -334,18 +338,20 @@ export function SuperAdminDashboard({ userName }: SuperAdminDashboardProps) {
                 <h2 className="text-xl font-bold text-[#1D1D1F] tracking-tight px-1">Overview Surat</h2>
                 <div className="grid grid-cols-2 lg:grid-cols-1 gap-4">
                     {/* Total */}
-                    <div className="col-span-2 bg-[#1D1D1F] text-white rounded-[32px] p-8 shadow-lg relative overflow-hidden group">
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-4 text-white/60">
-                                <FileText className="w-5 h-5" />
-                                <span className="text-sm font-semibold uppercase tracking-wider">Total Surat</span>
-                            </div>
-                            <div className="text-6xl font-bold tracking-tighter mb-1">{stats.total}</div>
-                            <div className="text-sm text-white/50 font-medium">Dokumen terdata dalam sistem</div>
-                        </div>
-                        {/* Abstract Circle Decoration */}
-                        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-colors duration-500"></div>
-                    </div>
+                    <Link href="/dashboard/surat" className="col-span-2">
+                      <div className="bg-[#1D1D1F] text-white rounded-[32px] p-8 shadow-lg relative overflow-hidden group cursor-pointer hover:shadow-xl transition-all duration-300">
+                          <div className="relative z-10">
+                              <div className="flex items-center gap-3 mb-4 text-white/60">
+                                  <FileText className="w-5 h-5" />
+                                  <span className="text-sm font-semibold uppercase tracking-wider">Total Surat</span>
+                              </div>
+                              <div className="text-6xl font-bold tracking-tighter mb-1">{stats.total}</div>
+                              <div className="text-sm text-white/50 font-medium">Dokumen terdata dalam sistem</div>
+                          </div>
+                          {/* Abstract Circle Decoration */}
+                          <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-colors duration-500"></div>
+                      </div>
+                    </Link>
 
                     <StatWidget 
                         icon={Clock}
@@ -354,6 +360,7 @@ export function SuperAdminDashboard({ userName }: SuperAdminDashboardProps) {
                         subLabel="surat"
                         color="text-[#007AFF]"
                         iconBg="bg-[#E1F0FF]"
+                        href="/dashboard/surat?status=PENDING,PROCESSING"
                     />
 
                     <StatWidget 
@@ -363,6 +370,7 @@ export function SuperAdminDashboard({ userName }: SuperAdminDashboardProps) {
                         subLabel="surat"
                         color="text-[#FF9500]"
                         iconBg="bg-[#FFF5E0]"
+                        href="/dashboard/surat?status=REVISION"
                     />
 
                     <StatWidget 
@@ -372,6 +380,7 @@ export function SuperAdminDashboard({ userName }: SuperAdminDashboardProps) {
                         subLabel="surat"
                         color="text-[#34C759]"
                         iconBg="bg-[#E4F9E9]"
+                        href="/dashboard/surat?status=COMPLETED"
                     />
                 </div>
             </div>

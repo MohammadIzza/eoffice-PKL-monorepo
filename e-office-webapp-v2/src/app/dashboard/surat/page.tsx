@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import * as React from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -47,6 +47,8 @@ import {
   X
 } from 'lucide-react';
 import { useAuthStore } from '@/stores';
+import { letterService } from '@/services';
+import type { Letter } from '@/services/letter.service';
 
 const getStatusColor = (status: string): string => {
   switch (status) {
@@ -106,6 +108,7 @@ const getStatusLabel = (status: string) => {
 export default function SuratListPage() {
   const searchParams = useSearchParams();
   const { user } = useAuthStore();
+  const isSuperAdmin = user?.roles?.some(r => r.name === 'superadmin');
   const isMahasiswa = user?.roles?.some(r => r.name === 'mahasiswa');
   const blocked = searchParams.get('blocked') === '1';
   const isApprover = user?.roles?.some(role => 
@@ -113,14 +116,42 @@ export default function SuratListPage() {
      'supervisor_akademik', 'manajer_tu', 'wakil_dekan_1', 'upa'].includes(role.name)
   );
   
+  // State for superadmin letters
+  const [allLetters, setAllLetters] = useState<Letter[]>([]);
+  const [isLoadingAll, setIsLoadingAll] = useState(false);
+  const [errorAll, setErrorAll] = useState<string | null>(null);
+  
+  // Fetch all letters for superadmin
+  useEffect(() => {
+    if (isSuperAdmin) {
+      const fetchAllLetters = async () => {
+        setIsLoadingAll(true);
+        try {
+          const data = await letterService.getAllLetters();
+          setAllLetters(data);
+          setErrorAll(null);
+        } catch (err: any) {
+          setErrorAll(err?.message || 'Gagal memuat data surat');
+        } finally {
+          setIsLoadingAll(false);
+        }
+      };
+      fetchAllLetters();
+    }
+  }, [isSuperAdmin]);
+  
   // Use different hooks based on role
   const myLettersData = useMyLetters();
   const approvalQueueData = useApprovalQueue();
   
   // Select data based on role
-  const { letters, isLoading, error, refetch, hasLetterInProgress } = isMahasiswa 
-    ? myLettersData 
-    : { ...approvalQueueData, hasLetterInProgress: false };
+  const lettersData = isSuperAdmin 
+    ? { letters: allLetters, isLoading: isLoadingAll, error: errorAll, refetch: () => {}, hasLetterInProgress: false } 
+    : isMahasiswa 
+      ? myLettersData 
+      : { ...approvalQueueData, hasLetterInProgress: false };
+  
+  const { letters, isLoading, error, refetch, hasLetterInProgress } = lettersData;
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -236,7 +267,7 @@ export default function SuratListPage() {
             Daftar Surat
           </h1>
           <p className="text-sm text-[#86868B]">
-            {isMahasiswa ? 'Kelola pengajuan surat Anda' : 'Kelola semua surat'}
+            {isSuperAdmin ? 'Monitoring semua surat dalam sistem' : isMahasiswa ? 'Kelola pengajuan surat Anda' : 'Kelola semua surat'}
           </p>
         </div>
         {isMahasiswa && (
@@ -294,7 +325,7 @@ export default function SuratListPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#86868B]" />
                 <Input
-                  placeholder={isMahasiswa ? "Cari surat atau nomor..." : "Cari surat, nomor, atau pemohon..."}
+                  placeholder={isSuperAdmin ? "Cari surat, nomor, atau pemohon..." : isMahasiswa ? "Cari surat atau nomor..." : "Cari surat, nomor, atau pemohon..."}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 h-11 text-sm rounded-xl border-[rgba(0,0,0,0.1)] bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3]/20"

@@ -667,22 +667,22 @@ export default function LetterDetail({ id }: LetterDetailProps) {
               <Card className="bg-white border-[#E5E5E7] shadow-sm">
                 <CardHeader className="border-b border-[#E5E5E7]">
                   <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
-                    Dokumen
+                    Surat
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-sm font-semibold text-[#1D1D1F]">
-                        {isFinalDocument ? "Dokumen Final" : "Preview Dokumen Sementara"}
+                        {isFinalDocument ? "Surat Final" : "Preview Surat Sementara"}
                       </p>
                       <p className="text-xs text-[#86868B]">
                         {isLoadingPreview
                           ? "Memuat preview..."
                           : previewData
                             ? isFinalDocument
-                              ? "Dokumen final sudah tersedia."
-                              : "Dokumen masih sementara. Final tersedia setelah penomoran."
+                              ? "Surat final sudah tersedia."
+                              : "Surat masih sementara. Final tersedia setelah penomoran."
                             : "Preview tidak tersedia."}
                       </p>
                     </div>
@@ -894,12 +894,12 @@ export default function LetterDetail({ id }: LetterDetailProps) {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <DialogTitle className="text-lg">
-                  {isFinalDocument ? "Dokumen Final" : "Preview Dokumen Sementara"}
+                  {isFinalDocument ? "Surat Final" : "Preview Surat Sementara"}
                 </DialogTitle>
                 <DialogDescription className="text-xs text-[#86868B]">
                   {isFinalDocument
-                    ? "Dokumen final sudah bernomor dan siap didistribusikan."
-                    : "Dokumen ini masih draft. Dokumen final tersedia setelah penomoran."}
+                    ? "Surat final sudah bernomor dan siap didistribusikan."
+                    : "Surat ini masih draft. Surat final tersedia setelah penomoran."}
                 </DialogDescription>
               </div>
               {previewData?.isPDF && (
