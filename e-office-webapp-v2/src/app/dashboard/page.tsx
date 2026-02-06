@@ -19,6 +19,7 @@ import {
   ClipboardList
 } from 'lucide-react';
 import { DashboardChartsWrapper } from '@/components/features/dashboard/DashboardChartsWrapper';
+import { SuperAdminDashboard } from '@/components/features/dashboard/SuperAdminDashboard';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 
@@ -34,11 +35,17 @@ const COLORS = {
 
 export default function DashboardPage() {
   const { user, isLoading: authLoading } = useAuthStore();
+  const isSuperAdmin = user?.roles?.some(r => r.name === 'superadmin');
   const isMahasiswa = user?.roles?.some(r => r.name === 'mahasiswa');
   const isApprover = user?.roles?.some(role => 
     ['dosen_pembimbing', 'dosen_koordinator', 'ketua_program_studi', 'admin_fakultas', 
      'supervisor_akademik', 'manajer_tu', 'wakil_dekan_1', 'upa'].includes(role.name)
   );
+
+  // Show SuperAdmin dashboard if user is superadmin
+  if (!authLoading && isSuperAdmin) {
+    return <SuperAdminDashboard userName={user?.name || 'Super Admin'} />;
+  }
   
   // Use different hooks based on role
   const myLettersData = useMyLetters();

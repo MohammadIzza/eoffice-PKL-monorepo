@@ -7,3 +7,4 @@ export * from './user.service';
 export * from './mahasiswa.service';
 export * from './pegawai.service';
 export * from './role.service';
+export * from './letterType.service';
