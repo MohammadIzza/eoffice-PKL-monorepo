@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/api/useAuth";
+import { DevLoginModal } from "./DevLoginModal";
 
 const loginSchema = z.object({
   email: z.string().email("Format email tidak valid"),
@@ -49,6 +50,12 @@ export default function LoginPage() {
     },
   });
 
+  const handleDevLogin = (email: string) => {
+    form.setValue("email", email);
+    form.setValue("password", "password1234");
+    form.handleSubmit(onSubmit)();
+  };
+
   const onSubmit = async (data: LoginFormValues) => {
     setErrorMessage(null);
     
@@ -60,69 +67,85 @@ export default function LoginPage() {
     }
   };
 
-  const backgroundImageUrl = "https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=1986&auto=format&fit=crop"; 
+  const backgroundImageUrl = "/ap_undip.jpg"; 
 
   return (
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 xl:min-h-screen">
-      <div className="hidden bg-slate-900 lg:block relative overflow-hidden">
+      <div className="hidden lg:block relative overflow-hidden">
         <div 
-          className="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-overlay"
+          className="absolute inset-0 bg-cover bg-center"
           style={{ 
             backgroundImage: `url('${backgroundImageUrl}')` 
           }}
         ></div>
         
+        {/* Dark Overlay Layers */}
+        <div className="absolute inset-0 bg-slate-950/60"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-transparent to-slate-900/80"></div>
+        
         <div className="relative z-10 flex h-full flex-col justify-between p-12 text-white">
           <div className="flex items-center gap-3">
-            <div className="bg-white/10 p-2 rounded-lg backdrop-blur-sm border border-white/20">
+            <div className="bg-white/10 p-2 rounded-xl backdrop-blur-md border border-white/20 shadow-lg">
                <Image 
                  src="/Undip.png" 
                  alt="Logo Undip" 
-                 width={40} 
-                 height={40} 
+                 width={48} 
+                 height={48} 
                  className="object-contain"
                />
             </div>
-            <span className="text-lg font-bold tracking-tight">E-Office FSM</span>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold tracking-tight">E-Office FSM</span>
+              <span className="text-xs text-slate-300 font-medium tracking-wider uppercase">Universitas Diponegoro</span>
+            </div>
           </div>
 
-          <div className="space-y-4 max-w-lg">
-            <h1 className="text-4xl font-extrabold leading-tight tracking-tight lg:text-5xl">
-              Sistem Informasi <br/> Persuratan Digital
+          <div className="space-y-6 max-w-lg mb-12">
+            <h1 className="text-4xl font-extrabold leading-tight tracking-tight lg:text-5xl drop-shadow-md">
+              Sistem Informasi <br/> <span className="text-indigo-400">Persuratan Digital</span>
             </h1>
-            <p className="text-lg text-slate-300">
-              Fakultas Sains dan Matematika <br/> Universitas Diponegoro
+            <p className="text-lg text-slate-200 leading-relaxed font-light">
+              Platform terintegrasi untuk pengelolaan administrasi akademik dan kemahasiswaan Fakultas Sains dan Matematika.
             </p>
           </div>
 
-          <div className="text-sm text-slate-400">
-            &copy; {new Date().getFullYear()} FSM Undip. All rights reserved.
+          <div className="flex items-center justify-between text-sm text-slate-400/80 border-t border-white/10 pt-6">
+            <span>&copy; {new Date().getFullYear()} FSM Undip</span>
+            <span className="flex items-center gap-4">
+              <a href="#" className="hover:text-white transition-colors">Bantuan</a>
+              <a href="#" className="hover:text-white transition-colors">Privasi</a>
+            </span>
           </div>
         </div>
       </div>
 
       {/* LOGIN FORM */}
-      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-100 dark:bg-slate-950">
-        <Card className="mx-auto w-full max-w-[500px] py-12 shadow-lg border-muted/40 bg-white dark:bg-slate-900">
-
-          <CardHeader className="space-y-1 text-center pb-8">
-             <div className="flex justify-center lg:hidden mb-2">
+      <div className="flex items-center justify-center p-4 min-h-screen bg-slate-50 dark:bg-slate-950">
+        <div className="w-full max-w-[440px] space-y-8">
+          
+          {/* Mobile Logo */}
+          <div className="flex flex-col items-center justify-center lg:hidden mb-8 space-y-2">
                <Image 
                  src="/Undip.png" 
                  alt="Logo Undip" 
-                 width={50} 
-                 height={50} 
+                 width={64} 
+                 height={64} 
+                 className="mb-2"
                />
-            </div>
-            <CardTitle className="text-3xl font-bold tracking-tight">Selamat Datang</CardTitle>
-            <CardDescription className="text-base mt-2">
-              Masuk untuk mengakses dashboard E-Office Anda
+               <h2 className="text-2xl font-bold text-center text-slate-900 dark:text-white">E-Office FSM</h2>
+          </div>
+
+          <Card className="border-0 shadow-2xl sm:border sm:border-slate-200/60 dark:bg-slate-900/50 dark:border-slate-800 backdrop-blur-xl">
+          <CardHeader className="space-y-1 text-center pb-8 pt-10">
+            <CardTitle className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Selamat Datang Kembali</CardTitle>
+            <CardDescription className="text-base text-slate-500 dark:text-slate-400">
+              Silakan masuk dengan akun Undip / SSO Anda
             </CardDescription>
           </CardHeader>
           
-          <CardContent className="px-8">
+          <CardContent className="px-8 pb-10">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                 
                 {/* Input Email */}
                 <FormField
@@ -197,7 +220,7 @@ export default function LoginPage() {
                 {/* Submit Button */}
                 <Button 
                   type="submit" 
-                  className="w-full mt-2 h-11 text-base bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-500 hover:to-blue-400 transition-all duration-300 shadow-md hover:shadow-lg" 
+                  className="w-full h-12 text-base font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/30 transition-all duration-300 rounded-lg hover:translate-y-[1px]" 
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -206,13 +229,27 @@ export default function LoginPage() {
                       Memproses...
                     </>
                   ) : (
-                    "Masuk"
+                    "Masuk ke Portal"
                   )}
                 </Button>
+
+                {process.env.NODE_ENV === "development" && (
+                    <div className="pt-2">
+                         <DevLoginModal onLogin={handleDevLogin} isLoading={isLoading} />
+                    </div>
+                )}
               </form>
             </Form>
           </CardContent>
+          <div className="px-8 pb-8 text-center text-xs text-muted-foreground border-t pt-6 bg-slate-50/50 dark:bg-slate-900/50 rounded-b-xl">
+             Belum punya akun? <a href="#" className="underline hover:text-indigo-600 transition-colors">Hubungi Administrator</a>
+          </div>
         </Card>
+        
+        <div className="mt-8 text-center text-xs text-slate-400 lg:hidden">
+            &copy; {new Date().getFullYear()} FSM Undip
+        </div>
+        </div>
       </div>
     </div>
   );
