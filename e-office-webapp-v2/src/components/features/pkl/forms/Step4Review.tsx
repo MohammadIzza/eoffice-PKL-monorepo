@@ -26,6 +26,7 @@ export default function Step4Review() {
   const { user } = useAuthStore();
   const { hasLetterInProgress, isLoading: lettersLoading } = useMyLetters();
   const [expandedAttachments, setExpandedAttachments] = useState<Record<number, boolean>>({});
+  const [checklistState, setChecklistState] = useState<Record<number, boolean>>({});
   const { submit, isSubmitting, error, setError } = useFormSubmission();
 
   const isMahasiswa = user?.roles?.some((r: { name?: string }) => r.name === "mahasiswa") ?? false;
@@ -66,10 +67,19 @@ export default function Step4Review() {
   const checklistItems = [
     {
       label: 'Data inti lengkap',
-      checked: !!(formData.namaLengkap && formData.nim && formData.email)
+      checked: checklistState[0] || false
     },
-    ...(isRevisi ? [] : [{ label: 'Lampiran utama ada', checked: utamaFiles.length > 0 }])
+    ...(isRevisi ? [] : [{ label: 'Lampiran utama ada', checked: checklistState[1] || false }])
   ];
+
+  const allChecked = checklistItems.every((_, index) => checklistState[index] === true);
+
+  const handleToggleChecklist = (index: number) => {
+    setChecklistState(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
 
   return (
     <div className="w-full max-w-7xl mx-auto flex flex-col items-center gap-4 pt-8 pb-20 px-4 bg-white min-h-screen">
@@ -169,12 +179,17 @@ export default function Step4Review() {
           <ReviewRow label="NIP Kaprodi" value={formData.nipKaprodi || '-'} />
         </ReviewSection>
 
-        <ReviewChecklist items={checklistItems} />
+        <ReviewChecklist items={checklistItems} onToggle={handleToggleChecklist} />
 
         <div className="w-full bg-card rounded-xl p-6 border shadow-sm flex flex-col gap-5">
-           <h3 className="font-bold text-lg text-foreground">
-             Lampiran ({attachments.length})
-           </h3>
+           <div className="flex items-center gap-2">
+             <h3 className="font-bold text-lg text-foreground">
+               Lampiran
+             </h3>
+             <span className="inline-flex items-center justify-center min-w-[24px] h-6 px-2 bg-[#0071E3] text-white text-xs font-semibold rounded-full">
+               {attachments.length}
+             </span>
+           </div>
            {attachments.length === 0 ? (
              <p className="text-muted-foreground text-sm">Tidak ada lampiran</p>
            ) : (
@@ -270,7 +285,7 @@ export default function Step4Review() {
             <Button
               size="default"
               onClick={submit}
-              disabled={isSubmitting}
+              disabled={isSubmitting || !allChecked}
             >
               {isSubmitting ? (
                 <>
