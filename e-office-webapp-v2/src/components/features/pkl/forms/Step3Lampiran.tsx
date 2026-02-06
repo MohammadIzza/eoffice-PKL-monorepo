@@ -615,7 +615,7 @@ export default function Step3Lampiran() {
         <Button
           variant="outline"
           size="default"
-          onClick={() => router.back()}
+          onClick={() => router.push("/dashboard/pengajuan/pkl/detail-pengajuan")}
         >
           Kembali
         </Button>

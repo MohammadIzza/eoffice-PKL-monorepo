@@ -129,7 +129,7 @@ export default function Step2Detail() {
               <FormField control={form.control} name="tujuanSurat" render={({ field }) => (
                 <FormItem>
                   <FormLabel className={labelClass}>Tujuan Surat</FormLabel>
-                  <FormInputWithInfo info="Masukkan nama lengkap atau pihak yang akan menerima surat pengantar PKL ini. Contoh: PT. ABC, CV. XYZ, atau nama instansi/perusahaan.">
+                  <FormInputWithInfo info="Masukkan nama lengkap atau pihak yang akan menerima surat pengantar PKL ini. Contoh: Bapak Izza Hakiki">
                     <FormControl><Input {...field} className={editInput} placeholder="Tuliskan nama/ pihak yang dituju" /></FormControl>
                   </FormInputWithInfo>
                   <FormMessage />
@@ -139,7 +139,7 @@ export default function Step2Detail() {
               <FormField control={form.control} name="jabatan" render={({ field }) => (
                 <FormItem>
                   <FormLabel className={labelClass}>Jabatan</FormLabel>
-                  <FormInputWithInfo info="Masukkan jabatan atau posisi pihak yang dituju di instansi/perusahaan. Contoh: HR Manager, Direktur, atau Kepala Divisi.">
+                  <FormInputWithInfo info="Masukkan jabatan atau posisi dari Tujuan Surat yang dituju di instansi/perusahaan. Contoh: HR Manager, Direktur, atau Kepala Divisi.">
                     <FormControl><Input {...field} className={editInput} placeholder="Tuliskan jabatan pihak yang dituju" /></FormControl>
                   </FormInputWithInfo>
                   <FormMessage />
@@ -305,7 +305,7 @@ export default function Step2Detail() {
             </div>
           </div>
           <div className="w-full max-w-5xl flex justify-between items-center">
-            <Button type="button" variant="outline" size="default" onClick={() => router.back()} className="min-w-[84px]">
+            <Button type="button" variant="outline" size="default" onClick={() => router.push("/dashboard/pengajuan/pkl/identitas")} className="min-w-[84px]">
               Kembali
             </Button>
             <Button type="submit" size="default" className="min-w-[84px]">
