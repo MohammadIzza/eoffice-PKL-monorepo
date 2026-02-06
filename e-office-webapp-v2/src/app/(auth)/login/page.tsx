@@ -67,7 +67,7 @@ export default function LoginPage() {
     }
   };
 
-  const backgroundImageUrl = "/ap_undip.jpg"; 
+  const backgroundImageUrl = "/ACINTYA.jpeg"; 
 
   return (
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 xl:min-h-screen">
@@ -241,9 +241,6 @@ export default function LoginPage() {
               </form>
             </Form>
           </CardContent>
-          <div className="px-8 pb-8 text-center text-xs text-muted-foreground border-t pt-6 bg-slate-50/50 dark:bg-slate-900/50 rounded-b-xl">
-             Belum punya akun? <a href="#" className="underline hover:text-indigo-600 transition-colors">Hubungi Administrator</a>
-          </div>
         </Card>
         
         <div className="mt-8 text-center text-xs text-slate-400 lg:hidden">
