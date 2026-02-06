@@ -32,6 +32,8 @@ import {
   RotateCcw,
   Send,
   FileCheck,
+  Copy,
+  Check,
   type LucideIcon,
 } from "lucide-react";
 import { useLetter } from "@/hooks/api";
@@ -40,6 +42,7 @@ import { usePKLFormStore } from "@/stores/pklFormStore";
 import { letterService } from "@/services";
 import { formatDate, formatDateTime } from "@/lib/utils/date.utils";
 import { API_URL } from "@/lib/constants";
+import { toast } from "sonner";
 
 interface LetterDetailProps {
   id: string;
@@ -132,6 +135,50 @@ const getTimelineIcon = (action: string): LucideIcon => {
   if (key === "SIGNED" || key === "NUMBERED") return FileCheck;
   if (key === "SUBMITTED" || key === "RESUBMITTED") return Send;
   return Clock;
+};
+
+const SummaryItem = ({
+  label,
+  value,
+  className,
+  isCopyable,
+}: {
+  label: string;
+  value?: string | null;
+  className?: string;
+  isCopyable?: boolean;
+}) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    if (!value) return;
+    navigator.clipboard.writeText(value);
+    setCopied(true);
+    toast.success("ID berhasil disalin");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-xs text-[#86868B]">{label}</span>
+      <div className="flex items-center gap-2">
+        <span className={`text-sm font-medium text-[#1D1D1F] break-words ${className || ""}`}>
+          {value || "-"}
+        </span>
+        {isCopyable && value && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-[#86868B] hover:text-[#0071E3]"
+            onClick={handleCopy}
+            title="Salin ID"
+          >
+            {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+          </Button>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default function LetterDetail({ id }: LetterDetailProps) {
@@ -292,13 +339,6 @@ export default function LetterDetail({ id }: LetterDetailProps) {
     hasRevisedHistory &&
     !alreadyResubmitted;
 
-  const SummaryItem = ({ label, value }: { label: string; value?: string | null }) => (
-    <div className="flex flex-col gap-1">
-      <span className="text-xs text-[#86868B]">{label}</span>
-      <span className="text-sm font-medium text-[#1D1D1F] break-words">{value || "-"}</span>
-    </div>
-  );
-
   const DetailRow = ({ label, value }: { label: string; value?: string | null }) => (
     <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-2 py-3 px-5 border-b border-[#E5E5E7] last:border-0">
       <div className="text-sm text-[#86868B]">{label}</div>
@@ -441,7 +481,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
                 Detail Surat
               </h1>
               <p className="font-lexend font-normal text-[16px] leading-[24px] text-[#86868B]">
-                Step: {getStepLabel(letter.currentStep)}
+                Step: {letter.status === "COMPLETED" ? "-" : getStepLabel(letter.currentStep)}
               </p>
             </div>
             <Button
@@ -466,13 +506,13 @@ export default function LetterDetail({ id }: LetterDetailProps) {
               </CardHeader>
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <SummaryItem label="ID Surat" value={letter.id} />
+                  <SummaryItem label="ID Surat" value={letter.id} className="font-mono" isCopyable={true} />
                   <SummaryItem label="Jenis Surat" value={letter.letterType?.name || "PKL"} />
                   <SummaryItem
                     label="Status"
                     value={getStatusDisplayLabel(letter.status, letter.currentStep)}
                   />
-                  <SummaryItem label="Step Saat Ini" value={getStepLabel(letter.currentStep)} />
+                  <SummaryItem label="Step Saat Ini" value={letter.status === "COMPLETED" ? "-" : getStepLabel(letter.currentStep)} />
                   <SummaryItem label="Nomor Surat" value={letterNumber} />
                   <SummaryItem label="Diajukan Oleh" value={letter.createdBy?.name} />
                   <SummaryItem label="Email Pengaju" value={letter.createdBy?.email} />
