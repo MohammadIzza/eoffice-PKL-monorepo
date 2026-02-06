@@ -67,7 +67,7 @@ export default function LoginPage() {
     }
   };
 
-  const backgroundImageUrl = "/ap_undip.jpg"; 
+  const backgroundImageUrl = "/ACINTYA.jpeg"; 
 
   return (
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 xl:min-h-screen">
