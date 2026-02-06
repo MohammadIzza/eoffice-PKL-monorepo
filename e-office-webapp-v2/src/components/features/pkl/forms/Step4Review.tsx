@@ -262,7 +262,7 @@ export default function Step4Review() {
             <Button
               variant="outline"
               size="default"
-              onClick={() => router.back()}
+              onClick={() => router.push("/dashboard/pengajuan/pkl/lampiran")}
               disabled={isSubmitting}
             >
               Kembali

@@ -213,19 +213,19 @@ export default function Step1Identitas() {
                     return (
                       <FormItem>
                         <FormLabel className={labelClass}>Tanggal Lahir</FormLabel>
-                        <FormInputWithInfo info="Tanggal kelahiran Anda sesuai dengan dokumen identitas resmi. Format: DD Bulan YYYY." hasOtherIcon={true}>
+                        <FormInputWithInfo info="Tanggal kelahiran Anda sesuai dengan dokumen identitas resmi. Format: DD Bulan YYYY.">
                           <div className="relative">
                             <FormControl>
                               <Input 
                                 value={displayValue}
                                 readOnly 
-                                className={`${readOnlyClass} pr-20`}
+                                className={`${readOnlyClass} !pr-24`}
                                 onBlur={field.onBlur}
                                 name={field.name}
                                 ref={field.ref}
                               />
                             </FormControl>
-                            <Calendar className="absolute right-12 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                            <Calendar className="absolute right-12 top-1/2 -translate-y-1/2 h-4 w-4 text-[#86868B] pointer-events-none" />
                           </div>
                         </FormInputWithInfo>
                         <FormMessage />
@@ -304,10 +304,7 @@ export default function Step1Identitas() {
             </CardContent>
           </Card>
 
-          <div className="w-full max-w-5xl flex justify-between items-center">
-            <Button type="button" variant="outline" size="default" className="min-w-[84px]">
-              Kembali
-            </Button>
+          <div className="w-full max-w-5xl flex justify-end items-center">
             <Button type="submit" size="default" className="min-w-[84px]">
               Lanjut
             </Button>
