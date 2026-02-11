@@ -279,7 +279,7 @@ export default function DashboardPage() {
         <DashboardChartsWrapper chartData={chartData} pieData={pieData} />
 
         {/* Quick Actions - Apple Style */}
-        <div className="flex items-center gap-4 animate-slide-up">
+        {/* <div className="flex items-center gap-4 animate-slide-up">
           <Link href="/dashboard/surat" className="flex-1">
             <Card className="border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden bg-white hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
               <CardContent className="p-6">
@@ -293,7 +293,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           </Link>
-        </div>
+        </div> */}
       </div>
     </div>
   );

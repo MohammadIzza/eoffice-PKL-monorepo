@@ -52,6 +52,7 @@ const APPROVER_ROLES = [
 
 const getStepLabel = (step: number | null): string => {
   if (!step) return '-';
+  
   const stepMap: Record<number, string> = {
     1: 'Dosen Pembimbing',
     2: 'Dosen Koordinator',
@@ -61,8 +62,13 @@ const getStepLabel = (step: number | null): string => {
     6: 'Manajer TU',
     7: 'Wakil Dekan 1',
     8: 'UPA',
+    9: 'Selesai', // Tambahkan Step 9 di sini sesuai kebutuhan sistem Anda
   };
-  return stepMap[step] || `Step ${step}`;
+
+  const label = stepMap[step] || `${step}`;
+  
+  // Menambahkan spasi setelah angka agar tidak nempel "9. Tahap 9"
+  return `${label}`;
 };
 
 const getActionLabel = (action: string): string => {
@@ -784,9 +790,9 @@ export default function ApprovalDetailPage() {
               <h1 className="font-lexend font-bold text-[30px] leading-[36px] tracking-[-0.5px] text-[#1D1D1F] mb-2">
                 Review Surat
               </h1>
-              <p className="font-lexend font-normal text-[16px] leading-[24px] text-[#86868B]">
+              {/* <p className="font-lexend font-normal text-[16px] leading-[24px] text-[#86868B]">
                 Step: {getStepLabel(letter.currentStep)}
-              </p>
+              </p> */}
             </div>
             <Button
               variant="outline"

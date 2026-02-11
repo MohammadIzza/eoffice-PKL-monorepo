@@ -42,8 +42,9 @@ const getStepLabel = (step: number | null): string => {
     6: 'Manajer TU',
     7: 'Wakil Dekan 1',
     8: 'UPA',
+    9: 'Selesai'
   };
-  return stepMap[step] || `Step ${step}`;
+  return stepMap[step] || ` ${step}`;
 };
 
 export default function ApprovalQueuePage() {
