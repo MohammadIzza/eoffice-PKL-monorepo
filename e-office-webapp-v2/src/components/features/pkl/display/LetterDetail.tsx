@@ -481,7 +481,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
                 Detail Surat
               </h1>
               <p className="font-lexend font-normal text-[16px] leading-[24px] text-[#86868B]">
-                Step: {letter.status === "COMPLETED" ? "-" : getStepLabel(letter.currentStep)}
+                Step: {letter.status === "COMPLETED" ? "Selesai" : getStepLabel(letter.currentStep)}
               </p>
             </div>
             <Button
@@ -512,7 +512,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
                     label="Status"
                     value={getStatusDisplayLabel(letter.status, letter.currentStep)}
                   />
-                  <SummaryItem label="Step Saat Ini" value={letter.status === "COMPLETED" ? "-" : getStepLabel(letter.currentStep)} />
+                  <SummaryItem label="Step Saat Ini" value={letter.status === "COMPLETED" ? "Selesai" : getStepLabel(letter.currentStep)} />
                   <SummaryItem label="Nomor Surat" value={letterNumber} />
                   <SummaryItem label="Diajukan Oleh" value={letter.createdBy?.name} />
                   <SummaryItem label="Email Pengaju" value={letter.createdBy?.email} />
