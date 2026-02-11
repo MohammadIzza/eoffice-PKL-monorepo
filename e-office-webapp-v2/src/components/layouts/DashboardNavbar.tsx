@@ -135,7 +135,7 @@ export default function DashboardNavbar() {
                       if (title.includes('ditolak')) {
                         icon = <span className="inline-flex items-center justify-center w-6 h-6 text-[#D93025] mr-3"><svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M12 8v4m0 4h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></span>;
                         color = 'text-[#D93025]';
-                      } else if (title.includes('revisi')) {
+                      } else if (title.includes('revisi') || (title.includes('dikembalikan') && title.includes('review ulang'))) {
                         icon = <span className="inline-flex items-center justify-center w-6 h-6 text-[#FF9500] mr-3"><svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></span>;
                         color = 'text-[#FF9500]';
                       } else if (title.includes('disetujui')) {
@@ -155,13 +155,13 @@ export default function DashboardNavbar() {
                         <div
                           key={notif.id}
                           onClick={() => handleNotificationClick(notif)}
-                          className={`flex items-start gap-2 p-4 border-b border-slate-50 text-left hover:bg-slate-50 cursor-pointer transition-colors relative rounded-xl bg-white`}
+                          className={`flex items-start gap-2 p-4 border-b border-slate-50 text-left hover:bg-slate-50 cursor-pointer transition-colors relative rounded ${!notif.isRead ? 'bg-blue-50/100' : 'bg-white'}`}
                           style={{ minHeight: 64 }}
                         >
                           {icon}
                           <div className="flex-1 min-w-0">
                             <div className="flex justify-between items-start mb-1 gap-2">
-                              <span className={`text-[15px] font-bold break-words whitespace-pre-line min-w-0 ${color} ${!notif.isRead ? '' : 'opacity-90'}`} style={{wordBreak:'break-word',whiteSpace:'pre-line'}}>
+                              <span className={`text-[15px] font-bold break-words whitespace-pre-line min-w-0 ${color} ${!notif.isRead ? 'font-extrabold' : 'opacity-90'}`} style={{wordBreak:'break-word',whiteSpace:'pre-line'}}>
                                 {notif.title}
                               </span>
                               <span className="text-[10px] text-slate-400 whitespace-nowrap mt-0.5">
