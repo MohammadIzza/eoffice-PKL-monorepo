@@ -480,9 +480,9 @@ export default function LetterDetail({ id }: LetterDetailProps) {
               <h1 className="font-lexend font-bold text-[30px] leading-[36px] tracking-[-0.5px] text-[#1D1D1F] mb-2">
                 Detail Surat
               </h1>
-              <p className="font-lexend font-normal text-[16px] leading-[24px] text-[#86868B]">
+              {/* <p className="font-lexend font-normal text-[16px] leading-[24px] text-[#86868B]">
                 Step: {letter.status === "COMPLETED" ? "Selesai" : getStepLabel(letter.currentStep)}
-              </p>
+              </p> */}
             </div>
             <Button
               variant="outline"
@@ -576,7 +576,12 @@ export default function LetterDetail({ id }: LetterDetailProps) {
             <Card className="bg-white border-[#E5E5E7] shadow-sm">
               <CardHeader className="border-b border-[#E5E5E7]">
                 <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
-                  Lampiran ({attachments.length})
+                  <h3 className="font-bold text-lg text-foreground">
+                    Lampiran <span className="inline-flex items-center justify-center min-w-[24px] h-6 px-2 bg-[#0071E3] text-white text-xs font-semibold rounded-full">
+                    {attachments.length}
+                  </span>
+                  </h3>
+                  
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
@@ -875,7 +880,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
 
       {/* Attachment preview dialog */}
       <Dialog open={!!previewAttachment} onOpenChange={(open) => !open && setPreviewAttachment(null)}>
-        <DialogContent className="max-w-[960px] w-[92vw] p-0 overflow-hidden">
+        <DialogContent className="max-w-[760px] w-[72vw] p-0 overflow-hidden">
           {previewAttachment && (
             <>
               <DialogHeader className="px-6 pt-5 pb-4 border-b border-[#E5E5E7] pr-12">

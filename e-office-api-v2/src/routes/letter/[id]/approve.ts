@@ -195,16 +195,56 @@ export default new Elysia()
                 },
             });
 
-            // Kirim notifikasi ke pemilik surat (mahasiswa)
-            try {
-                const stepName = STEP_TO_ROLE[currentStep as keyof typeof STEP_TO_ROLE] ?? `Step ${currentStep}`;
-                await notificationService.create(
-                    letter.createdById,
-                    "Status Surat Diperbarui",
-                    `Surat PKL Anda telah disetujui pada tahap ${stepName}. Menunggu proses selanjutnya.`,
-                    `/dashboard/surat/${letter.id}`,
-                    "SUCCESS",
-                );
+// Kirim notifikasi
+			try {
+				const stepName = STEP_TO_ROLE[currentStep as keyof typeof STEP_TO_ROLE] ?? `Step ${currentStep}`;
+				
+				// Notifikasi ke mahasiswa
+				if (currentStep === PKL_WORKFLOW_STEPS.UPA) {
+					// Surat selesai
+					await notificationService.create(
+						letter.createdById,
+						"Surat PKL Selesai",
+						`Selamat! Surat PKL Anda telah selesai diproses dan disetujui oleh semua pihak.`,
+						`/dashboard/surat/${letter.id}`,
+						"SUCCESS",
+					);
+				} else {
+					// Masih ada step berikutnya
+					await notificationService.create(
+						letter.createdById,
+						"Status Surat Diperbarui",
+						`Surat PKL Anda telah disetujui pada tahap ${stepName}. Menunggu proses selanjutnya.`,
+						`/dashboard/surat/${letter.id}`,
+						"SUCCESS",
+					);
+				}
+
+				// Notifikasi ke approver berikutnya (jika bukan step terakhir)
+				if (currentStep < PKL_WORKFLOW_STEPS.UPA) {
+					const assignedApprovers = letter.assignedApprovers as Record<string, any>;
+					const stepRoleMap: Record<number, string> = {
+						1: "dospem",
+						2: "koordinator",
+						3: "kaprodi",
+						4: "admin",
+						5: "supervisor",
+						6: "manajer",
+						7: "wd1",
+						8: "upa",
+					};
+					const nextRoleKey = stepRoleMap[nextStep];
+					if (nextRoleKey && assignedApprovers[nextRoleKey]) {
+						const nextStepName = STEP_TO_ROLE[nextStep as keyof typeof STEP_TO_ROLE] ?? `Step ${nextStep}`;
+						await notificationService.create(
+							assignedApprovers[nextRoleKey],
+							"Surat Menunggu Persetujuan Anda",
+							`Surat PKL telah disetujui pada tahap ${stepName}. Sekarang menunggu persetujuan Anda sebagai ${nextStepName}.`,
+							`/dashboard/approval/${letter.id}`,
+							"INFO",
+						);
+					}
+				}
             } catch (e) {
                 console.error("Gagal mengirim notifikasi approval:", e);
             }

@@ -253,7 +253,9 @@ export default function ApprovalQueuePage() {
                     {filteredLetters.map((letter) => {
                       const values = letter.values as Record<string, any>;
                       const name = values?.namaLengkap || letter.createdBy?.name || '-';
-                      const isApproved = (letter as QueueLetter).approvalStatus === 'approved_by_me';
+                      const approvalStatus = (letter as QueueLetter).approvalStatus;
+                      const isApproved = approvalStatus === 'approved_by_me';
+                      const isRejected = approvalStatus === 'rejected_by_me';
                       return (
                         <TableRow
                           key={letter.id}
@@ -285,6 +287,11 @@ export default function ApprovalQueuePage() {
                                 <CheckCircle2 className="w-4 h-4" />
                                 Sudah disetujui
                               </span>
+                            ) : isRejected ? (
+                              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#D93025]">
+                                <AlertCircle className="w-4 h-4" />
+                                Ditolak
+                              </span>
                             ) : (
                               <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0071E3]">
                                 <Clock className="w-4 h-4" />
@@ -306,11 +313,11 @@ export default function ApprovalQueuePage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => router.push(`/dashboard/approval/${letter.id}${isApproved ? '?view=1' : ''}`)}
+                              onClick={() => router.push(`/dashboard/approval/${letter.id}${(isApproved || isRejected) ? '?view=1' : ''}`)}
                               className="h-8 gap-1.5 rounded-full border border-[#E5E5E7] text-sm font-medium text-[#1D1D1F] hover:bg-[#0071E3] hover:border-[#0071E3] hover:text-white transition-colors duration-200"
                             >
                               <Eye className="w-4 h-4" />
-                              {isApproved ? 'Lihat' : 'Review'}
+                              {(isApproved || isRejected) ? 'Lihat' : 'Review'}
                             </Button>
                           </TableCell>
                         </TableRow>

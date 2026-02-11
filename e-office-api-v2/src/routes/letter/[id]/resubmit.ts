@@ -1,5 +1,6 @@
 import { authGuardPlugin } from "@backend/middlewares/auth.ts";
 import { Prisma } from "@backend/db/index.ts";
+import { notificationService } from "@backend/services/notification.service.ts";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()
@@ -57,6 +58,33 @@ export default new Elysia()
 					toStep: letter.currentStep,
 				},
 			});
+
+			// Kirim notifikasi ke approver di current step
+			try {
+				const assignedApprovers = letter.assignedApprovers as Record<string, any>;
+				const stepRoleMap: Record<number, string> = {
+					1: "dospem",
+					2: "koordinator",
+					3: "kaprodi",
+					4: "admin",
+					5: "supervisor",
+					6: "manajer",
+					7: "wd1",
+					8: "upa",
+				};
+				const currentRoleKey = stepRoleMap[letter.currentStep!];
+				if (currentRoleKey && assignedApprovers[currentRoleKey]) {
+					await notificationService.create(
+						assignedApprovers[currentRoleKey],
+						"Surat Siap untuk Review",
+						`Mahasiswa telah melakukan perbaikan dan mengirim ulang surat PKL. Silakan review kembali.`,
+						`/dashboard/approval/${letter.id}`,
+						"INFO",
+					);
+				}
+			} catch (e) {
+				console.error("Gagal mengirim notifikasi resubmit:", e);
+			}
 
 			return {
 				success: true,

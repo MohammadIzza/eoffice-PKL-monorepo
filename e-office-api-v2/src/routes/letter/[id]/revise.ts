@@ -4,6 +4,7 @@ import {
 	validateUserIsAssignee,
 	calculateRollbackStep,
 } from "@backend/services/workflow/pkl.workflow.service.ts";
+import { notificationService } from "@backend/services/notification.service.ts";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()
@@ -63,6 +64,46 @@ export default new Elysia()
 					toStep: rollbackToStep,
 				},
 			});
+
+			// Kirim notifikasi ke mahasiswa
+			try {
+				await notificationService.create(
+					letter.createdById,
+					"Surat Perlu Revisi",
+					`Surat PKL Anda dikembalikan untuk revisi. Catatan: "${comment}". Silakan perbaiki dan kirim ulang.`,
+					`/dashboard/surat/${letter.id}`,
+					"WARNING",
+				);
+			} catch (e) {
+				console.error("Gagal mengirim notifikasi revise ke mahasiswa:", e);
+			}
+
+			// Kirim notifikasi ke approver di rollback step (yang perlu approve ulang)
+			try {
+				const assignedApprovers = letter.assignedApprovers as Record<string, any>;
+				const stepRoleMap: Record<number, string> = {
+					1: "dospem",
+					2: "koordinator",
+					3: "kaprodi",
+					4: "admin",
+					5: "supervisor",
+					6: "manajer",
+					7: "wd1",
+					8: "upa",
+				};
+				const rollbackRoleKey = stepRoleMap[rollbackToStep];
+				if (rollbackRoleKey && assignedApprovers[rollbackRoleKey]) {
+					await notificationService.create(
+						assignedApprovers[rollbackRoleKey],
+						"Surat Dikembalikan untuk Review Ulang",
+						`Surat PKL yang sebelumnya Anda setujui dikembalikan untuk revisi. Silakan review ulang setelah mahasiswa mengirim perbaikan.`,
+						`/dashboard/approval/${letter.id}`,
+						"INFO",
+					);
+				}
+			} catch (e) {
+				console.error("Gagal mengirim notifikasi revise ke approver:", e);
+			}
 
 			return {
 				success: true,
