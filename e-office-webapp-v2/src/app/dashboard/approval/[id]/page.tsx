@@ -760,7 +760,7 @@ export default function ApprovalDetailPage() {
           {note && (
             <div className="mt-3 rounded-r-lg border-l-2 border-[#E5E5E7] bg-[#F5F5F7]/90 py-2.5 pl-3.5 pr-1">
               <p className="text-[11px] font-semibold text-[#86868B] uppercase tracking-wider mb-1">Catatan</p>
-              <p className="text-sm text-[#1D1D1F] leading-relaxed whitespace-pre-line">
+              <p className="text-sm text-[#1D1D1F] leading-relaxed whitespace-pre-line break-words">
                 {note}
               </p>
             </div>
