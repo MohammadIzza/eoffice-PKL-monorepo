@@ -839,7 +839,7 @@ export default function ApprovalDetailPage() {
               </CardHeader>
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <SummaryItem label="ID Surat" value={letter.id} />
+                  {/* <SummaryItem label="ID Surat" value={letter.id} /> */}
                   <SummaryItem label="Jenis Surat" value={letter.letterType?.name || 'PKL'} />
                   <SummaryItem label="Status" value={getStatusDisplayLabel(letter.status, letter.currentStep)} />
                   <SummaryItem label="Step Saat Ini" value={getStepLabel(letter.currentStep)} />
@@ -1408,7 +1408,6 @@ export default function ApprovalDetailPage() {
                                 action={history.action}
                                 isLatest={index === 0}
                                 isLast={index === displayed.length - 1}
-                                animDelay={index * 50}
                               />
                             ))}
                           </div>

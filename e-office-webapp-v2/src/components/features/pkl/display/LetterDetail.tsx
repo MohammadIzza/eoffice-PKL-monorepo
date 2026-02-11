@@ -369,25 +369,22 @@ export default function LetterDetail({ id }: LetterDetailProps) {
     const colorClass = getTimelineStatusColor(action);
     return (
       <div
-        className="group relative pl-7 animate-in fade-in slide-in-from-left-2 duration-300"
-        style={{ animationDelay: `${animDelay}ms`, animationFillMode: "both" }}
+        className="group relative pl-7"
       >
         {!isLast && (
           <div
-            className={`absolute left-[6px] top-5 bottom-0 w-px transition-colors duration-200 ${
-              isLatest ? "bg-[#0071E3]" : "bg-[#E5E5E7] group-hover:bg-[#0071E3]"
+            className={`absolute left-[6px] top-5 bottom-0 w-px ${
+              isLatest ? "bg-[#0071E3]" : "bg-[#E5E5E7]"
             }`}
           />
         )}
         <div
-          className={`absolute left-0 top-4 w-3 h-3 rounded-full border-2 transition-all duration-200 ${
+          className={`absolute left-0 top-4 w-3 h-3 rounded-full border-2 ${
             isLatest ? "border-[#0071E3] bg-[#0071E3]" : "border-[#E5E5E7] bg-white"
           }`}
         />
         <div
-          className={`relative -ml-1 rounded-xl px-4 py-3 transition-colors duration-200 ${isLast ? "pb-0" : "pb-4"} ${
-            isLatest ? "" : "hover:bg-[#F5F5F7]/80"
-          }`}
+          className={`relative -ml-1 rounded-xl px-4 py-3 ${isLast ? "pb-0" : "pb-4"}`}
         >
           <div>
             <p className="text-[15px] font-semibold text-[#1D1D1F] tracking-tight">{role}</p>
@@ -506,7 +503,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
               </CardHeader>
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <SummaryItem label="ID Surat" value={letter.id} className="font-mono" isCopyable={true} />
+                  {/* <SummaryItem label="ID Surat" value={letter.id} className="font-mono" isCopyable={true} /> */}
                   <SummaryItem label="Jenis Surat" value={letter.letterType?.name || "PKL"} />
                   <SummaryItem
                     label="Status"
@@ -774,7 +771,6 @@ export default function LetterDetail({ id }: LetterDetailProps) {
                               action={h.action}
                               isLatest={i === 0}
                               isLast={i === displayed.length - 1}
-                              animDelay={i * 50}
                             />
                           ))}
                         </div>

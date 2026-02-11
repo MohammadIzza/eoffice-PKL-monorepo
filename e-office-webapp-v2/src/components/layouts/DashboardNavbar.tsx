@@ -229,10 +229,10 @@ export default function DashboardNavbar() {
                   <span>Profil</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer rounded-lg py-2">
+              {/* <DropdownMenuItem className="cursor-pointer rounded-lg py-2">
                 <Settings className="mr-2 h-4 w-4 text-gray-500" />
                 <span>Pengaturan</span>
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
               <DropdownMenuSeparator className="my-1" />
               <DropdownMenuItem 
                 className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 rounded-lg py-2"
