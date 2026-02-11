@@ -93,10 +93,24 @@ export function DashboardChartsWrapper({ chartData, pieData }: DashboardChartsWr
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ percent }) => `${(((percent ?? 0) * 100)).toFixed(0)}%`}
+                  label={({ percent, x, y }) => (
+                    <text
+                      x={x}
+                      y={y}
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      fontSize={12}
+                      fontWeight={600}
+                      fill="#1D1D1F"
+                      style={{ pointerEvents: 'none' }}
+                    >
+                      {`${(((percent ?? 0) * 100)).toFixed(0)}%`}
+                    </text>
+                  )}
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
+                  
                 >
                   {pieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
