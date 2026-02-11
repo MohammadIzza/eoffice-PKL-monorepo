@@ -20,4 +20,18 @@ export abstract class UserService extends CRUD<User, UserDelegate, UserInclude>(
 			data: data,
 		});
 	}
+
+	public static async delete(id: string): Promise<User> {
+		// Delete related Mahasiswa and Pegawai entries (cascade)
+		await Prisma.mahasiswa.deleteMany({
+			where: { userId: id }
+		});
+		await Prisma.pegawai.deleteMany({
+			where: { userId: id }
+		});
+		// Then delete the User
+		return await Prisma.user.delete({
+			where: { id: id }
+		});
+	}
 }

@@ -1,6 +1,7 @@
 import { authGuardPlugin, requirePermission } from "@backend/middlewares/auth.ts";
 import { MahasiswaService } from "@backend/services/database_models/mahasiswa.service.ts";
 import { UserService } from "@backend/services/database_models/user.service.ts";
+import { Prisma } from "@backend/db/index.ts";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()
@@ -45,10 +46,27 @@ export default new Elysia()
 				programStudiId,
 			},
 		}) => {
-			const user = await UserService.create({
-				name: name,
-				email: email,
+			let user = await Prisma.user.findUnique({
+				where: { email: email },
 			});
+
+			let userAlreadyExists = false;
+			if (!user) {
+				user = await UserService.create({
+					name: name,
+					email: email,
+				});
+			} else {
+				userAlreadyExists = true;
+			}
+
+			const existingMahasiswa = await Prisma.mahasiswa.findFirst({
+				where: { userId: user.id }
+			});
+
+			if (existingMahasiswa) {
+				throw new Error(`Mahasiswa dengan email ${email} sudah terdaftar.`);
+			}		
 
 			const mahasiswa = await MahasiswaService.create({
 				userId: user.id,
@@ -63,7 +81,9 @@ export default new Elysia()
 			});
 
 			return {
-				message: "Mahasiswa created successfully",
+				message: userAlreadyExists 
+					? "Mahasiswa created successfully. Catatan: Akun dengan email ini sudah terdaftar di User."
+					: "Mahasiswa created successfully. Catatan: Akun User baru telah dibuat otomatis.",
 				mahasiswa,
 			};
 		},
