@@ -389,13 +389,13 @@ export function SuperAdminDashboard({ userName }: SuperAdminDashboardProps) {
             <div className="lg:col-span-8 space-y-4">
                 <div className="flex items-center justify-between px-1">
                      <h2 className="text-lg font-bold text-[#1D1D1F] tracking-tight">Analitik & Grafik</h2>
-                     <button className="text-xs font-semibold text-[#007AFF] hover:text-[#0051A8] transition-colors">
+                     {/* <button className="text-xs font-semibold text-[#007AFF] hover:text-[#0051A8] transition-colors">
                         View Details
-                     </button>
+                     </button> */}
                 </div>
                 
                 {/* Main Chart Container - Glassmorphism Card */}
-                <div className="bg-white/80 backdrop-blur-xl rounded-[32px] p-1 border border-white shadow-[0_20px_40px_-12px_rgba(0,0,0,0.06)] h-full min-h-[380px]">
+                <div className="bg-white/80 backdrop-blur-xl rounded-[32px] p-1 border border-white shadow-[0_20px_40px_-12px_rgba(0,0,0,0.06)]">
                     <div className="h-full w-full rounded-[28px] bg-white/40 p-4 md:p-5">
                         <DashboardChartsWrapper chartData={chartData} pieData={pieData} />
                     </div>
