@@ -283,8 +283,8 @@ export default function LetterDetail({ id }: LetterDetailProps) {
     return (
       <div className="flex-1 px-[40px] py-[32px] overflow-y-auto bg-white">
         <div className="max-w-7xl mx-auto">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
+          <Alert className="bg-white border-none text-[#1B5BD7]">
+            <AlertCircle className="h-4 w-4 text-[#1B5BD7]" />
             <AlertDescription>{error || "Surat tidak ditemukan"}</AlertDescription>
           </Alert>
           <Button

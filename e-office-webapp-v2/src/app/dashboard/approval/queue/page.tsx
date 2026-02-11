@@ -79,7 +79,8 @@ export default function ApprovalQueuePage() {
 
   const filteredLetters = useMemo(() => {
     if (statusFilter === 'pending') {
-      return searchFiltered.filter((l) => (l as QueueLetter).approvalStatus !== 'approved_by_me');
+      // exclude rejected
+      return searchFiltered.filter((l) => (l as QueueLetter).approvalStatus !== 'approved_by_me' && (l as QueueLetter).approvalStatus !== 'rejected_by_me');
     }
     if (statusFilter === 'approved') {
       return searchFiltered.filter((l) => (l as QueueLetter).approvalStatus === 'approved_by_me');
@@ -100,7 +101,7 @@ export default function ApprovalQueuePage() {
   }, [searchFiltered, statusFilter]);
 
   const totalPending = useMemo(
-    () => searchFiltered.filter((l) => (l as QueueLetter).approvalStatus !== 'approved_by_me').length,
+    () => searchFiltered.filter((l) => (l as QueueLetter).approvalStatus !== 'approved_by_me' && (l as QueueLetter).approvalStatus !== 'rejected_by_me').length,
     [searchFiltered]
   );
 
@@ -130,9 +131,9 @@ export default function ApprovalQueuePage() {
     return (
       <div className="flex-1 px-[40px] py-[32px] overflow-y-auto bg-white">
         <div className="max-w-7xl mx-auto">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
+          <Alert className="bg-white border-none text-[#1B5BD7]">
+            <AlertCircle className="h-4 w-4 text-[#1B5BD7]" />
+            <AlertDescription className="break-words whitespace-pre-line min-w-0" style={{wordBreak:'break-word',whiteSpace:'pre-line'}}>{error}</AlertDescription>
           </Alert>
         </div>
       </div>
@@ -143,9 +144,9 @@ export default function ApprovalQueuePage() {
     return (
       <div className="flex-1 px-[40px] py-[32px] overflow-y-auto bg-white">
         <div className="max-w-7xl mx-auto">
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
+          <Alert className="bg-white border-none text-[#1B5BD7]">
+            <AlertCircle className="h-4 w-4 text-[#1B5BD7]" />
+            <AlertDescription className="break-words whitespace-pre-line min-w-0" style={{wordBreak:'break-word',whiteSpace:'pre-line'}}>
               Anda tidak memiliki role sebagai approver. Halaman ini hanya untuk user dengan role approver.
             </AlertDescription>
           </Alert>

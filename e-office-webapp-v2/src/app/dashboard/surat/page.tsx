@@ -280,8 +280,8 @@ export default function SuratListPage() {
   return (
     <div className="container mx-auto px-8 py-10 space-y-8 bg-white min-h-screen">
       {blocked && isMahasiswa && (
-        <Alert className="border-[#FF9500] bg-[#FFF7E6] text-[#B26A00]">
-          <AlertCircle className="h-3.5 w-3.5" />
+        <Alert className="bg-white border-none text-[#1B5BD7]">
+          <AlertCircle className="h-3.5 w-3.5 text-[#1B5BD7]" />
           <AlertTitle className="text-sm">Form pengajuan dinonaktifkan</AlertTitle>
           <AlertDescription className="mt-1.5 text-xs">
             Ada surat Anda yang masih diproses. Gunakan <strong>Revisi Mandiri</strong> dari detail surat jika perlu perbaikan, atau tunggu hingga surat selesai.

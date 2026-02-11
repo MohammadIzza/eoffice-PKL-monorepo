@@ -61,8 +61,8 @@ export default new Elysia()
 			try {
 				await notificationService.create(
 					letter.createdById,
-					"Surat Perlu Revisi/Ditolak",
-					`Surat PKL Anda dikembalikan dengan catatan: "${comment}". Silakan cek untuk revisi.`,
+					"Surat Perlu Ditolak",
+					`Surat PKL Anda dikembalikan dengan catatan: "${comment}"`,
 					`/dashboard/surat/${letter.id}`,
 					"WARNING",
 				);
