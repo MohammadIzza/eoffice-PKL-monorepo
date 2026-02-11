@@ -55,14 +55,14 @@ export default function ApprovalQueuePage() {
   
   // Initialize status filter from URL query parameter
   const initialStatusFilter = (() => {
-    const statusParam = searchParams.get('status') as 'all' | 'pending' | 'approved' | 'revision' | null;
-    if (statusParam && ['all', 'pending', 'approved', 'revision'].includes(statusParam)) {
+    const statusParam = searchParams.get('status') as 'all' | 'pending' | 'approved' | 'revision' | 'rejected' | null;
+    if (statusParam && ['all', 'pending', 'approved', 'revision', 'rejected'].includes(statusParam)) {
       return statusParam;
     }
     return 'all' as const;
   })();
-  
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'revision'>(initialStatusFilter);
+
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'revision' | 'rejected'>(initialStatusFilter);
 
   const searchFiltered = useMemo(() => {
     return letters.filter((letter) => {
@@ -96,6 +96,9 @@ export default function ApprovalQueuePage() {
         );
         return hasRevisionHistory;
       });
+    }
+    if (statusFilter === 'rejected') {
+      return searchFiltered.filter((l) => (l as QueueLetter).approvalStatus === 'rejected_by_me');
     }
     return searchFiltered;
   }, [searchFiltered, statusFilter]);
@@ -198,7 +201,7 @@ export default function ApprovalQueuePage() {
                     className="pl-10 h-10 text-sm rounded-xl bg-[#F5F5F7] border-[#E5E5E7] focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3]/20"
                   />
                 </div>
-                <Select value={statusFilter} onValueChange={(v: 'all' | 'pending' | 'approved' | 'revision') => setStatusFilter(v)}>
+                <Select value={statusFilter} onValueChange={(v: 'all' | 'pending' | 'approved' | 'revision' | 'rejected') => setStatusFilter(v)}>
                   <SelectTrigger className="w-full sm:w-[180px] h-10 text-sm rounded-xl bg-[#F5F5F7] border-[#E5E5E7]">
                     <Filter className="w-4 h-4 mr-2 text-[#86868B]" />
                     <SelectValue placeholder="Filter status" />
@@ -208,6 +211,7 @@ export default function ApprovalQueuePage() {
                     <SelectItem value="pending">Menunggu</SelectItem>
                     <SelectItem value="approved">Sudah disetujui</SelectItem>
                     <SelectItem value="revision">Revisi</SelectItem>
+                    <SelectItem value="rejected">Ditolak</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
