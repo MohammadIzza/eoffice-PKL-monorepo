@@ -76,6 +76,8 @@ const getStatusIcon = (status: string) => {
     case 'REJECTED':
     case 'CANCELLED':
       return <XCircle className="w-3.5 h-3.5" />;
+    case 'REVISION':
+      return <RefreshCw className="w-3.5 h-3.5" />;
     case 'PENDING':
     case 'PROCESSING':
       return <Clock className="w-3.5 h-3.5" />;
@@ -103,6 +105,32 @@ const getStatusLabel = (status: string) => {
     default:
       return status;
   }
+};
+
+// Helper: Get display status from letter (detect revision from stepHistory)
+const getLetterDisplayStatus = (letter: Letter): string => {
+  if (letter.status !== 'PROCESSING') {
+    return letter.status;
+  }
+  
+  const stepHistory = letter.stepHistory || [];
+  const revisionRelated = stepHistory.filter((h) =>
+    ['REVISED', 'SELF_REVISED', 'RESUBMITTED'].includes(h.action)
+  );
+  
+  if (revisionRelated.length === 0) {
+    return 'PROCESSING';
+  }
+  
+  const latestRevisionAction = [...revisionRelated].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  )[0];
+  
+  if (latestRevisionAction.action === 'REVISED' || latestRevisionAction.action === 'SELF_REVISED') {
+    return 'REVISION';
+  }
+  
+  return 'PROCESSING';
 };
 
 export default function SuratListPage() {
@@ -183,7 +211,8 @@ export default function SuratListPage() {
       let matchesStatus = statusFilter === 'all';
       if (statusFilter !== 'all') {
         const statusValues = statusFilter.split(',').map(s => s.trim());
-        matchesStatus = statusValues.includes(letter.status);
+        const displayStatus = getLetterDisplayStatus(letter);
+        matchesStatus = statusValues.includes(displayStatus);
       }
 
       return matchesSearch && matchesStatus;
@@ -470,14 +499,14 @@ export default function SuratListPage() {
                             </div>
                           </TableCell>
                           <TableCell className="py-4 w-[130px]">
-                            <div className={`flex items-center justify-center gap-1.5 font-medium text-xs ${getStatusColor(letter.status)}`}>
-                              {getStatusIcon(letter.status)}
-                              <span className="whitespace-nowrap tracking-tight">{getStatusLabel(letter.status)}</span>
+                            <div className={`flex items-center justify-center gap-1.5 font-medium text-xs ${getStatusColor(getLetterDisplayStatus(letter))}`}>
+                              {getStatusIcon(getLetterDisplayStatus(letter))}
+                              <span className="whitespace-nowrap tracking-tight">{getStatusLabel(getLetterDisplayStatus(letter))}</span>
                             </div>
                           </TableCell>
                           <TableCell className="py-4 w-[100px]">
                             <div className="flex items-center justify-center">
-                              <Link href={`/dashboard/surat/${letter.id}`}>
+                              <Link href={isApprover ? `/dashboard/approval/${letter.id}` : `/dashboard/surat/${letter.id}`}>
                                 <Button 
                                   variant="ghost" 
                                   size="sm" 

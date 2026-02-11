@@ -52,6 +52,7 @@ const APPROVER_ROLES = [
 
 const getStepLabel = (step: number | null): string => {
   if (!step) return '-';
+  
   const stepMap: Record<number, string> = {
     1: 'Dosen Pembimbing',
     2: 'Dosen Koordinator',
@@ -61,8 +62,13 @@ const getStepLabel = (step: number | null): string => {
     6: 'Manajer TU',
     7: 'Wakil Dekan 1',
     8: 'UPA',
+    9: 'Selesai', // Tambahkan Step 9 di sini sesuai kebutuhan sistem Anda
   };
-  return stepMap[step] || `Step ${step}`;
+
+  const label = stepMap[step] || `${step}`;
+  
+  // Menambahkan spasi setelah angka agar tidak nempel "9. Tahap 9"
+  return `${label}`;
 };
 
 const getActionLabel = (action: string): string => {
@@ -612,13 +618,16 @@ export default function ApprovalDetailPage() {
   const myStep = activeRole ? ROLE_TO_STEP[activeRole] : null;
   
   // Cek approval dengan validasi: hanya valid jika tidak ada revisi/resubmit setelahnya
+  // Ambil approval TERBARU (bukan yang pertama) untuk handle case approve > revise > resubmit > approve lagi
   const approvedEntry = myStep != null && user?.id
-    ? stepHistory.find(
-        (h) =>
-          h.action === 'APPROVED' &&
-          h.step === myStep &&
-          (h.actorUserId === user.id || (h.actor as { id?: string } | undefined)?.id === user.id)
-      )
+    ? stepHistory
+        .filter(
+          (h) =>
+            h.action === 'APPROVED' &&
+            h.step === myStep &&
+            (h.actorUserId === user.id || (h.actor as { id?: string } | undefined)?.id === user.id)
+        )
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
     : undefined;
   
   // Cek apakah ada revisi/resubmit setelah approval
@@ -635,6 +644,26 @@ export default function ApprovalDetailPage() {
   const approvedAt = approvedEntry?.createdAt;
   const viewOnly = searchParams.get('view') === '1' || approvedByMe;
   const isCompleted = letter?.status === 'COMPLETED';
+
+  // Check if user is assignee for current step
+  const isAssignee = myStep != null && 
+                     letter.currentStep != null && 
+                     myStep === letter.currentStep;
+
+  // Check if letter is waiting for mahasiswa to resubmit
+  const revisionRelated = stepHistory.filter((h) =>
+    ['REVISED', 'SELF_REVISED', 'RESUBMITTED'].includes(h.action)
+  );
+
+  const latestRevisionAction = revisionRelated.length > 0
+    ? [...revisionRelated].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )[0]
+    : null;
+
+  const waitingForResubmit = 
+    latestRevisionAction?.action === 'REVISED' || 
+    latestRevisionAction?.action === 'SELF_REVISED';
 
   const SummaryItem = ({ label, value }: { label: string; value?: string | null }) => (
     <div className="flex flex-col gap-1">
@@ -761,9 +790,9 @@ export default function ApprovalDetailPage() {
               <h1 className="font-lexend font-bold text-[30px] leading-[36px] tracking-[-0.5px] text-[#1D1D1F] mb-2">
                 Review Surat
               </h1>
-              <p className="font-lexend font-normal text-[16px] leading-[24px] text-[#86868B]">
+              {/* <p className="font-lexend font-normal text-[16px] leading-[24px] text-[#86868B]">
                 Step: {getStepLabel(letter.currentStep)}
-              </p>
+              </p> */}
             </div>
             <Button
               variant="outline"
@@ -920,7 +949,7 @@ export default function ApprovalDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-4">
-                {isSupervisor && (
+                {/* {isSupervisor && (
                   <Button
                     onClick={() => router.push(`/dashboard/approval/${letter.id}/edit`)}
                     className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3]"
@@ -928,8 +957,8 @@ export default function ApprovalDetailPage() {
                     <Edit className="w-4 h-4 mr-2" />
                     Edit Surat
                   </Button>
-                )}
-                <div className={isSupervisor ? 'pt-4 border-t border-[#E5E5E7]' : ''}>
+                )} */}
+                <div /*className={isSupervisor ? 'pt-4 border-t border-[#E5E5E7]' : ''}*/>
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-sm font-semibold text-[#1D1D1F]">
@@ -980,6 +1009,30 @@ export default function ApprovalDetailPage() {
                     <AlertDescription>
                       Anda telah menyetujui surat ini
                       {approvedAt ? ` pada ${formatDateTime(approvedAt)}` : ''}.
+                    </AlertDescription>
+                  </Alert>
+                </CardContent>
+              </Card>
+            ) : !isAssignee ? (
+              <Card className="bg-white border-[#E5E5E7] shadow-sm">
+                <CardContent className="p-6">
+                  <Alert className="border-[#FFF2F2] bg-[#FFF2F2]/50 text-[#D93025]">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Anda telah melakuakan revisi. <br/>
+                      Surat tidak lagi berada di tahap approval Anda.
+                    </AlertDescription>
+                  </Alert>
+                </CardContent>
+              </Card>
+            ) : waitingForResubmit ? (
+              <Card className="bg-white border-[#E5E5E7] shadow-sm">
+                <CardContent className="p-6">
+                  <Alert className="border-[#FFF9E6] bg-[#FFF9E6]/50 text-[#B26A00]">
+                    <Clock className="h-4 w-4" />
+                    <AlertDescription>
+                      Menunggu mahasiswa melakukan perbaikan. 
+                      Tombol akan muncul setelah mahasiswa mengirim ulang surat.
                     </AlertDescription>
                   </Alert>
                 </CardContent>

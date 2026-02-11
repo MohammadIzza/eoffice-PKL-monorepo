@@ -12,6 +12,11 @@ export default new Elysia()
 			include: {
 				letterType: true,
 				numbering: true,
+				stepHistory: {
+					orderBy: {
+						createdAt: "asc",
+					},
+				},
 			},
 			orderBy: {
 				createdAt: "desc",
