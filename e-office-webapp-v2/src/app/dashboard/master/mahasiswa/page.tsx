@@ -102,9 +102,16 @@ export default function MasterMahasiswaPage() {
 			onUpdate={handleUpdate}
 			onDelete={handleDelete}
 			getId={(item) => item.id}
+			deleteWarning="Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat diurungkan."
 			formFields={[
 				{ key: 'name', label: 'Nama', required: true },
-				{ key: 'email', label: 'Email', type: 'email', required: true },
+				{
+					key: 'email',
+					label: 'Email',
+					type: 'email',
+					required: true,
+					description: "Jika email sudah terdaftar di User, data akan dikaitkan. Jika belum, User baru akan otomatis dibuat."
+				},
 				{ key: 'nim', label: 'NIM', required: true },
 				{ key: 'tahunMasuk', label: 'Tahun Masuk', required: true },
 				{ key: 'noHp', label: 'No. HP', required: true },

@@ -97,9 +97,16 @@ export default function MasterPegawaiPage() {
 			onUpdate={handleUpdate}
 			onDelete={handleDelete}
 			getId={(item) => item.id}
+			deleteWarning="Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat diurungkan."
 			formFields={[
 				{ key: 'name', label: 'Nama', required: true },
-				{ key: 'email', label: 'Email', type: 'email', required: true },
+				{
+					key: 'email',
+					label: 'Email',
+					type: 'email',
+					required: true,
+					description: "Jika email sudah terdaftar di User, data akan dikaitkan. Jika belum, User baru akan otomatis dibuat."
+				},
 				{ key: 'nip', label: 'NIP', required: true },
 				{ key: 'jabatan', label: 'Jabatan', required: true },
 				{ key: 'noHp', label: 'No. HP' },

@@ -65,6 +65,7 @@ export default function MasterDepartemenPage() {
 			onUpdate={handleUpdate}
 			onDelete={handleDelete}
 			getId={(item) => item.id}
+			deleteWarning="Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat diurungkan."
 			formFields={[
 				{ key: 'name', label: 'Nama Departemen', required: true },
 				{ key: 'code', label: 'Kode Departemen', required: true },

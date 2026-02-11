@@ -78,6 +78,7 @@ export default function MasterProgramStudiPage() {
 			onUpdate={handleUpdate}
 			onDelete={handleDelete}
 			getId={(item) => item.id}
+			deleteWarning="Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat diurungkan."
 			formFields={[
 				{ key: 'name', label: 'Nama Program Studi', required: true },
 				{ key: 'code', label: 'Kode Program Studi', required: true },
