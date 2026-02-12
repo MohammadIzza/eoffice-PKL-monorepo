@@ -4,7 +4,8 @@ import { MinioService } from "@backend/services/minio.service.ts";
 import {
     validateUserIsAssignee,
     PKL_WORKFLOW_STEPS,
-    STEP_TO_ROLE,
+    getAssigneeForStep,
+    getStepLabel,
 } from "@backend/services/workflow/pkl.workflow.service.ts";
 import { notificationService } from "@backend/services/notification.service.ts";
 import { Elysia, t } from "elysia";
@@ -197,16 +198,35 @@ export default new Elysia()
 
             // Kirim notifikasi ke pemilik surat (mahasiswa)
             try {
-                const stepName = STEP_TO_ROLE[currentStep as keyof typeof STEP_TO_ROLE] ?? `Step ${currentStep}`;
+                const stepLabel = getStepLabel(currentStep);
                 await notificationService.create(
                     letter.createdById,
                     "Status Surat Diperbarui",
-                    `Surat PKL Anda telah disetujui pada tahap ${stepName}. Menunggu proses selanjutnya.`,
+                    `Surat PKL Anda telah disetujui pada tahap ${stepLabel}. Menunggu proses selanjutnya.`,
                     `/dashboard/surat/${letter.id}`,
                     "SUCCESS",
                 );
             } catch (e) {
                 console.error("Gagal mengirim notifikasi approval:", e);
+            }
+
+            // Kirim notifikasi ke penerus (next approver) jika ada dan bukan selesai
+            try {
+                if (nextStep <= PKL_WORKFLOW_STEPS.UPA) {
+                    const nextAssignee = getAssigneeForStep(letter.assignedApprovers as Record<string, string>, nextStep);
+                    if (nextAssignee) {
+                        const nextLabel = getStepLabel(nextStep);
+                        await notificationService.create(
+                            nextAssignee,
+                            "Ada Surat Menunggu Persetujuan",
+                            `Terdapat surat PKL yang perlu Anda setujui pada tahap ${nextLabel}.`,
+                            `/dashboard/approval/${letter.id}`,
+                            "INFO",
+                        );
+                    }
+                }
+            } catch (e) {
+                console.error("Gagal mengirim notifikasi ke penerus:", e);
             }
 
             return {
@@ -215,7 +235,7 @@ export default new Elysia()
                 data: {
                     letterId: letter.id,
                     currentStep: nextStep,
-                    nextStepRole: nextStep <= PKL_WORKFLOW_STEPS.UPA ? STEP_TO_ROLE[nextStep as keyof typeof STEP_TO_ROLE] : "COMPLETED",
+                    nextStepRole: nextStep <= PKL_WORKFLOW_STEPS.UPA ? getStepLabel(nextStep) : "COMPLETED",
                 },
             }; 
         },

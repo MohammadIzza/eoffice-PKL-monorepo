@@ -23,6 +23,23 @@ export const STEP_TO_ROLE = {
 	8: "upa",
 } as const;
 
+// Human-friendly labels for UI/messages
+export const STEP_ROLE_LABEL: Record<string, string> = {
+	dosen_pembimbing: "Dosen Pembimbing",
+	dosen_koordinator: "Dosen Koordinator",
+	ketua_program_studi: "Ketua Program Studi",
+	admin_fakultas: "Admin Fakultas",
+	supervisor_akademik: "Supervisor Akademik",
+	manajer_tu: "Manajer TU",
+	wakil_dekan_1: "Wakil Dekan I",
+	upa: "UPA",
+};
+
+export function getStepLabel(step: number): string {
+	const roleKey = STEP_TO_ROLE[step as keyof typeof STEP_TO_ROLE];
+	if (!roleKey) return `Step ${step}`;
+	return STEP_ROLE_LABEL[roleKey] || roleKey;
+}
 export async function determineApproversForPKL(
 	prodiId: string,
 	selectedDosenPembimbingUserId: string,
