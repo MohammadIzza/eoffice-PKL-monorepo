@@ -8,7 +8,6 @@ import { QRCodeService } from "@backend/services/qrcode.service.ts";
 import {
     validateUserIsAssignee,
     PKL_WORKFLOW_STEPS,
-    getStepLabel,
 } from "@backend/services/workflow/pkl.workflow.service.ts";
 import { notificationService } from "@backend/services/notification.service.ts";
 import { Elysia, t } from "elysia";
@@ -262,18 +261,17 @@ export default new Elysia()
                 },
             });
 
-            // Kirim notifikasi ke pemilik surat bahwa penomoran selesai
+            // Notifikasi untuk UPA (Surat Berhasil Dinomori)
             try {
-                const label = getStepLabel(PKL_WORKFLOW_STEPS.UPA);
                 await notificationService.create(
-                    letter.createdById,
-                    "Surat Telah Diberi Nomor",
-                    `Surat PKL Anda telah dinomori oleh ${label} dengan nomor: ${numberString}.`,
+                    user.id,
+                    "Surat Berhasil Dinomori",
+                    `Surat telah diberi nomor ${numberString} dan statusnya selesai.`,
                     `/dashboard/surat/${letter.id}`,
                     "SUCCESS",
                 );
             } catch (e) {
-                console.error("Gagal mengirim notifikasi penomoran:", e);
+                console.error("Gagal mengirim notifikasi numbering ke UPA:", e);
             }
 
             return {
