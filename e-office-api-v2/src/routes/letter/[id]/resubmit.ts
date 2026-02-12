@@ -61,6 +61,15 @@ export default new Elysia()
 
 			// Kirim notifikasi ke approver di current step
 			try {
+                // 1. Notifikasi ke DIRI SENDIRI (Mahasiswa)
+                await notificationService.create(
+                    user.id,
+                    "Revisi Terkirim",
+                    "Anda telah berhasil mengirimkan perbaikan revisi surat.",
+                    `/dashboard/surat/${letter.id}`,
+                    "SUCCESS",
+                );
+
 				const assignedApprovers = letter.assignedApprovers as Record<string, any>;
 				const stepRoleMap: Record<number, string> = {
 					1: "dospem",
