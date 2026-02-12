@@ -70,7 +70,8 @@ export const useNotifications = () => {
 
     useEffect(() => {
         fetchNotifications();
-        const interval = setInterval(fetchNotifications, 30000);
+        // Untuk kemudahan pengujian, kita buat intervalnya singkat.
+        const interval = setInterval(fetchNotifications, 5000);
         return () => clearInterval(interval);
     }, [fetchNotifications]);
 

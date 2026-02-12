@@ -41,13 +41,16 @@ export interface MasterCRUDTableProps<T> {
 	onUpdate: (id: string, data: Record<string, any>) => Promise<void>;
 	onDelete?: (id: string) => Promise<void>;
 	getId: (item: T) => string;
+	deleteWarning?: string;
 	formFields: Array<{
 		key: string;
 		label: string;
-		type?: 'text' | 'email' | 'number' | 'select';
+		type?: 'text' | 'email' | 'number' | 'select' | 'date';
 		options?: Array<{ value: string; label: string }>;
 		required?: boolean;
+		description?: string;
 	}>;
+	editFormFields?: Array<any>;
 }
 
 export function MasterCRUDTable<T extends Record<string, any>>({
@@ -63,6 +66,7 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 	getId,
 	formFields,
 	editFormFields,
+	deleteWarning,
 }: MasterCRUDTableProps<T>) {
 	const effectiveEditFields = editFormFields || formFields;
 	const [searchQuery, setSearchQuery] = useState('');
@@ -299,6 +303,11 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 										{field.required && <span className="text-red-500 ml-1">*</span>}
 									</Label>
 									{renderField(field, formData[field.key])}
+									{field.description && (
+										<p className="text-[0.8rem] text-muted-foreground text-gray-500">
+											{field.description}
+										</p>
+									)}
 								</div>
 							))}
 							{submitError && (
@@ -332,7 +341,7 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 					<DialogHeader>
 						<DialogTitle>Hapus Data</DialogTitle>
 						<DialogDescription>
-							Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.
+							{deleteWarning ? deleteWarning: "Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat diurungkan."}
 						</DialogDescription>
 					</DialogHeader>
 					{submitError && (

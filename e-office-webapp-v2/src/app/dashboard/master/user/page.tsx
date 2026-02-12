@@ -69,6 +69,7 @@ export default function MasterUserPage() {
 			onUpdate={handleUpdate}
 			onDelete={handleDelete}
 			getId={(item) => item.id}
+			deleteWarning="Menghapus User akan otomatis menghapus data Mahasiswa atau Pegawai yang menggunakan email ini. Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat diurungkan."
 			formFields={[
 				{ key: 'name', label: 'Nama', required: true },
 				{ key: 'email', label: 'Email', type: 'email', required: true },

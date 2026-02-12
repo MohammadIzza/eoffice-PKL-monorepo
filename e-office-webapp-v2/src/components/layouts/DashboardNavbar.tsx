@@ -99,7 +99,7 @@ export default function DashboardNavbar() {
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-80 p-0 shadow-xl bg-white border-slate-200">
+            <PopoverContent align="end" className="w-80 p-0 shadow-xl bg-white border-slate-200 z-[110]">
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
                 <h4 className="font-semibold text-sm text-slate-900">Notifikasi</h4>
                 {unreadCount > 0 && (
