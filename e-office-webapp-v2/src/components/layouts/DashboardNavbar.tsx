@@ -62,7 +62,7 @@ export default function DashboardNavbar() {
   };
 
   return (
-    <header className="w-full h-16 bg-blue-600/90 backdrop-blur-md sticky top-0 z-[100] border-b border-blue-700/50 shadow-lg">
+    <header className="w-full h-16 bg-blue-600/90 backdrop-blur-md sticky top-0 z-100 border-b border-blue-700/50 shadow-lg">
       <div className="container mx-auto h-full px-6 flex items-center justify-between">
         {/* Logo Section */}
         <div className="flex items-center h-8">
@@ -115,7 +115,7 @@ export default function DashboardNavbar() {
                 )}
               </div>
               
-              <ScrollArea className="h-[300px]">
+              <ScrollArea className="h-75">
                 {isLoading ? (
                   <div className="p-4 text-center text-xs text-slate-500">Memuat...</div>
                 ) : notifications.length === 0 ? (
@@ -125,31 +125,56 @@ export default function DashboardNavbar() {
                   </div>
                 ) : (
                   <div className="flex flex-col">
-                    {notifications.map((notif) => (
-                      <div 
-                        key={notif.id} 
-                        onClick={() => handleNotificationClick(notif)}
-                        className={`
-                          p-4 border-b border-slate-50 text-left hover:bg-slate-50 cursor-pointer transition-colors relative
-                          ${!notif.isRead ? 'bg-blue-50/60' : 'bg-white'}
-                        `}
-                      >
-                        {!notif.isRead && (
-                          <span className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500" />
-                        )}
-                        <div className="flex justify-between items-start mb-1 gap-2">
-                          <span className={`text-sm font-semibold line-clamp-1 ${!notif.isRead ? 'text-blue-700' : 'text-slate-700'}`}>
-                            {notif.title}
-                          </span>
-                          <span className="text-[10px] text-slate-400 whitespace-nowrap">
-                            {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true, locale: indonesia })}
-                          </span>
+                    {notifications.map((notif) => {
+                      // Bedakan warna/icon sesuai tipe notifikasi
+                      let icon = null;
+                      let color = '';
+                      // Penentuan tipe notifikasi berbasis title/message/type
+                      const title = notif.title?.toLowerCase() || '';
+                      // Pisahkan revisi dan ditolak
+                      if (title.includes('ditolak')) {
+                        icon = <span className="inline-flex items-center justify-center w-6 h-6 text-[#D93025] mr-3"><svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M12 8v4m0 4h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></span>;
+                        color = 'text-[#D93025]';
+                      } else if (title.includes('revisi') || (title.includes('dikembalikan') && title.includes('review ulang'))) {
+                        icon = <span className="inline-flex items-center justify-center w-6 h-6 text-[#FF9500] mr-3"><svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></span>;
+                        color = 'text-[#FF9500]';
+                      } else if (title.includes('disetujui')) {
+                        icon = <span className="inline-flex items-center justify-center w-6 h-6 text-[#1E8E3E] mr-3"><svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></span>;
+                        color = 'text-[#1E8E3E]';
+                      } else if (title.includes('menunggu') || title.includes('pending') || title.includes('persetujuan')) {
+                        icon = <span className="inline-flex items-center justify-center w-6 h-6 text-[#1B5BD7] mr-3"><svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></span>;
+                        color = 'text-[#1B5BD7]';
+                      } else if (title.includes('baru')) {
+                        icon = <span className="inline-flex items-center justify-center w-6 h-6 text-[#1B5BD7] mr-3"><svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></span>;
+                        color = 'text-[#1B5BD7]';
+                      } else {
+                        icon = <span className="inline-flex items-center justify-center w-6 h-6 text-[#636366] mr-3"><svg width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/></svg></span>;
+                        color = 'text-[#636366]';
+                      }
+                      return (
+                        <div
+                          key={notif.id}
+                          onClick={() => handleNotificationClick(notif)}
+                          className={`flex items-start gap-2 p-4 border-b border-slate-50 text-left hover:bg-slate-50 cursor-pointer transition-colors relative rounded ${!notif.isRead ? 'bg-blue-50/100' : 'bg-white'}`}
+                          style={{ minHeight: 64 }}
+                        >
+                          {icon}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-start mb-1 gap-2">
+                              <span className={`text-[15px] font-bold break-words whitespace-pre-line min-w-0 ${color} ${!notif.isRead ? 'font-extrabold' : 'opacity-90'}`} style={{wordBreak:'break-word',whiteSpace:'pre-line'}}>
+                                {notif.title}
+                              </span>
+                              <span className="text-[10px] text-slate-400 whitespace-nowrap mt-0.5">
+                                {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true, locale: indonesia })}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-600 leading-relaxed break-words whitespace-pre-line min-w-0" style={{wordBreak:'break-word',whiteSpace:'pre-line'}}>
+                              {notif.message}
+                            </p>
+                          </div>
                         </div>
-                        <p className="text-xs text-slate-600 leading-relaxed whitespace-normal">
-                          {notif.message}
-                        </p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </ScrollArea>
@@ -165,7 +190,7 @@ export default function DashboardNavbar() {
                 variant="ghost"
                 className="flex items-center gap-3 h-auto p-2 text-white hover:bg-white/20 rounded-full transition-colors"
               >
-                <div className="flex flex-col items-end mr-1 hidden sm:flex gap-1">
+                <div className="flex flex-col items-end mr-1 sm:flex gap-1">
                   <span className="text-sm font-semibold leading-none text-white">
                     {user?.name || 'Pengguna'}
                   </span>
@@ -184,10 +209,10 @@ export default function DashboardNavbar() {
               </Button>
             </DropdownMenuTrigger>
             
-            <DropdownMenuContent align="end" className="min-w-[14rem] w-auto max-w-[20rem] rounded-2xl shadow-xl border border-gray-200 bg-white p-2">
+            <DropdownMenuContent align="end" className="min-w-56 w-auto max-w-[20rem] rounded-2xl shadow-xl border border-gray-200 bg-white p-2">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1.5 py-1 px-1">
-                  <p className="text-sm font-semibold leading-none text-gray-900 break-words">
+                  <p className="text-sm font-semibold leading-none text-gray-900 wrap-break-word">
                     {user?.name || 'Pengguna'}
                   </p>
                   {user?.email && (
@@ -204,10 +229,10 @@ export default function DashboardNavbar() {
                   <span>Profil</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer rounded-lg py-2">
+              {/* <DropdownMenuItem className="cursor-pointer rounded-lg py-2">
                 <Settings className="mr-2 h-4 w-4 text-gray-500" />
                 <span>Pengaturan</span>
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
               <DropdownMenuSeparator className="my-1" />
               <DropdownMenuItem 
                 className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 rounded-lg py-2"

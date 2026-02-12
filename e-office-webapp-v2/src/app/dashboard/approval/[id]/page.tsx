@@ -62,12 +62,11 @@ const getStepLabel = (step: number | null): string => {
     6: 'Manajer TU',
     7: 'Wakil Dekan 1',
     8: 'UPA',
-    9: 'Selesai', // Tambahkan Step 9 di sini sesuai kebutuhan sistem Anda
+    9: 'Selesai', 
   };
 
   const label = stepMap[step] || `${step}`;
   
-  // Menambahkan spasi setelah angka agar tidak nempel "9. Tahap 9"
   return `${label}`;
 };
 
@@ -617,8 +616,8 @@ export default function ApprovalDetailPage() {
   ) ?? null;
   const myStep = activeRole ? ROLE_TO_STEP[activeRole] : null;
   
-  // Cek approval dengan validasi: hanya valid jika tidak ada revisi/resubmit setelahnya
-  // Ambil approval TERBARU (bukan yang pertama) untuk handle case approve > revise > resubmit > approve lagi
+
+  // Cek approval oleh user di step ini
   const approvedEntry = myStep != null && user?.id
     ? stepHistory
         .filter(
@@ -629,7 +628,19 @@ export default function ApprovalDetailPage() {
         )
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
     : undefined;
-  
+
+  // Cek reject oleh user di step ini
+  const rejectedEntry = myStep != null && user?.id
+    ? stepHistory
+        .filter(
+          (h) =>
+            h.action === 'REJECTED' &&
+            h.step === myStep &&
+            (h.actorUserId === user.id || (h.actor as { id?: string } | undefined)?.id === user.id)
+        )
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
+    : undefined;
+
   // Cek apakah ada revisi/resubmit setelah approval
   const hasLaterRevision = approvedEntry
     ? stepHistory.some(
@@ -638,11 +649,24 @@ export default function ApprovalDetailPage() {
           new Date(h.createdAt).getTime() > new Date(approvedEntry.createdAt).getTime()
       )
     : false;
-  
+
   // Approval hanya valid jika tidak ada revisi setelahnya
   const approvedByMe = !!approvedEntry && !hasLaterRevision;
   const approvedAt = approvedEntry?.createdAt;
-  const viewOnly = searchParams.get('view') === '1' || approvedByMe;
+
+  // Reject hanya valid jika tidak ada revisi/resubmit setelahnya
+  const hasLaterRevisionReject = rejectedEntry
+    ? stepHistory.some(
+        (h) =>
+          ['REVISED', 'SELF_REVISED', 'RESUBMITTED'].includes(h.action) &&
+          new Date(h.createdAt).getTime() > new Date(rejectedEntry.createdAt).getTime()
+      )
+    : false;
+  const rejectedByMe = !!rejectedEntry && !hasLaterRevisionReject;
+  const rejectedAt = rejectedEntry?.createdAt;
+
+  // viewOnly jika sudah approve atau sudah reject
+  const viewOnly = searchParams.get('view') === '1' || approvedByMe || rejectedByMe;
   const isCompleted = letter?.status === 'COMPLETED';
 
   // Check if user is assignee for current step
@@ -736,7 +760,7 @@ export default function ApprovalDetailPage() {
           {note && (
             <div className="mt-3 rounded-r-lg border-l-2 border-[#E5E5E7] bg-[#F5F5F7]/90 py-2.5 pl-3.5 pr-1">
               <p className="text-[11px] font-semibold text-[#86868B] uppercase tracking-wider mb-1">Catatan</p>
-              <p className="text-sm text-[#1D1D1F] leading-relaxed whitespace-pre-line">
+              <p className="text-sm text-[#1D1D1F] leading-relaxed whitespace-pre-line break-words">
                 {note}
               </p>
             </div>
@@ -815,7 +839,7 @@ export default function ApprovalDetailPage() {
               </CardHeader>
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <SummaryItem label="ID Surat" value={letter.id} />
+                  {/* <SummaryItem label="ID Surat" value={letter.id} /> */}
                   <SummaryItem label="Jenis Surat" value={letter.letterType?.name || 'PKL'} />
                   <SummaryItem label="Status" value={getStatusDisplayLabel(letter.status, letter.currentStep)} />
                   <SummaryItem label="Step Saat Ini" value={getStepLabel(letter.currentStep)} />
@@ -876,7 +900,11 @@ export default function ApprovalDetailPage() {
             <Card className="bg-white border-[#E5E5E7] shadow-sm">
               <CardHeader className="border-b border-[#E5E5E7]">
                 <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
-                  Lampiran ({attachments.length})
+                  <h3 className="font-bold text-lg text-foreground">
+                    Lampiran <span className="inline-flex items-center justify-center min-w-[24px] h-6 px-2 bg-[#0071E3] text-white text-xs font-semibold rounded-full">
+                    {attachments.length}
+                  </span>
+                  </h3>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
@@ -1004,13 +1032,23 @@ export default function ApprovalDetailPage() {
             ) : viewOnly ? (
               <Card className="bg-white border-[#E5E5E7] shadow-sm">
                 <CardContent className="p-6">
-                  <Alert className="border-[#E7F9EE] bg-[#E7F9EE]/50 text-[#1E8E3E]">
-                    <CheckCircle2 className="h-4 w-4" />
-                    <AlertDescription>
-                      Anda telah menyetujui surat ini
-                      {approvedAt ? ` pada ${formatDateTime(approvedAt)}` : ''}.
-                    </AlertDescription>
-                  </Alert>
+                  {approvedByMe ? (
+                    <Alert className="border-[#E7F9EE] bg-[#E7F9EE]/50 text-[#1E8E3E]">
+                      <CheckCircle2 className="h-4 w-4" />
+                      <AlertDescription>
+                        Anda telah menyetujui surat ini
+                        {approvedAt ? ` pada ${formatDateTime(approvedAt)}` : ''}.
+                      </AlertDescription>
+                    </Alert>
+                  ) : rejectedByMe ? (
+                    <Alert className="border-[#FFF2F2] bg-[#FFF2F2]/50 text-[#D93025]">
+                      <XCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        Anda telah menolak surat ini
+                        {rejectedAt ? ` pada ${formatDateTime(rejectedAt)}` : ''}.
+                      </AlertDescription>
+                    </Alert>
+                  ) : null}
                 </CardContent>
               </Card>
             ) : !isAssignee ? (
@@ -1370,7 +1408,6 @@ export default function ApprovalDetailPage() {
                                 action={history.action}
                                 isLatest={index === 0}
                                 isLast={index === displayed.length - 1}
-                                animDelay={index * 50}
                               />
                             ))}
                           </div>

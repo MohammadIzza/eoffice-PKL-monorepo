@@ -151,12 +151,12 @@ export default function ProfilePage() {
                 <h2 className="text-2xl font-semibold text-[#1D1D1F] tracking-tight">
                   {userData.name}
                 </h2>
-                {userData.emailVerified && (
+                {/* {userData.emailVerified && (
                   <Badge className="bg-[#34C759] text-white rounded-full px-2 py-0.5 text-xs">
                     <CheckCircle2 className="h-3 w-3 mr-1" />
                     Terverifikasi
                   </Badge>
-                )}
+                )} */}
               </div>
               <div className="flex items-center gap-2 text-sm text-[#86868B] mb-4">
                 <Mail className="h-4 w-4" />
@@ -191,19 +191,19 @@ export default function ProfilePage() {
               <p className="text-xs font-medium text-[#86868B] uppercase tracking-wide">Email</p>
               <div className="flex items-center gap-2">
                 <p className="text-sm text-[#1D1D1F]">{userData.email}</p>
-                {userData.emailVerified ? (
+                {/* {userData.emailVerified ? (
                   <CheckCircle2 className="h-4 w-4 text-[#34C759]" />
                 ) : (
                   <XCircle className="h-4 w-4 text-[#FF3B30]" />
-                )}
+                )} */}
               </div>
             </div>
-            <div className="space-y-1">
+            {/* <div className="space-y-1">
               <p className="text-xs font-medium text-[#86868B] uppercase tracking-wide">Status Verifikasi Email</p>
               <p className="text-sm text-[#1D1D1F]">
                 {userData.emailVerified ? 'Terverifikasi' : 'Belum Terverifikasi'}
               </p>
-            </div>
+            </div> */}
           </div>
         </Card>
 

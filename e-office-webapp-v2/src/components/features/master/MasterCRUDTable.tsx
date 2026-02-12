@@ -69,6 +69,7 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 	deleteWarning,
 }: MasterCRUDTableProps<T>) {
 	const effectiveEditFields = editFormFields || formFields;
+	const [searchQuery, setSearchQuery] = useState('');
 	const [isCreateOpen, setIsCreateOpen] = useState(false);
 	const [isEditOpen, setIsEditOpen] = useState(false);
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -184,18 +185,36 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 		);
 	};
 
+	// Filter data based on searchQuery
+	const filteredData = searchQuery
+		? data.filter((item) =>
+			columns.some((col) => {
+				const value = col.render ? col.render(item) : item[col.key];
+				return String(value ?? '').toLowerCase().includes(searchQuery.toLowerCase());
+			})
+		)
+		: data;
+
 	return (
 		<div className="flex-1 px-[40px] py-[32px] overflow-y-auto bg-white">
 			<div className="max-w-7xl mx-auto">
-				<div className="mb-8 flex items-center justify-between">
+				<div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 					<div>
 						<h1 className="text-2xl font-bold text-[#1D1D1F] tracking-tight">{title}</h1>
 						<p className="text-[#86868B] mt-1">{description}</p>
 					</div>
-					<Button onClick={handleCreate} className="bg-[#0071E3] text-white hover:bg-[#0051A3]">
-						<Plus className="w-4 h-4 mr-2" />
-						Tambah Baru
-					</Button>
+					<div className="flex items-center gap-2">
+						<Input
+							placeholder="Cari..."
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
+							className="h-10 w-[220px] rounded-xl border-[#E5E5E7] bg-[#F5F5F7] focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3]/20"
+						/>
+						<Button onClick={handleCreate} className="bg-[#0071E3] text-white hover:bg-[#0051A3]">
+							<Plus className="w-4 h-4 mr-2" />
+							Tambah Baru
+						</Button>
+					</div>
 				</div>
 
 				{error && (
@@ -205,7 +224,7 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 					</Alert>
 				)}
 
-				<div className="bg-white border border-[#E5E5E7] rounded-xl overflow-hidden">
+				<div className="bg-white border border-[#E5E5E7] rounded-2xl shadow-md overflow-hidden">
 					{isLoading ? (
 						<div className="p-6 space-y-4">
 							{[1, 2, 3].map((i) => (
@@ -215,37 +234,37 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 					) : (
 						<Table>
 							<TableHeader>
-								<TableRow>
+								<TableRow className="bg-[#F5F5F7]">
 									{columns.map((col) => (
-										<TableHead key={String(col.key)} className="font-semibold text-[#1D1D1F]">
+										<TableHead key={String(col.key)} className="font-semibold text-[#1D1D1F] text-sm uppercase tracking-wider py-4 px-3">
 											{col.header}
 										</TableHead>
 									))}
-									<TableHead className="w-[100px] text-right">Aksi</TableHead>
+									<TableHead className="w-[100px] text-right text-sm uppercase tracking-wider py-4 px-3">Aksi</TableHead>
 								</TableRow>
 							</TableHeader>
 							<TableBody>
-								{data.length === 0 ? (
+								{filteredData.length === 0 ? (
 									<TableRow>
 										<TableCell colSpan={columns.length + 1} className="text-center text-[#86868B] py-8">
 											Tidak ada data
 										</TableCell>
 									</TableRow>
 								) : (
-									data.map((item) => (
-										<TableRow key={getId(item)}>
+									filteredData.map((item, idx) => (
+										<TableRow key={getId(item)} className={idx % 2 === 0 ? "bg-white" : "bg-[#F9FAFB] hover:bg-[#F5F5F7] transition-colors"}>
 											{columns.map((col) => (
-												<TableCell key={String(col.key)}>
+												<TableCell key={String(col.key)} className="px-3 py-4 text-[15px] text-[#1D1D1F]">
 													{col.render ? col.render(item) : String(item[col.key] ?? '-')}
 												</TableCell>
 											))}
-											<TableCell className="text-right">
+											<TableCell className="text-right px-3 py-4">
 												<div className="flex justify-end gap-2">
 													<Button
 														variant="ghost"
 														size="sm"
 														onClick={() => handleEdit(item)}
-														className="text-[#0071E3] hover:text-[#0051A3]"
+														className="text-[#0071E3] hover:text-[#0051A3] rounded-full border border-[#E5E5E7] bg-white hover:bg-[#E5E5E7]/40 transition-colors"
 													>
 														<Edit className="w-4 h-4" />
 													</Button>
@@ -254,7 +273,7 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 															variant="ghost"
 															size="sm"
 															onClick={() => handleDeleteClick(item)}
-															className="text-red-600 hover:text-red-700 hover:bg-red-50"
+															className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded-full border border-[#E5E5E7] bg-white hover:bg-red-50 transition-colors"
 														>
 															<Trash2 className="w-4 h-4" />
 														</Button>

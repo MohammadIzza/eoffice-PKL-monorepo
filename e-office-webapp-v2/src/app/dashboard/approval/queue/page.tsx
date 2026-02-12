@@ -55,14 +55,14 @@ export default function ApprovalQueuePage() {
   
   // Initialize status filter from URL query parameter
   const initialStatusFilter = (() => {
-    const statusParam = searchParams.get('status') as 'all' | 'pending' | 'approved' | 'revision' | null;
-    if (statusParam && ['all', 'pending', 'approved', 'revision'].includes(statusParam)) {
+    const statusParam = searchParams.get('status') as 'all' | 'pending' | 'approved' | 'revision' | 'rejected' | null;
+    if (statusParam && ['all', 'pending', 'approved', 'revision', 'rejected'].includes(statusParam)) {
       return statusParam;
     }
     return 'all' as const;
   })();
-  
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'revision'>(initialStatusFilter);
+
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'revision' | 'rejected'>(initialStatusFilter);
 
   const searchFiltered = useMemo(() => {
     return letters.filter((letter) => {
@@ -79,7 +79,8 @@ export default function ApprovalQueuePage() {
 
   const filteredLetters = useMemo(() => {
     if (statusFilter === 'pending') {
-      return searchFiltered.filter((l) => (l as QueueLetter).approvalStatus !== 'approved_by_me');
+      // exclude rejected
+      return searchFiltered.filter((l) => (l as QueueLetter).approvalStatus !== 'approved_by_me' && (l as QueueLetter).approvalStatus !== 'rejected_by_me');
     }
     if (statusFilter === 'approved') {
       return searchFiltered.filter((l) => (l as QueueLetter).approvalStatus === 'approved_by_me');
@@ -96,11 +97,14 @@ export default function ApprovalQueuePage() {
         return hasRevisionHistory;
       });
     }
+    if (statusFilter === 'rejected') {
+      return searchFiltered.filter((l) => (l as QueueLetter).approvalStatus === 'rejected_by_me');
+    }
     return searchFiltered;
   }, [searchFiltered, statusFilter]);
 
   const totalPending = useMemo(
-    () => searchFiltered.filter((l) => (l as QueueLetter).approvalStatus !== 'approved_by_me').length,
+    () => searchFiltered.filter((l) => (l as QueueLetter).approvalStatus !== 'approved_by_me' && (l as QueueLetter).approvalStatus !== 'rejected_by_me').length,
     [searchFiltered]
   );
 
@@ -130,9 +134,9 @@ export default function ApprovalQueuePage() {
     return (
       <div className="flex-1 px-[40px] py-[32px] overflow-y-auto bg-white">
         <div className="max-w-7xl mx-auto">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
+          <Alert className="bg-white border-none text-[#1B5BD7]">
+            <AlertCircle className="h-4 w-4 text-[#1B5BD7]" />
+            <AlertDescription className="break-words whitespace-pre-line min-w-0" style={{wordBreak:'break-word',whiteSpace:'pre-line'}}>{error}</AlertDescription>
           </Alert>
         </div>
       </div>
@@ -143,9 +147,9 @@ export default function ApprovalQueuePage() {
     return (
       <div className="flex-1 px-[40px] py-[32px] overflow-y-auto bg-white">
         <div className="max-w-7xl mx-auto">
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
+          <Alert className="bg-white border-none text-[#1B5BD7]">
+            <AlertCircle className="h-4 w-4 text-[#1B5BD7]" />
+            <AlertDescription className="break-words whitespace-pre-line min-w-0" style={{wordBreak:'break-word',whiteSpace:'pre-line'}}>
               Anda tidak memiliki role sebagai approver. Halaman ini hanya untuk user dengan role approver.
             </AlertDescription>
           </Alert>
@@ -197,7 +201,7 @@ export default function ApprovalQueuePage() {
                     className="pl-10 h-10 text-sm rounded-xl bg-[#F5F5F7] border-[#E5E5E7] focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3]/20"
                   />
                 </div>
-                <Select value={statusFilter} onValueChange={(v: 'all' | 'pending' | 'approved' | 'revision') => setStatusFilter(v)}>
+                <Select value={statusFilter} onValueChange={(v: 'all' | 'pending' | 'approved' | 'revision' | 'rejected') => setStatusFilter(v)}>
                   <SelectTrigger className="w-full sm:w-[180px] h-10 text-sm rounded-xl bg-[#F5F5F7] border-[#E5E5E7]">
                     <Filter className="w-4 h-4 mr-2 text-[#86868B]" />
                     <SelectValue placeholder="Filter status" />
@@ -207,6 +211,7 @@ export default function ApprovalQueuePage() {
                     <SelectItem value="pending">Menunggu</SelectItem>
                     <SelectItem value="approved">Sudah disetujui</SelectItem>
                     <SelectItem value="revision">Revisi</SelectItem>
+                    <SelectItem value="rejected">Ditolak</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -253,7 +258,9 @@ export default function ApprovalQueuePage() {
                     {filteredLetters.map((letter) => {
                       const values = letter.values as Record<string, any>;
                       const name = values?.namaLengkap || letter.createdBy?.name || '-';
-                      const isApproved = (letter as QueueLetter).approvalStatus === 'approved_by_me';
+                      const approvalStatus = (letter as QueueLetter).approvalStatus;
+                      const isApproved = approvalStatus === 'approved_by_me';
+                      const isRejected = approvalStatus === 'rejected_by_me';
                       return (
                         <TableRow
                           key={letter.id}
@@ -285,6 +292,11 @@ export default function ApprovalQueuePage() {
                                 <CheckCircle2 className="w-4 h-4" />
                                 Sudah disetujui
                               </span>
+                            ) : isRejected ? (
+                              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#D93025]">
+                                <AlertCircle className="w-4 h-4" />
+                                Ditolak
+                              </span>
                             ) : (
                               <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0071E3]">
                                 <Clock className="w-4 h-4" />
@@ -306,11 +318,11 @@ export default function ApprovalQueuePage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => router.push(`/dashboard/approval/${letter.id}${isApproved ? '?view=1' : ''}`)}
+                              onClick={() => router.push(`/dashboard/approval/${letter.id}${(isApproved || isRejected) ? '?view=1' : ''}`)}
                               className="h-8 gap-1.5 rounded-full border border-[#E5E5E7] text-sm font-medium text-[#1D1D1F] hover:bg-[#0071E3] hover:border-[#0071E3] hover:text-white transition-colors duration-200"
                             >
                               <Eye className="w-4 h-4" />
-                              {isApproved ? 'Lihat' : 'Review'}
+                              {(isApproved || isRejected) ? 'Lihat' : 'Review'}
                             </Button>
                           </TableCell>
                         </TableRow>

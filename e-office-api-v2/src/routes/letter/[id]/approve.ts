@@ -3,6 +3,7 @@ import { Prisma } from "@backend/db/index.ts";
 import { MinioService } from "@backend/services/minio.service.ts";
 import {
     validateUserIsAssignee,
+    getAssigneeForStep,
     PKL_WORKFLOW_STEPS,
     getAssigneeForStep,
     getStepLabel,
@@ -196,7 +197,7 @@ export default new Elysia()
                 },
             });
 
-            // Kirim notifikasi ke pemilik surat (mahasiswa)
+            // 1. Notifikasi ke DIRI SENDIRI (Actor)
             try {
                 const stepLabel = getStepLabel(currentStep);
                 await notificationService.create(

@@ -1,6 +1,6 @@
 import { authGuardPlugin } from "@backend/middlewares/auth.ts";
 import { Prisma } from "@backend/db/index.ts";
-import { validateUserIsAssignee } from "@backend/services/workflow/pkl.workflow.service.ts";
+import { validateUserIsAssignee, PKL_WORKFLOW_STEPS } from "@backend/services/workflow/pkl.workflow.service.ts";
 import { notificationService } from "@backend/services/notification.service.ts";
 import { Elysia, t } from "elysia";
 
@@ -57,12 +57,28 @@ export default new Elysia()
 				},
 			});
 
-			// Kirim notifikasi penolakan ke mahasiswa
+            // 1. Notifikasi ke DIRI SENDIRI (Actor)
+            try {
+                // Tolak: Dospem (1) s/d Wakil Dekan (7)
+                if (currentStep >= PKL_WORKFLOW_STEPS.DOSEN_PEMBIMBING && currentStep <= PKL_WORKFLOW_STEPS.WAKIL_DEKAN_1) {
+                    await notificationService.create(
+                        user.id,
+                        "Penolakan Berhasil",
+                        "Anda telah berhasil menolak surat PKL ini.",
+                        `/dashboard/approval/${letter.id}`,
+                        "ERROR",
+                    );
+                }
+            } catch (e) {
+                console.error("Gagal mengirim notifikasi self-reject:", e);
+            }
+
+			// 2. Notifikasi ke MAHASISWA
 			try {
 				await notificationService.create(
 					letter.createdById,
-					"Surat Perlu Revisi/Ditolak",
-					`Surat PKL Anda dikembalikan dengan catatan: "${comment}". Silakan cek untuk revisi.`,
+					"Surat Ditolak",
+					`Surat PKL Anda dikembalikan dengan catatan: "${comment}"`,
 					`/dashboard/surat/${letter.id}`,
 					"WARNING",
 				);

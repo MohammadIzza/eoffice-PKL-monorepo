@@ -240,7 +240,7 @@ export default function Step4Review() {
                      </div>
                      {isOpen && attachment.preview && (
                        <div className="w-full bg-muted/30 border-t border-border">
-                         <div className="w-full h-[500px] bg-muted rounded-b-lg p-6 flex items-center justify-center overflow-auto">
+                         <div className="w-full h-[1000px] bg-muted rounded-b-lg p-6 flex items-center justify-center overflow-auto">
                            {isImage && (
                              <img
                                src={attachment.preview}
