@@ -5,8 +5,7 @@ import {
     validateUserIsAssignee,
     getAssigneeForStep,
     PKL_WORKFLOW_STEPS,
-    getAssigneeForStep,
-    getStepLabel,
+    STEP_TO_ROLE,
 } from "@backend/services/workflow/pkl.workflow.service.ts";
 import { notificationService } from "@backend/services/notification.service.ts";
 import { Elysia, t } from "elysia";
@@ -199,35 +198,100 @@ export default new Elysia()
 
             // 1. Notifikasi ke DIRI SENDIRI (Actor)
             try {
-                const stepLabel = getStepLabel(currentStep);
-                await notificationService.create(
-                    letter.createdById,
-                    "Status Surat Diperbarui",
-                    `Surat PKL Anda telah disetujui pada tahap ${stepLabel}. Menunggu proses selanjutnya.`,
-                    `/dashboard/surat/${letter.id}`,
-                    "SUCCESS",
-                );
-            } catch (e) {
-                console.error("Gagal mengirim notifikasi approval:", e);
-            }
-
-            // Kirim notifikasi ke penerus (next approver) jika ada dan bukan selesai
-            try {
-                if (nextStep <= PKL_WORKFLOW_STEPS.UPA) {
-                    const nextAssignee = getAssigneeForStep(letter.assignedApprovers as Record<string, string>, nextStep);
-                    if (nextAssignee) {
-                        const nextLabel = getStepLabel(nextStep);
-                        await notificationService.create(
-                            nextAssignee,
-                            "Ada Surat Menunggu Persetujuan",
-                            `Terdapat surat PKL yang perlu Anda setujui pada tahap ${nextLabel}.`,
-                            `/dashboard/approval/${letter.id}`,
-                            "INFO",
-                        );
-                    }
+                // Tanda tangan: Hanya Wakil Dekan (Step 7)
+                if (currentStep === PKL_WORKFLOW_STEPS.WAKIL_DEKAN_1) {
+                    await notificationService.create(
+                        user.id,
+                        "Tanda Tangan Berhasil",
+                        "Anda telah berhasil melakukan Tanda Tangan pada surat ini.",
+                        `/dashboard/approval/${letter.id}`,
+                        "SUCCESS",
+                    );
+                }
+                // Approval biasa: Dospem (1) s/d Manajer TU (6)
+                else if (currentStep >= PKL_WORKFLOW_STEPS.DOSEN_PEMBIMBING && currentStep <= PKL_WORKFLOW_STEPS.MANAJER_TU) {
+                     await notificationService.create(
+                        user.id,
+                        "Persetujuan Berhasil",
+                        "Anda telah berhasil menyetujui surat PKL ini.",
+                        `/dashboard/approval/${letter.id}`,
+                        "SUCCESS",
+                    );
+                }
+                // Penomoran: UPA (Step 8)
+                else if (currentStep === PKL_WORKFLOW_STEPS.UPA) {
+                     await notificationService.create(
+                        user.id,
+                        "Penomoran Berhasil",
+                        "Anda telah berhasil melakukan penomoran pada surat ini.",
+                        `/dashboard/approval/${letter.id}`,
+                        "SUCCESS",
+                    );
                 }
             } catch (e) {
-                console.error("Gagal mengirim notifikasi ke penerus:", e);
+                console.error("Gagal mengirim notifikasi self-approval:", e);
+            }
+
+            // 2. Notifikasi ke ORANG LAIN (Next Approver & Mahasiswa)
+			try {
+				const stepName = STEP_TO_ROLE[currentStep as keyof typeof STEP_TO_ROLE] ?? `Step ${currentStep}`;
+				
+				// Notifikasi ke mahasiswa
+				if (currentStep === PKL_WORKFLOW_STEPS.UPA) {
+					// Surat selesai
+					await notificationService.create(
+						letter.createdById,
+						"Surat PKL Selesai",
+						`Selamat! Surat PKL Anda telah selesai diproses dan disetujui oleh semua pihak.`,
+						`/dashboard/surat/${letter.id}`,
+						"SUCCESS",
+					);
+				} else {
+					// Masih ada step berikutnya
+					await notificationService.create(
+						letter.createdById,
+						"Status Surat Diperbarui",
+						`Surat PKL Anda telah disetujui pada tahap ${stepName}. Menunggu proses selanjutnya.`,
+						`/dashboard/surat/${letter.id}`,
+						"SUCCESS",
+					);
+				}
+
+				// Notifikasi ke approver berikutnya (jika bukan step terakhir)
+				if (currentStep < PKL_WORKFLOW_STEPS.UPA) {
+					const assignedApprovers = letter.assignedApprovers as Record<string, string>;
+                    
+                    // Kembalikan stepRoleMap sesuai permintaan user
+                    const stepRoleMap: Record<number, string> = {
+                        1: "dospem",
+                        2: "koordinator",
+                        3: "kaprodi",
+                        4: "adminFakultas",
+                        5: "supervisor",
+                        6: "manajerTu",
+                        7: "wakilDekan1",
+                        8: "upa",
+                    };
+
+                    let nextAssigneeId = getAssigneeForStep(assignedApprovers, nextStep);
+
+                    if (!nextAssigneeId && stepRoleMap[nextStep]) {
+                        nextAssigneeId = assignedApprovers[stepRoleMap[nextStep]];
+                    }
+					
+					if (nextAssigneeId) {
+						const nextStepName = STEP_TO_ROLE[nextStep as keyof typeof STEP_TO_ROLE] ?? `Step ${nextStep}`;
+						await notificationService.create(
+							nextAssigneeId,
+							"Surat Menunggu Persetujuan Anda",
+							`Surat PKL telah disetujui pada tahap ${stepName}. Sekarang menunggu persetujuan Anda sebagai ${nextStepName}.`,
+							`/dashboard/approval/${letter.id}`,
+							"INFO",
+						);
+					}
+				}
+            } catch (e) {
+                console.error("Gagal mengirim notifikasi approval:", e);
             }
 
             return {
@@ -236,7 +300,7 @@ export default new Elysia()
                 data: {
                     letterId: letter.id,
                     currentStep: nextStep,
-                    nextStepRole: nextStep <= PKL_WORKFLOW_STEPS.UPA ? getStepLabel(nextStep) : "COMPLETED",
+                    nextStepRole: nextStep <= PKL_WORKFLOW_STEPS.UPA ? STEP_TO_ROLE[nextStep as keyof typeof STEP_TO_ROLE] : "COMPLETED",
                 },
             }; 
         },
