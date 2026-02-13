@@ -79,8 +79,8 @@ export default function ApprovalQueuePage() {
 
   const filteredLetters = useMemo(() => {
     if (statusFilter === 'pending') {
-      // exclude rejected
-      return searchFiltered.filter((l) => (l as QueueLetter).approvalStatus !== 'approved_by_me' && (l as QueueLetter).approvalStatus !== 'rejected_by_me');
+      // exclude approved
+      return searchFiltered.filter((l) => (l as QueueLetter).approvalStatus !== 'approved_by_me');
     }
     if (statusFilter === 'approved') {
       return searchFiltered.filter((l) => (l as QueueLetter).approvalStatus === 'approved_by_me');
@@ -98,13 +98,14 @@ export default function ApprovalQueuePage() {
       });
     }
     if (statusFilter === 'rejected') {
-      return searchFiltered.filter((l) => (l as QueueLetter).approvalStatus === 'rejected_by_me');
+      // fallback: filter by status property if available
+      return searchFiltered.filter((l) => l.status === 'REJECTED');
     }
     return searchFiltered;
   }, [searchFiltered, statusFilter]);
 
   const totalPending = useMemo(
-    () => searchFiltered.filter((l) => (l as QueueLetter).approvalStatus !== 'approved_by_me' && (l as QueueLetter).approvalStatus !== 'rejected_by_me').length,
+    () => searchFiltered.filter((l) => (l as QueueLetter).approvalStatus !== 'approved_by_me').length,
     [searchFiltered]
   );
 
@@ -260,7 +261,7 @@ export default function ApprovalQueuePage() {
                       const name = values?.namaLengkap || letter.createdBy?.name || '-';
                       const approvalStatus = (letter as QueueLetter).approvalStatus;
                       const isApproved = approvalStatus === 'approved_by_me';
-                      const isRejected = approvalStatus === 'rejected_by_me';
+                      const isRejected = letter.status === 'REJECTED';
                       return (
                         <TableRow
                           key={letter.id}
