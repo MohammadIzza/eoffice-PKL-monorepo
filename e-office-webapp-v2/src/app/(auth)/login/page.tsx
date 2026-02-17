@@ -67,7 +67,7 @@ export default function LoginPage() {
     }
   };
 
-  const backgroundImageUrl = "/ap_undip.jpg"; 
+  const backgroundImageUrl = "/ACINTYA.jpeg"; 
 
   return (
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 xl:min-h-screen">
@@ -79,73 +79,68 @@ export default function LoginPage() {
           }}
         ></div>
         
-        {/* Dark Overlay Layers */}
-        <div className="absolute inset-0 bg-slate-950/60"></div>
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-transparent to-slate-900/80"></div>
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-slate-950/70"></div>
         
-        <div className="relative z-10 flex h-full flex-col justify-between p-12 text-white">
+        <div className="relative z-10 flex h-full flex-col justify-between p-10 text-white">
           <div className="flex items-center gap-3">
-            <div className="bg-white/10 p-2 rounded-xl backdrop-blur-md border border-white/20 shadow-lg">
+            <div className="bg-white/10 p-2 rounded-xl backdrop-blur-sm border border-white/20">
                <Image 
                  src="/Undip.png" 
                  alt="Logo Undip" 
-                 width={48} 
-                 height={48} 
+                 width={40} 
+                 height={40} 
                  className="object-contain"
                />
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-bold tracking-tight">E-Office FSM</span>
-              <span className="text-xs text-slate-300 font-medium tracking-wider uppercase">Universitas Diponegoro</span>
+              <span className="text-lg font-bold">E-Office FSM</span>
+              <span className="text-xs text-slate-300">Universitas Diponegoro</span>
             </div>
           </div>
 
-          <div className="space-y-6 max-w-lg mb-12">
-            <h1 className="text-4xl font-extrabold leading-tight tracking-tight lg:text-5xl drop-shadow-md">
-              Sistem Informasi <br/> <span className="text-indigo-400">Persuratan Digital</span>
+          <div className="space-y-4 max-w-lg">
+            <h1 className="text-4xl font-bold leading-tight tracking-tight">
+              Sistem Informasi <br/> <span className="text-blue-400">Persuratan Digital</span>
             </h1>
-            <p className="text-lg text-slate-200 leading-relaxed font-light">
+            <p className="text-base text-slate-300">
               Platform terintegrasi untuk pengelolaan administrasi akademik dan kemahasiswaan Fakultas Sains dan Matematika.
             </p>
           </div>
 
-          <div className="flex items-center justify-between text-sm text-slate-400/80 border-t border-white/10 pt-6">
-            <span>&copy; {new Date().getFullYear()} FSM Undip</span>
-            <span className="flex items-center gap-4">
-              <a href="#" className="hover:text-white transition-colors">Bantuan</a>
-              <a href="#" className="hover:text-white transition-colors">Privasi</a>
-            </span>
+          <div className="text-xs text-slate-400 border-t border-white/10 pt-5">
+            <span>&copy; {new Date().getFullYear()} FSM Undip. All rights reserved.</span>
           </div>
         </div>
       </div>
 
       {/* LOGIN FORM */}
-      <div className="flex items-center justify-center p-4 min-h-screen bg-slate-50 dark:bg-slate-950">
-        <div className="w-full max-w-[440px] space-y-8">
+      <div className="flex items-center justify-center p-6 min-h-screen bg-slate-50">
+        <div className="w-full max-w-[360px]">
           
           {/* Mobile Logo */}
-          <div className="flex flex-col items-center justify-center lg:hidden mb-8 space-y-2">
+          <div className="flex flex-col items-center justify-center lg:hidden mb-6">
                <Image 
                  src="/Undip.png" 
                  alt="Logo Undip" 
-                 width={64} 
-                 height={64} 
-                 className="mb-2"
+                 width={40} 
+                 height={40} 
+                 className="mb-1.5"
                />
-               <h2 className="text-2xl font-bold text-center text-slate-900 dark:text-white">E-Office FSM</h2>
+               <h2 className="text-base font-bold text-slate-900">E-Office FSM</h2>
           </div>
 
-          <Card className="border-0 shadow-2xl sm:border sm:border-slate-200/60 dark:bg-slate-900/50 dark:border-slate-800 backdrop-blur-xl">
-          <CardHeader className="space-y-1 text-center pb-8 pt-10">
-            <CardTitle className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Selamat Datang Kembali</CardTitle>
-            <CardDescription className="text-base text-slate-500 dark:text-slate-400">
+          <Card className="border border-slate-200 shadow-sm">
+          <CardHeader className="space-y-0.5 text-center pb-4 pt-6">
+            <CardTitle className="text-lg font-bold text-slate-900">Selamat Datang Kembali</CardTitle>
+            <CardDescription className="text-xs text-slate-500">
               Silakan masuk dengan akun Undip / SSO Anda
             </CardDescription>
           </CardHeader>
           
-          <CardContent className="px-8 pb-10">
+          <CardContent className="px-5 pb-5">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
                 
                 {/* Input Email */}
                 <FormField
@@ -153,13 +148,13 @@ export default function LoginPage() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email Undip / SSO</FormLabel>
+                      <FormLabel className="text-xs font-medium">Email Undip / SSO</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Mail className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
                           <Input 
                             placeholder="Masukkan email Anda" 
-                            className="pl-9 h-11 bg-background" 
+                            className="pl-8 h-9 border-slate-200 text-sm" 
                             {...field} 
                           />
                         </div>
@@ -175,29 +170,27 @@ export default function LoginPage() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <div className="flex items-center justify-between">
-                          <FormLabel>Password</FormLabel>
-                      </div>
+                      <FormLabel className="text-xs font-medium">Password</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Lock className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
                           <Input 
                             type={showPassword ? "text" : "password"} 
                             placeholder="Masukkan password Anda" 
-                            className="pl-9 pr-9 h-11 bg-background" 
+                            className="pl-8 pr-9 h-9 border-slate-200 text-sm" 
                             {...field} 
                           />
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                            className="absolute right-0 top-0 h-full px-2.5 py-2 hover:bg-transparent"
                             onClick={() => setShowPassword(!showPassword)}
                           >
                             {showPassword ? (
-                              <EyeOff className="h-4 w-4 text-muted-foreground" />
+                              <EyeOff className="h-3.5 w-3.5 text-slate-400" />
                             ) : (
-                              <Eye className="h-4 w-4 text-muted-foreground" />
+                              <Eye className="h-3.5 w-3.5 text-slate-400" />
                             )}
                           </Button>
                         </div>
@@ -208,10 +201,10 @@ export default function LoginPage() {
                 />
 
                 {errorMessage && (
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Gagal Masuk</AlertTitle>
-                    <AlertDescription>
+                  <Alert variant="destructive" className="py-2">
+                    <AlertCircle className="h-3.5 w-3.5" />
+                    <AlertTitle className="text-xs">Gagal Masuk</AlertTitle>
+                    <AlertDescription className="text-xs">
                       {errorMessage}
                     </AlertDescription>
                   </Alert>
@@ -220,12 +213,12 @@ export default function LoginPage() {
                 {/* Submit Button */}
                 <Button 
                   type="submit" 
-                  className="w-full h-12 text-base font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/30 transition-all duration-300 rounded-lg hover:translate-y-[1px]" 
+                  className="w-full h-9 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors" 
                   disabled={isLoading}
                 >
                   {isLoading ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
                       Memproses...
                     </>
                   ) : (
@@ -234,19 +227,19 @@ export default function LoginPage() {
                 </Button>
 
                 {process.env.NODE_ENV === "development" && (
-                    <div className="pt-2">
+                    <div className="pt-1">
                          <DevLoginModal onLogin={handleDevLogin} isLoading={isLoading} />
                     </div>
                 )}
               </form>
             </Form>
           </CardContent>
-          <div className="px-8 pb-8 text-center text-xs text-muted-foreground border-t pt-6 bg-slate-50/50 dark:bg-slate-900/50 rounded-b-xl">
-             Belum punya akun? <a href="#" className="underline hover:text-indigo-600 transition-colors">Hubungi Administrator</a>
+          <div className="px-5 pb-5 text-center text-[11px] text-slate-500 border-t pt-4">
+             Belum punya akun? <a href="#" className="text-blue-600 hover:underline">Hubungi Administrator</a>
           </div>
         </Card>
         
-        <div className="mt-8 text-center text-xs text-slate-400 lg:hidden">
+        <div className="mt-5 text-center text-[11px] text-slate-400 lg:hidden">
             &copy; {new Date().getFullYear()} FSM Undip
         </div>
         </div>

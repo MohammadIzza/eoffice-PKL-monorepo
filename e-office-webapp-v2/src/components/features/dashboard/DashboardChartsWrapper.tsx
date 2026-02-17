@@ -23,10 +23,10 @@ interface DashboardChartsWrapperProps {
 
 export function DashboardChartsWrapper({ chartData, pieData }: DashboardChartsWrapperProps) {
   return (
-    <div className="grid lg:grid-cols-12 gap-4 mb-8 animate-slide-up">
+    <div className="grid lg:grid-cols-12 gap-4 animate-slide-up">
       {/* Bar Chart */}
       <Card className="lg:col-span-8 border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden bg-white">
-        <CardHeader className="border-b border-[rgba(0,0,0,0.08)] pb-5 px-6 pt-6">
+        <CardHeader className="border-b border-[rgba(0,0,0,0.08)] p-2 px-6 pt-6">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-lg font-semibold flex items-center gap-2 mb-1.5 tracking-tight text-[#1D1D1F]">
@@ -93,10 +93,24 @@ export function DashboardChartsWrapper({ chartData, pieData }: DashboardChartsWr
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ percent }) => `${(((percent ?? 0) * 100)).toFixed(0)}%`}
+                  label={({ percent, x, y }) => (
+                    <text
+                      x={x}
+                      y={y}
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      fontSize={12}
+                      fontWeight={600}
+                      fill="#1D1D1F"
+                      style={{ pointerEvents: 'none' }}
+                    >
+                      {`${(((percent ?? 0) * 100)).toFixed(0)}%`}
+                    </text>
+                  )}
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
+                  
                 >
                   {pieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />

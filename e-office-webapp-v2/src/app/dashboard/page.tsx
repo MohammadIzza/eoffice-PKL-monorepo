@@ -19,6 +19,7 @@ import {
   ClipboardList
 } from 'lucide-react';
 import { DashboardChartsWrapper } from '@/components/features/dashboard/DashboardChartsWrapper';
+import { SuperAdminDashboard } from '@/components/features/dashboard/SuperAdminDashboard';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 
@@ -34,11 +35,17 @@ const COLORS = {
 
 export default function DashboardPage() {
   const { user, isLoading: authLoading } = useAuthStore();
+  const isSuperAdmin = user?.roles?.some(r => r.name === 'superadmin');
   const isMahasiswa = user?.roles?.some(r => r.name === 'mahasiswa');
   const isApprover = user?.roles?.some(role => 
     ['dosen_pembimbing', 'dosen_koordinator', 'ketua_program_studi', 'admin_fakultas', 
      'supervisor_akademik', 'manajer_tu', 'wakil_dekan_1', 'upa'].includes(role.name)
   );
+
+  // Show SuperAdmin dashboard if user is superadmin
+  if (!authLoading && isSuperAdmin) {
+    return <SuperAdminDashboard userName={user?.name || 'Super Admin'} />;
+  }
   
   // Use different hooks based on role
   const myLettersData = useMyLetters();
@@ -49,14 +56,30 @@ export default function DashboardPage() {
     ? myLettersData 
     : { ...approvalQueueData, hasLetterInProgress: false };
 
+  // Helper: Detect if letter needs revision from stepHistory
+  const isLetterInRevision = (letter: any): boolean => {
+    if (letter.status !== 'PROCESSING') return false;
+    const stepHistory = letter.stepHistory || [];
+    const revisionRelated = stepHistory.filter((h: any) =>
+      ['REVISED', 'SELF_REVISED', 'RESUBMITTED'].includes(h.action)
+    );
+    if (revisionRelated.length === 0) return false;
+    const latestRevisionAction = [...revisionRelated].sort(
+      (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )[0];
+    return latestRevisionAction.action === 'REVISED' || latestRevisionAction.action === 'SELF_REVISED';
+  };
+
   // Calculate statistics
   const stats = useMemo(() => {
     const total = letters.length;
     const draft = letters.filter(l => l.status === 'DRAFT').length;
-    const pending = letters.filter(l => l.status === 'PENDING' || l.status === 'PROCESSING').length;
+    const revision = letters.filter(l => isLetterInRevision(l)).length;
+    const pending = letters.filter(l => 
+      (l.status === 'PENDING' || l.status === 'PROCESSING') && !isLetterInRevision(l)
+    ).length;
     const completed = letters.filter(l => l.status === 'COMPLETED').length;
     const rejected = letters.filter(l => l.status === 'REJECTED' || l.status === 'CANCELLED').length;
-    const revision = letters.filter(l => l.status === 'REVISION').length;
 
     return { total, draft, pending, completed, rejected, revision };
   }, [letters]);
@@ -169,21 +192,21 @@ export default function DashboardPage() {
                   </Link>
                 )
               )}
-              {isApprover && (
+              {/* {isApprover && (
                 <Link href="/dashboard/approval/queue">
                   <Button className="gap-2" size="default">
                     <ClipboardList className="w-4 h-4" />
                     Antrian Approval
                   </Button>
                 </Link>
-              )}
+              )} */}
             </div>
           </div>
         </div>
 
         {/* Bento Grid Stats Section */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 animate-slide-up">
-          <Link href="/dashboard/surat">
+          <Link href={isApprover ? "/dashboard/approval/queue" : "/dashboard/surat"}>
             <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
               <CardContent className="p-6">
                 <div className="space-y-2">
@@ -200,7 +223,7 @@ export default function DashboardPage() {
             </Card>
           </Link>
           
-          <Link href="/dashboard/surat?status=PENDING,PROCESSING">
+          <Link href={isApprover ? "/dashboard/approval/queue?status=pending" : "/dashboard/surat?status=PENDING,PROCESSING"}>
             <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
               <CardContent className="p-6">
                 <div className="space-y-2">
@@ -217,7 +240,7 @@ export default function DashboardPage() {
             </Card>
           </Link>
           
-          <Link href="/dashboard/surat?status=COMPLETED">
+          <Link href={isApprover ? "/dashboard/approval/queue?status=approved" : "/dashboard/surat?status=COMPLETED"}>
             <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
               <CardContent className="p-6">
                 <div className="space-y-2">
@@ -234,7 +257,7 @@ export default function DashboardPage() {
             </Card>
           </Link>
           
-          <Link href="/dashboard/surat?status=REVISION">
+          <Link href={isApprover ? "/dashboard/approval/queue?status=revision" : "/dashboard/surat?status=REVISION"}>
             <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
               <CardContent className="p-6">
                 <div className="space-y-2">
@@ -256,7 +279,7 @@ export default function DashboardPage() {
         <DashboardChartsWrapper chartData={chartData} pieData={pieData} />
 
         {/* Quick Actions - Apple Style */}
-        <div className="flex items-center gap-4 animate-slide-up">
+        {/* <div className="flex items-center gap-4 animate-slide-up">
           <Link href="/dashboard/surat" className="flex-1">
             <Card className="border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden bg-white hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
               <CardContent className="p-6">
@@ -270,7 +293,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           </Link>
-        </div>
+        </div> */}
       </div>
     </div>
   );

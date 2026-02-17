@@ -7,11 +7,14 @@ export default new Elysia()
 	.get(
 		"/all",
 		async () => {
-			LetterTypeService.getAll();
-			return;
+			const data = await LetterTypeService.getAll();
+			return {
+				success: true,
+				data,
+			};
 		},
 		{
-			...requirePermission("letterType", "create"),
+			...requirePermission("letterType", "read"),
 			body: t.Object({}),
 		},
 	)

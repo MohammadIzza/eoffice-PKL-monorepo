@@ -9,6 +9,7 @@ import {
     validateUserIsAssignee,
     PKL_WORKFLOW_STEPS,
 } from "@backend/services/workflow/pkl.workflow.service.ts";
+import { notificationService } from "@backend/services/notification.service.ts";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()
@@ -259,6 +260,19 @@ export default new Elysia()
                     },
                 },
             });
+
+            // Notifikasi untuk UPA (Surat Berhasil Dinomori)
+            try {
+                await notificationService.create(
+                    user.id,
+                    "Surat Berhasil Dinomori",
+                    `Surat telah diberi nomor ${numberString} dan statusnya selesai.`,
+                    `/dashboard/surat/${letter.id}`,
+                    "SUCCESS",
+                );
+            } catch (e) {
+                console.error("Gagal mengirim notifikasi numbering ke UPA:", e);
+            }
 
             return {
                 success: true,

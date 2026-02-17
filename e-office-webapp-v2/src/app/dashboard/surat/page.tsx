@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import * as React from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -47,6 +47,8 @@ import {
   X
 } from 'lucide-react';
 import { useAuthStore } from '@/stores';
+import { letterService } from '@/services';
+import type { Letter } from '@/services/letter.service';
 
 const getStatusColor = (status: string): string => {
   switch (status) {
@@ -74,6 +76,8 @@ const getStatusIcon = (status: string) => {
     case 'REJECTED':
     case 'CANCELLED':
       return <XCircle className="w-3.5 h-3.5" />;
+    case 'REVISION':
+      return <RefreshCw className="w-3.5 h-3.5" />;
     case 'PENDING':
     case 'PROCESSING':
       return <Clock className="w-3.5 h-3.5" />;
@@ -103,9 +107,36 @@ const getStatusLabel = (status: string) => {
   }
 };
 
+// Helper: Get display status from letter (detect revision from stepHistory)
+const getLetterDisplayStatus = (letter: Letter): string => {
+  if (letter.status !== 'PROCESSING') {
+    return letter.status;
+  }
+  
+  const stepHistory = letter.stepHistory || [];
+  const revisionRelated = stepHistory.filter((h) =>
+    ['REVISED', 'SELF_REVISED', 'RESUBMITTED'].includes(h.action)
+  );
+  
+  if (revisionRelated.length === 0) {
+    return 'PROCESSING';
+  }
+  
+  const latestRevisionAction = [...revisionRelated].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  )[0];
+  
+  if (latestRevisionAction.action === 'REVISED' || latestRevisionAction.action === 'SELF_REVISED') {
+    return 'REVISION';
+  }
+  
+  return 'PROCESSING';
+};
+
 export default function SuratListPage() {
   const searchParams = useSearchParams();
   const { user } = useAuthStore();
+  const isSuperAdmin = user?.roles?.some(r => r.name === 'superadmin');
   const isMahasiswa = user?.roles?.some(r => r.name === 'mahasiswa');
   const blocked = searchParams.get('blocked') === '1';
   const isApprover = user?.roles?.some(role => 
@@ -113,14 +144,42 @@ export default function SuratListPage() {
      'supervisor_akademik', 'manajer_tu', 'wakil_dekan_1', 'upa'].includes(role.name)
   );
   
+  // State for superadmin letters
+  const [allLetters, setAllLetters] = useState<Letter[]>([]);
+  const [isLoadingAll, setIsLoadingAll] = useState(false);
+  const [errorAll, setErrorAll] = useState<string | null>(null);
+  
+  // Fetch all letters for superadmin
+  useEffect(() => {
+    if (isSuperAdmin) {
+      const fetchAllLetters = async () => {
+        setIsLoadingAll(true);
+        try {
+          const data = await letterService.getAllLetters();
+          setAllLetters(data);
+          setErrorAll(null);
+        } catch (err: any) {
+          setErrorAll(err?.message || 'Gagal memuat data surat');
+        } finally {
+          setIsLoadingAll(false);
+        }
+      };
+      fetchAllLetters();
+    }
+  }, [isSuperAdmin]);
+  
   // Use different hooks based on role
   const myLettersData = useMyLetters();
   const approvalQueueData = useApprovalQueue();
   
   // Select data based on role
-  const { letters, isLoading, error, refetch, hasLetterInProgress } = isMahasiswa 
-    ? myLettersData 
-    : { ...approvalQueueData, hasLetterInProgress: false };
+  const lettersData = isSuperAdmin 
+    ? { letters: allLetters, isLoading: isLoadingAll, error: errorAll, refetch: () => {}, hasLetterInProgress: false } 
+    : isMahasiswa 
+      ? myLettersData 
+      : { ...approvalQueueData, hasLetterInProgress: false };
+  
+  const { letters, isLoading, error, refetch, hasLetterInProgress } = lettersData;
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -152,7 +211,8 @@ export default function SuratListPage() {
       let matchesStatus = statusFilter === 'all';
       if (statusFilter !== 'all') {
         const statusValues = statusFilter.split(',').map(s => s.trim());
-        matchesStatus = statusValues.includes(letter.status);
+        const displayStatus = getLetterDisplayStatus(letter);
+        matchesStatus = statusValues.includes(displayStatus);
       }
 
       return matchesSearch && matchesStatus;
@@ -220,8 +280,8 @@ export default function SuratListPage() {
   return (
     <div className="container mx-auto px-8 py-10 space-y-8 bg-white min-h-screen">
       {blocked && isMahasiswa && (
-        <Alert className="border-[#FF9500] bg-[#FFF7E6] text-[#B26A00]">
-          <AlertCircle className="h-3.5 w-3.5" />
+        <Alert className="bg-white border-none text-[#1B5BD7]">
+          <AlertCircle className="h-3.5 w-3.5 text-[#1B5BD7]" />
           <AlertTitle className="text-sm">Form pengajuan dinonaktifkan</AlertTitle>
           <AlertDescription className="mt-1.5 text-xs">
             Ada surat Anda yang masih diproses. Gunakan <strong>Revisi Mandiri</strong> dari detail surat jika perlu perbaikan, atau tunggu hingga surat selesai.
@@ -236,7 +296,7 @@ export default function SuratListPage() {
             Daftar Surat
           </h1>
           <p className="text-sm text-[#86868B]">
-            {isMahasiswa ? 'Kelola pengajuan surat Anda' : 'Kelola semua surat'}
+            {isSuperAdmin ? 'Monitoring semua surat dalam sistem' : isMahasiswa ? 'Kelola pengajuan surat Anda' : 'Kelola semua surat'}
           </p>
         </div>
         {isMahasiswa && (
@@ -294,7 +354,7 @@ export default function SuratListPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#86868B]" />
                 <Input
-                  placeholder={isMahasiswa ? "Cari surat atau nomor..." : "Cari surat, nomor, atau pemohon..."}
+                  placeholder={isSuperAdmin ? "Cari surat, nomor, atau pemohon..." : isMahasiswa ? "Cari surat atau nomor..." : "Cari surat, nomor, atau pemohon..."}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 h-11 text-sm rounded-xl border-[rgba(0,0,0,0.1)] bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3]/20"
@@ -439,14 +499,14 @@ export default function SuratListPage() {
                             </div>
                           </TableCell>
                           <TableCell className="py-4 w-[130px]">
-                            <div className={`flex items-center justify-center gap-1.5 font-medium text-xs ${getStatusColor(letter.status)}`}>
-                              {getStatusIcon(letter.status)}
-                              <span className="whitespace-nowrap tracking-tight">{getStatusLabel(letter.status)}</span>
+                            <div className={`flex items-center justify-center gap-1.5 font-medium text-xs ${getStatusColor(getLetterDisplayStatus(letter))}`}>
+                              {getStatusIcon(getLetterDisplayStatus(letter))}
+                              <span className="whitespace-nowrap tracking-tight">{getStatusLabel(getLetterDisplayStatus(letter))}</span>
                             </div>
                           </TableCell>
                           <TableCell className="py-4 w-[100px]">
                             <div className="flex items-center justify-center">
-                              <Link href={`/dashboard/surat/${letter.id}`}>
+                              <Link href={isApprover ? `/dashboard/approval/${letter.id}` : `/dashboard/surat/${letter.id}`}>
                                 <Button 
                                   variant="ghost" 
                                   size="sm" 

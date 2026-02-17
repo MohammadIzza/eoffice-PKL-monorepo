@@ -69,6 +69,7 @@ export default function PKLSidebar() {
         title: "MENU UTAMA",
         items: [
           { href: "/dashboard", label: "Dasbor", icon: LayoutDashboard },
+          { href: "/dashboard/surat", label: "Semua Surat", icon: FileText },
         ],
       });
       items.push({

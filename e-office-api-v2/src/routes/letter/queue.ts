@@ -1,6 +1,9 @@
 import { authGuardPlugin } from "@backend/middlewares/auth.ts";
 import { Prisma } from "@backend/db/index.ts";
-import { STEP_TO_ROLE } from "@backend/services/workflow/pkl.workflow.service.ts";
+import { 
+    STEP_TO_ROLE, 
+    getAssigneeForStep 
+} from "@backend/services/workflow/pkl.workflow.service.ts";
 import { Elysia, t } from "elysia";
 
 const ROLE_TO_KEY: Record<string, string> = {
@@ -38,10 +41,9 @@ export default new Elysia()
 			}
 
 			const stepNumber = Number(stepNum);
+
+            // Added back for code style consistency, though logic uses getAssigneeForStep for robustness
 			const assigneeKey = ROLE_TO_KEY[activeRole];
-			if (!assigneeKey) {
-				return { success: true, data: [] };
-			}
 
 			const allAtStep = await Prisma.letterInstance.findMany({
 				where: {
@@ -64,7 +66,16 @@ export default new Elysia()
 
 			const myQueue = allAtStep.filter((letter) => {
 				const assigned = letter.assignedApprovers as Record<string, string>;
-				return assigned[assigneeKey] === user.id;
+                
+                // Prioritaskan logic robust (getAssigneeForStep)
+                let assigneeId = getAssigneeForStep(assigned, stepNumber);
+
+                // Fallback ke logic lama jika robust belum mencakup (meskipun getAssigneeForStep sudah cover semua)
+                if (!assigneeId && assigneeKey && assigned[assigneeKey]) {
+                    assigneeId = assigned[assigneeKey];
+                }
+
+				return assigneeId === user.id;
 			});
 
 			const pending = myQueue.map((letter) => ({

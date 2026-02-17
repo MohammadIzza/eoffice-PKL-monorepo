@@ -283,8 +283,8 @@ export default function LetterDetail({ id }: LetterDetailProps) {
     return (
       <div className="flex-1 px-[40px] py-[32px] overflow-y-auto bg-white">
         <div className="max-w-7xl mx-auto">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
+          <Alert className="bg-white border-none text-[#1B5BD7]">
+            <AlertCircle className="h-4 w-4 text-[#1B5BD7]" />
             <AlertDescription>{error || "Surat tidak ditemukan"}</AlertDescription>
           </Alert>
           <Button
@@ -369,25 +369,22 @@ export default function LetterDetail({ id }: LetterDetailProps) {
     const colorClass = getTimelineStatusColor(action);
     return (
       <div
-        className="group relative pl-7 animate-in fade-in slide-in-from-left-2 duration-300"
-        style={{ animationDelay: `${animDelay}ms`, animationFillMode: "both" }}
+        className="group relative pl-7"
       >
         {!isLast && (
           <div
-            className={`absolute left-[6px] top-5 bottom-0 w-px transition-colors duration-200 ${
-              isLatest ? "bg-[#0071E3]" : "bg-[#E5E5E7] group-hover:bg-[#0071E3]"
+            className={`absolute left-[6px] top-5 bottom-0 w-px ${
+              isLatest ? "bg-[#0071E3]" : "bg-[#E5E5E7]"
             }`}
           />
         )}
         <div
-          className={`absolute left-0 top-4 w-3 h-3 rounded-full border-2 transition-all duration-200 ${
+          className={`absolute left-0 top-4 w-3 h-3 rounded-full border-2 ${
             isLatest ? "border-[#0071E3] bg-[#0071E3]" : "border-[#E5E5E7] bg-white"
           }`}
         />
         <div
-          className={`relative -ml-1 rounded-xl px-4 py-3 transition-colors duration-200 ${isLast ? "pb-0" : "pb-4"} ${
-            isLatest ? "" : "hover:bg-[#F5F5F7]/80"
-          }`}
+          className={`relative -ml-1 rounded-xl px-4 py-3 ${isLast ? "pb-0" : "pb-4"}`}
         >
           <div>
             <p className="text-[15px] font-semibold text-[#1D1D1F] tracking-tight">{role}</p>
@@ -403,7 +400,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
           {note && (
             <div className="mt-3 rounded-r-lg border-l-2 border-[#E5E5E7] bg-[#F5F5F7]/90 py-2.5 pl-3.5 pr-1">
               <p className="text-[11px] font-semibold text-[#86868B] uppercase tracking-wider mb-1">Catatan</p>
-              <p className="text-sm text-[#1D1D1F] leading-relaxed whitespace-pre-line">{note}</p>
+              <p className="text-sm text-[#1D1D1F] leading-relaxed whitespace-pre-line break-words">{note}</p>
             </div>
           )}
         </div>
@@ -480,9 +477,9 @@ export default function LetterDetail({ id }: LetterDetailProps) {
               <h1 className="font-lexend font-bold text-[30px] leading-[36px] tracking-[-0.5px] text-[#1D1D1F] mb-2">
                 Detail Surat
               </h1>
-              <p className="font-lexend font-normal text-[16px] leading-[24px] text-[#86868B]">
-                Step: {letter.status === "COMPLETED" ? "-" : getStepLabel(letter.currentStep)}
-              </p>
+              {/* <p className="font-lexend font-normal text-[16px] leading-[24px] text-[#86868B]">
+                Step: {letter.status === "COMPLETED" ? "Selesai" : getStepLabel(letter.currentStep)}
+              </p> */}
             </div>
             <Button
               variant="outline"
@@ -506,13 +503,13 @@ export default function LetterDetail({ id }: LetterDetailProps) {
               </CardHeader>
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <SummaryItem label="ID Surat" value={letter.id} className="font-mono" isCopyable={true} />
+                  {/* <SummaryItem label="ID Surat" value={letter.id} className="font-mono" isCopyable={true} /> */}
                   <SummaryItem label="Jenis Surat" value={letter.letterType?.name || "PKL"} />
                   <SummaryItem
                     label="Status"
                     value={getStatusDisplayLabel(letter.status, letter.currentStep)}
                   />
-                  <SummaryItem label="Step Saat Ini" value={letter.status === "COMPLETED" ? "-" : getStepLabel(letter.currentStep)} />
+                  <SummaryItem label="Step Saat Ini" value={letter.status === "COMPLETED" ? "Selesai" : getStepLabel(letter.currentStep)} />
                   <SummaryItem label="Nomor Surat" value={letterNumber} />
                   <SummaryItem label="Diajukan Oleh" value={letter.createdBy?.name} />
                   <SummaryItem label="Email Pengaju" value={letter.createdBy?.email} />
@@ -576,7 +573,12 @@ export default function LetterDetail({ id }: LetterDetailProps) {
             <Card className="bg-white border-[#E5E5E7] shadow-sm">
               <CardHeader className="border-b border-[#E5E5E7]">
                 <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
-                  Lampiran ({attachments.length})
+                  <h3 className="font-bold text-lg text-foreground">
+                    Lampiran <span className="inline-flex items-center justify-center min-w-[24px] h-6 px-2 bg-[#0071E3] text-white text-xs font-semibold rounded-full">
+                    {attachments.length}
+                  </span>
+                  </h3>
+                  
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
@@ -707,22 +709,22 @@ export default function LetterDetail({ id }: LetterDetailProps) {
               <Card className="bg-white border-[#E5E5E7] shadow-sm">
                 <CardHeader className="border-b border-[#E5E5E7]">
                   <CardTitle className="text-[18px] font-semibold text-[#1D1D1F]">
-                    Dokumen
+                    Surat
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-sm font-semibold text-[#1D1D1F]">
-                        {isFinalDocument ? "Dokumen Final" : "Preview Dokumen Sementara"}
+                        {isFinalDocument ? "Surat Final" : "Preview Surat Sementara"}
                       </p>
                       <p className="text-xs text-[#86868B]">
                         {isLoadingPreview
                           ? "Memuat preview..."
                           : previewData
                             ? isFinalDocument
-                              ? "Dokumen final sudah tersedia."
-                              : "Dokumen masih sementara. Final tersedia setelah penomoran."
+                              ? "Surat final sudah tersedia."
+                              : "Surat masih sementara. Final tersedia setelah penomoran."
                             : "Preview tidak tersedia."}
                       </p>
                     </div>
@@ -769,7 +771,6 @@ export default function LetterDetail({ id }: LetterDetailProps) {
                               action={h.action}
                               isLatest={i === 0}
                               isLast={i === displayed.length - 1}
-                              animDelay={i * 50}
                             />
                           ))}
                         </div>
@@ -875,7 +876,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
 
       {/* Attachment preview dialog */}
       <Dialog open={!!previewAttachment} onOpenChange={(open) => !open && setPreviewAttachment(null)}>
-        <DialogContent className="max-w-[960px] w-[92vw] p-0 overflow-hidden">
+        <DialogContent className="max-w-[760px] w-[72vw] p-0 overflow-hidden">
           {previewAttachment && (
             <>
               <DialogHeader className="px-6 pt-5 pb-4 border-b border-[#E5E5E7] pr-12">
@@ -934,12 +935,12 @@ export default function LetterDetail({ id }: LetterDetailProps) {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <DialogTitle className="text-lg">
-                  {isFinalDocument ? "Dokumen Final" : "Preview Dokumen Sementara"}
+                  {isFinalDocument ? "Surat Final" : "Preview Surat Sementara"}
                 </DialogTitle>
                 <DialogDescription className="text-xs text-[#86868B]">
                   {isFinalDocument
-                    ? "Dokumen final sudah bernomor dan siap didistribusikan."
-                    : "Dokumen ini masih draft. Dokumen final tersedia setelah penomoran."}
+                    ? "Surat final sudah bernomor dan siap didistribusikan."
+                    : "Surat ini masih draft. Surat final tersedia setelah penomoran."}
                 </DialogDescription>
               </div>
               {previewData?.isPDF && (

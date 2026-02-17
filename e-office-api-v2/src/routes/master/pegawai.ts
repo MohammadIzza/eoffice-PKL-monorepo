@@ -53,11 +53,14 @@ export default new Elysia()
 				where: { email: email },
 			});
 
+			let userAlreadyExists = false;
 			if (!user) {
 				user = await UserService.create({
 					name: name,
 					email: email,
 				});
+			} else {
+				userAlreadyExists = true;
 			}
 
 			const existingPegawai = await Prisma.pegawai.findFirst({
@@ -65,7 +68,7 @@ export default new Elysia()
 			});
 
 			if (existingPegawai) {
-				throw new Error('Pegawai dengan email ${email} sudah terdaftar.');
+				throw new Error(`Pegawai dengan email ${email} sudah terdaftar.`);
 			}		
 
 			const pegawai = await PegawaiService.create({
@@ -78,7 +81,9 @@ export default new Elysia()
 			});
 
 			return {
-				message: "Pegawai created successfully",
+				message: userAlreadyExists 
+					? "Pegawai created successfully. Catatan: Akun dengan email ini sudah terdaftar di User."
+					: "Pegawai created successfully. Catatan: Akun User baru telah dibuat otomatis.",
 				pegawai,
 			};
 		},

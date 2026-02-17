@@ -23,6 +23,23 @@ export const STEP_TO_ROLE = {
 	8: "upa",
 } as const;
 
+// Human-friendly labels for UI/messages
+export const STEP_ROLE_LABEL: Record<string, string> = {
+	dosen_pembimbing: "Dosen Pembimbing",
+	dosen_koordinator: "Dosen Koordinator",
+	ketua_program_studi: "Ketua Program Studi",
+	admin_fakultas: "Admin Fakultas",
+	supervisor_akademik: "Supervisor Akademik",
+	manajer_tu: "Manajer TU",
+	wakil_dekan_1: "Wakil Dekan I",
+	upa: "UPA",
+};
+
+export function getStepLabel(step: number): string {
+	const roleKey = STEP_TO_ROLE[step as keyof typeof STEP_TO_ROLE];
+	if (!roleKey) return `Step ${step}`;
+	return STEP_ROLE_LABEL[roleKey] || roleKey;
+}
 export async function determineApproversForPKL(
 	prodiId: string,
 	selectedDosenPembimbingUserId: string,
@@ -107,10 +124,10 @@ export async function determineApproversForPKL(
 		dospem: dospem.id,
 		koordinator: koordinator.user.id,
 		kaprodi: kaprodi.user.id,
-		adminFakultas: fixApprovers.admin_fakultas!,  // Non-null karena sudah validated
+		adminFakultas: fixApprovers.admin_fakultas!,
 		supervisor: fixApprovers.supervisor_akademik!,
-		manajerTu: fixApprovers.manajer_tu!,
-		wakilDekan1: fixApprovers.wakil_dekan_1!,
+		manajer: fixApprovers.manajer_tu!,
+		wd1: fixApprovers.wakil_dekan_1!,
 		upa: fixApprovers.upa!,
 	};
 
@@ -143,20 +160,27 @@ export function getAssigneeForStep(
 	const roleKey = STEP_TO_ROLE[step as keyof typeof STEP_TO_ROLE];
 	if (!roleKey) return null;
 
-	const keyMap: Record<string, string> = {
-		dosen_pembimbing: "dospem",
-		dosen_koordinator: "koordinator",
-		ketua_program_studi: "kaprodi",
-		admin_fakultas: "adminFakultas",
-		supervisor_akademik: "supervisor",
-		manajer_tu: "manajerTu",
-		wakil_dekan_1: "wakilDekan1",
-		upa: "upa",
+    // Check key priority: short name -> old camelCase -> old snake_case
+	const possibleKeys: Record<string, string[]> = {
+		dosen_pembimbing: ["dospem", "dosenPembimbing", "dosen_pembimbing"],
+		dosen_koordinator: ["koordinator", "dosenKoordinator", "dosen_koordinator"],
+		ketua_program_studi: ["kaprodi", "ketuaProgramStudi", "ketua_program_studi"],
+		admin_fakultas: ["admin", "adminFakultas", "admin_fakultas"],
+		supervisor_akademik: ["supervisor", "supervisorAkademik", "supervisor_akademik"],
+		manajer_tu: ["manajer", "manajerTu", "manajer_tu"],
+		wakil_dekan_1: ["wd1", "wakilDekan1", "wakil_dekan_1"],
+		upa: ["upa"],
 	};
 
-	const key = keyMap[roleKey];
-	if (!key) return null;
-	return assignedApprovers[key] || null;
+	const keys = possibleKeys[roleKey];
+    if (!keys) return null;
+
+    for (const key of keys) {
+        if (assignedApprovers[key]) {
+            return assignedApprovers[key];
+        }
+    }
+	return null;
 }
 
 export function validateUserIsAssignee(

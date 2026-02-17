@@ -82,6 +82,15 @@ export default new Elysia()
 
 			// (Opsional) Kirim notifikasi ke dosen pembimbing yang ditugaskan
 		try {
+            // 1. Notifikasi ke DIRI SENDIRI (Mahasiswa)
+            await notificationService.create(
+                user.id,
+                "Pengajuan Berhasil",
+                "Anda telah berhasil mengajukan surat PKL.",
+                `/dashboard/surat/${letter.id}`,
+                "SUCCESS",
+            );
+
 			const dospemId = assignedApprovers.dospem;
 			if (dospemId) {
 				await notificationService.create(
