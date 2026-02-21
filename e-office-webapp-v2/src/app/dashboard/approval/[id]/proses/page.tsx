@@ -618,8 +618,8 @@ export default function ProsesPage() {
           </div>
 
           {/* Right: Pratinjau Surat */}
-          <Card className="bg-white border border-[#E5E5E7] shadow-sm rounded-2xl overflow-hidden">
-            <CardHeader className="border-b border-[#E5E5E7] py-4 px-5 flex flex-row items-center justify-between">
+          <Card className="bg-white border border-[#E5E5E7] shadow-sm rounded-2xl overflow-hidden flex flex-col h-full min-h-[520px]">
+            <CardHeader className="border-b border-[#E5E5E7] py-4 px-5 flex flex-row items-center justify-between shrink-0">
               <CardTitle className="text-[16px] font-semibold text-[#1D1D1F]">
                 Pratinjau Surat
               </CardTitle>
@@ -627,26 +627,26 @@ export default function ProsesPage() {
                 <span className="text-xs text-[#86868B]">Nomor: {previewNumber}</span>
               )}
             </CardHeader>
-            <CardContent className="p-0">
-              <div className="min-h-[520px] bg-[#F5F5F7]">
+            <CardContent className="p-0 flex-1 flex flex-col">
+              <div className="flex-1 bg-[#F5F5F7] flex flex-col">
                 {isLoadingPreview ? (
-                  <div className="flex items-center justify-center h-[480px]">
+                  <div className="flex-1 flex items-center justify-center h-full min-h-[480px]">
                     <Loader2 className="w-8 h-8 animate-spin text-[#86868B]" />
                   </div>
                 ) : previewData?.htmlContent ? (
                   <iframe
                     srcDoc={previewData.htmlContent}
-                    className="w-full h-[520px] border-none rounded-b-2xl"
+                    className="w-full h-full flex-1 border-none rounded-b-2xl min-h-[520px]"
                     title="Pratinjau surat"
                   />
                 ) : previewData?.previewUrl ? (
                   <iframe
                     src={previewData.previewUrl}
-                    className="w-full h-[520px] border-none rounded-b-2xl"
+                    className="w-full h-full flex-1 border-none rounded-b-2xl min-h-[520px]"
                     title="Pratinjau surat"
                   />
                 ) : (
-                  <div className="flex items-center justify-center h-[480px] text-[#86868B] text-sm">
+                  <div className="flex-1 flex items-center justify-center text-[#86868B] text-sm h-full min-h-[480px]">
                     Preview tidak tersedia
                   </div>
                 )}

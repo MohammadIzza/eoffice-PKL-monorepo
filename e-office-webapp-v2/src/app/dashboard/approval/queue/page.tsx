@@ -105,7 +105,7 @@ export default function ApprovalQueuePage() {
   }, [searchFiltered, statusFilter]);
 
   const totalPending = useMemo(
-    () => searchFiltered.filter((l) => (l as QueueLetter).approvalStatus !== 'approved_by_me').length,
+    () => searchFiltered.filter((l) => (l as QueueLetter).approvalStatus !== 'approved_by_me' && l.status !== 'REJECTED').length,
     [searchFiltered]
   );
 
