@@ -1,6 +1,6 @@
-import { authGuardPlugin } from "@backend/middlewares/auth.ts";
-import { Prisma } from "@backend/db/index.ts";
-import { MinioService } from "@backend/services/minio.service.ts";
+import { authGuardPlugin } from "@backend/middlewares/auth";
+import { Prisma } from "@backend/db/index";
+import { MinioService } from "@backend/services/minio.service";
 import { Elysia, t } from "elysia";
 
 export default new Elysia().use(authGuardPlugin).get(

@@ -1,6 +1,6 @@
-import { authGuardPlugin } from "@backend/middlewares/auth.ts";
-import { Prisma } from "@backend/db/index.ts";
-import { notificationService } from "@backend/services/notification.service.ts";
+import { authGuardPlugin } from "@backend/middlewares/auth";
+import { Prisma } from "@backend/db/index";
+import { notificationService } from "@backend/services/notification.service";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()

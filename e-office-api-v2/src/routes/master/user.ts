@@ -1,6 +1,6 @@
-import { authGuardPlugin, requirePermission } from "@backend/middlewares/auth.ts";
-import { UserService } from "@backend/services/database_models/user.service.ts";
-import { Prisma } from "@backend/db/index.ts";
+import { authGuardPlugin, requirePermission } from "@backend/middlewares/auth";
+import { UserService } from "@backend/services/database_models/user.service";
+import { Prisma } from "@backend/db/index";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()

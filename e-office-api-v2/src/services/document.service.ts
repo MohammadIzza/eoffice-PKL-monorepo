@@ -1,5 +1,5 @@
-import { Prisma } from "@backend/db/index.ts";
-import type { LetterInstance } from "@backend/db/index.ts";
+import { Prisma } from "@backend/db/index";
+import type { LetterInstance } from "@backend/db/index";
 
 /**
  * Service untuk generate dokumen HTML dari data surat PKL
@@ -2158,7 +2158,7 @@ export class DocumentService {
 		const html = await this.generateHTML(letter);
 		
 		// Import dependencies
-		const { MinioService } = await import("./minio.service.ts");
+		const { MinioService } = await import("./minio.service");
 		const fs = await import("node:fs");
 		
 		// Define file paths

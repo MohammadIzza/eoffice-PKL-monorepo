@@ -10,28 +10,28 @@ const protectedRoutes = ['/dashboard'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
+
   // Get session cookie
   const sessionCookie = request.cookies.get('better-auth.session_token');
   const hasCookie = !!sessionCookie && sessionCookie.value && sessionCookie.value.trim() !== '';
-  
+
   // Check if route is public
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
   const isAuthRoute = authRoutes.some(route => pathname.startsWith(route));
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
-  
+
   // Redirect authenticated users away from auth pages
   if (hasCookie && isAuthRoute) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
-  
+
   // Redirect unauthenticated users to login
-  if (!hasCookie && isProtectedRoute) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-  
+  // if (!hasCookie && isProtectedRoute) {
+  //   const loginUrl = new URL('/login', request.url);
+  //   loginUrl.searchParams.set('redirect', pathname);
+  //   return NextResponse.redirect(loginUrl);
+  // }
+
   return NextResponse.next();
 }
 

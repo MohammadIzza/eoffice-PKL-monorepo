@@ -1,11 +1,11 @@
-import { auth } from "@backend/lib/auth.ts";
+import { auth } from "@backend/lib/auth";
 import { Elysia } from "elysia";
 
 export default new Elysia().post(
 	"/",
 	async ({ headers, set }) => {
 		const data = await auth.api.signOut({
-			headers: headers,
+			headers: headers as HeadersInit,
 		});
 
 		// Clear cookie by setting it to expire immediately

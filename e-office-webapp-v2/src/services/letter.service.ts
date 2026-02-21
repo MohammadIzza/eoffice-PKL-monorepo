@@ -119,12 +119,12 @@ export const letterService = {
 	getMyLetters: async (): Promise<Letter[]> => {
 		try {
 			const response = await client.letter.my.get();
-			
+
 			if (response.data && typeof response.data === 'object') {
 				const data = response.data as LetterListResponse;
 				return data.data || [];
 			}
-			
+
 			throw new Error('Invalid response from /letter/my endpoint');
 		} catch (error) {
 			throw handleApiError(error);
@@ -135,21 +135,21 @@ export const letterService = {
 		try {
 			console.log('[letterService] Calling /letter/all endpoint...');
 			const response = await client.letter.all.get();
-			
+
 			console.log('[letterService] Response status:', response.status);
 			console.log('[letterService] Response error:', response.error);
-			
+
 			if (response.error) {
 				console.error('[letterService] API returned error:', response.error);
 				throw response.error;
 			}
-			
+
 			if (response.data && typeof response.data === 'object') {
 				const data = response.data as LetterListResponse;
 				console.log('[letterService] Successfully fetched', data.data?.length || 0, 'letters');
 				return data.data || [];
 			}
-			
+
 			throw new Error('Invalid response from /letter/all endpoint');
 		} catch (error) {
 			console.error('[letterService] Exception in getAllLetters:', error);
@@ -160,12 +160,12 @@ export const letterService = {
 	getLetterDetail: async (id: string): Promise<Letter> => {
 		try {
 			const response = await client.letter[id].get();
-			
+
 			if (response.data && typeof response.data === 'object') {
 				const data = response.data as LetterDetailResponse;
 				return data.data;
 			}
-			
+
 			throw new Error('Invalid response from /letter/:id endpoint');
 		} catch (error) {
 			throw handleApiError(error);
@@ -179,14 +179,14 @@ export const letterService = {
 				dosenPembimbingUserId: payload.dosenPembimbingUserId,
 				formData: payload.formData,
 			});
-			
+
 			// Check if response has error status
 			const responseStatus = (response as any).status;
 			if (responseStatus && responseStatus >= 400) {
 				// Try to get error message from various possible locations
 				// Treaty client might return error body in different places
 				let errorMessage = 'Terjadi kesalahan pada server';
-				
+
 				// Priority 1: response.text (most common for plain text error responses)
 				if ((response as any).text && typeof (response as any).text === 'string' && (response as any).text.trim().length > 0) {
 					errorMessage = (response as any).text.trim();
@@ -216,11 +216,11 @@ export const letterService = {
 						errorMessage = dataObj.error.trim();
 					}
 				}
-				
+
 				const error = new Error(errorMessage);
 				(error as any).status = responseStatus;
-				(error as any).response = { 
-					data: response.data, 
+				(error as any).response = {
+					data: response.data,
 					status: responseStatus,
 					text: (response as any).text,
 					body: (response as any).body,
@@ -229,7 +229,7 @@ export const letterService = {
 				(error as any).responseData = errorMessage;
 				throw error;
 			}
-			
+
 			// Check if response.data is a string (error message from server, e.g., 500 error)
 			// This happens when API returns error with plain text body
 			if (response.data && typeof response.data === 'string') {
@@ -239,14 +239,14 @@ export const letterService = {
 				(error as any).responseData = response.data;
 				throw error;
 			}
-			
+
 			if (response.data && typeof response.data === 'object') {
 				const data = response.data as SubmitLetterResponse;
 				if (data.success && data.data) {
 					return data.data;
 				}
 			}
-			
+
 			throw new Error('Invalid response from /letter/pkl/submit endpoint');
 		} catch (error) {
 			// Preserve original error structure for better error handling
@@ -293,12 +293,12 @@ export const letterService = {
 			const response = await client.letter.queue.get({
 				query: { activeRole, includeApproved },
 			});
-			
+
 			if (response.data && typeof response.data === 'object') {
 				const data = response.data as QueueResponse;
 				return data.data || [];
 			}
-			
+
 			throw new Error('Invalid response from /letter/queue endpoint');
 		} catch (error) {
 			throw handleApiError(error);
@@ -311,7 +311,7 @@ export const letterService = {
 				comment,
 				signatureData,
 			});
-			
+
 			if (!response.data || typeof response.data !== 'object') {
 				throw new Error('Invalid response from /letter/:id/approve endpoint');
 			}
@@ -325,7 +325,7 @@ export const letterService = {
 			const response = await client.letter[id].reject.post({
 				comment,
 			});
-			
+
 			if (!response.data || typeof response.data !== 'object') {
 				throw new Error('Invalid response from /letter/:id/reject endpoint');
 			}
@@ -339,7 +339,7 @@ export const letterService = {
 			const response = await client.letter[id].revise.post({
 				comment,
 			});
-			
+
 			if (!response.data || typeof response.data !== 'object') {
 				throw new Error('Invalid response from /letter/:id/revise endpoint');
 			}
@@ -351,7 +351,7 @@ export const letterService = {
 	cancel: async (id: string): Promise<void> => {
 		try {
 			const response = await client.letter[id].cancel.post({});
-			
+
 			if (!response.data || typeof response.data !== 'object') {
 				throw new Error('Invalid response from /letter/:id/cancel endpoint');
 			}
@@ -365,7 +365,7 @@ export const letterService = {
 			const response = await client.letter[id]['self-revise'].post({
 				...(comment != null && comment.trim() !== '' ? { comment: comment.trim() } : {}),
 			});
-			
+
 			if (!response.data || typeof response.data !== 'object') {
 				throw new Error('Invalid response from /letter/:id/self-revise endpoint');
 			}
@@ -379,7 +379,7 @@ export const letterService = {
 			const response = await client.letter[id].resubmit.post({
 				formData,
 			});
-			
+
 			if (!response.data || typeof response.data !== 'object') {
 				throw new Error('Invalid response from /letter/:id/resubmit endpoint');
 			}
@@ -404,14 +404,14 @@ export const letterService = {
 			const response = await client.letter[id].preview.get({
 				...(previewNumber != null && previewNumber.trim() !== '' ? { query: { previewNumber: previewNumber.trim() } } : {}),
 			});
-			
+
 			if (response.data && typeof response.data === 'object') {
 				const data = response.data as any;
 				if (data.success && data.data && data.data.preview) {
 					return data.data.preview;
 				}
 			}
-			
+
 			throw new Error('Invalid response from /letter/:id/preview endpoint');
 		} catch (error) {
 			throw handleApiError(error);
@@ -427,14 +427,14 @@ export const letterService = {
 			const response = await client.letter[id].numbering.suggestion.get({
 				query: date ? { date } : {},
 			});
-			
+
 			if (response.data && typeof response.data === 'object') {
 				const data = response.data as any;
 				if (data.success && data.data) {
 					return data.data;
 				}
 			}
-			
+
 			throw new Error('Invalid response from /letter/:id/numbering/suggestion endpoint');
 		} catch (error) {
 			throw handleApiError(error);
@@ -448,14 +448,14 @@ export const letterService = {
 	}> => {
 		try {
 			const response = await client.letter[id].editor.get();
-			
+
 			if (response.data && typeof response.data === 'object') {
 				const data = response.data as any;
 				if (data.success && data.data) {
 					return data.data;
 				}
 			}
-			
+
 			throw new Error('Invalid response from /letter/:id/editor endpoint');
 		} catch (error) {
 			throw handleApiError(error);
@@ -467,7 +467,7 @@ export const letterService = {
 			const response = await client.letter[id].editor.draft.post({
 				html,
 			});
-			
+
 			if (!response.data || typeof response.data !== 'object') {
 				throw new Error('Invalid response from /letter/:id/editor/draft endpoint');
 			}
@@ -486,14 +486,14 @@ export const letterService = {
 				html,
 				comment,
 			});
-			
+
 			if (response.data && typeof response.data === 'object') {
 				const data = response.data as any;
 				if (data.success && data.data) {
 					return data.data;
 				}
 			}
-			
+
 			throw new Error('Invalid response from /letter/:id/editor/publish endpoint');
 		} catch (error) {
 			throw handleApiError(error);
@@ -506,7 +506,7 @@ export const letterService = {
 				numberString,
 				date,
 			});
-			
+
 			if (!response.data || typeof response.data !== 'object') {
 				throw new Error('Invalid response from /letter/:id/numbering endpoint');
 			}
@@ -544,8 +544,18 @@ export const letterService = {
 				formData.append('replaceExisting', String(replaceExisting));
 			}
 
+			const token = localStorage.getItem('auth-storage')
+				? JSON.parse(localStorage.getItem('auth-storage')!).state?.token
+				: null;
+
+			const headers: Record<string, string> = {};
+			if (token) {
+				headers['Authorization'] = `Bearer ${token}`;
+			}
+
 			const response = await fetch(`${API_URL}/letter/${letterId}/attachments`, {
 				method: 'POST',
+				headers,
 				body: formData,
 				credentials: 'include',
 			});

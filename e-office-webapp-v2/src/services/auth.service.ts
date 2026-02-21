@@ -2,29 +2,30 @@ import { client, handleApiError } from '@/lib/api';
 import type { User } from '@/types';
 
 export const authService = {
-  login: async (email: string, password: string): Promise<{ user: User }> => {
-		try {
+  login: async (email: string, password: string): Promise<{ user: User; token: string }> => {
+    try {
       const api = client as any;
       const response = await api.public['sign-in'].post({
-					username: email,
-          password,
-			});
+        username: email,
+        password,
+      });
 
       if (response.error) {
         throw response.error;
       }
 
       const responseData = response.data as any;
+      const token = responseData.token; // Extract token
 
-      const fullUser = await authService.getMe();
-      return { user: fullUser };
-		} catch (error) {
+      const fullUser = await authService.getMe(token);
+      return { user: fullUser, token };
+    } catch (error) {
       throw handleApiError(error);
-		}
-	},
+    }
+  },
 
-	logout: async (): Promise<void> => {
-		try {
+  logout: async (): Promise<void> => {
+    try {
       const api = client as any;
       const response = await api.public['sign-out'].post({});
 
@@ -36,16 +37,38 @@ export const authService = {
         return;
       }
       throw new Error('Logout failed: Invalid response');
-		} catch (error) {
-			console.error('Logout error:', error);
+    } catch (error) {
+      console.error('Logout error:', error);
       throw handleApiError(error);
-		}
-	},
+    }
+  },
 
-  getMe: async (): Promise<User> => {
-		try {
+  getMe: async (token?: string): Promise<User> => {
+    try {
+      console.log("[AuthService] getMe called. TokenArg present:", !!token);
       const api = client as any;
-      const response = await api.me.get();
+
+      if (!token && typeof window !== 'undefined') {
+        try {
+          const storageStr = localStorage.getItem('auth-storage');
+          if (storageStr) {
+            const storage = JSON.parse(storageStr);
+            token = storage?.state?.token;
+            console.log("[AuthService] Token from storage:", !!token);
+          }
+        } catch (e) {
+          console.error("[AuthService] Error reading storage:", e);
+        }
+      }
+
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await api.me.get({
+        headers: headers
+      });
 
       if (response.error) {
         throw {
@@ -60,10 +83,10 @@ export const authService = {
       }
 
       throw new Error('Invalid response from /me endpoint');
-		} catch (error) {
+    } catch (error) {
       throw handleApiError(error);
-		}
-	},
+    }
+  },
 
   updateProfile: async (data: {
     name: string;

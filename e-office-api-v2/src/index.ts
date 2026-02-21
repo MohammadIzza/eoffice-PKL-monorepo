@@ -1,6 +1,6 @@
-import { config } from "./config.ts";
-import { Prisma } from "@backend/db/index.ts";
-import { app } from "./server.ts";
+import { config } from "./config";
+import { Prisma } from "@backend/db/index";
+import { app } from "./server";
 
 const signals = ["SIGINT", "SIGTERM"];
 

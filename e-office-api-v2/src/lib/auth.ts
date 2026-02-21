@@ -1,4 +1,4 @@
-import { PrismaClient } from "@backend/db/index.ts";
+import { PrismaClient } from "@backend/db/index";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { anonymous, bearer } from "better-auth/plugins";

@@ -208,6 +208,15 @@ export default function LetterDetail({ id }: LetterDetailProps) {
     createdAt: Date;
   } | null>(null);
   const [historyExpanded, setHistoryExpanded] = useState(false);
+  
+  // HOOKS MUST BE AT THE TOP LEVEL
+  useEffect(() => {
+    return () => {
+      if (previewAttachment?.url && previewAttachment.url.startsWith('blob:')) {
+        URL.revokeObjectURL(previewAttachment.url);
+      }
+    };
+  }, [previewAttachment]);
 
   const isMahasiswa = user?.roles?.some((r: { name?: string }) => r.name === "mahasiswa") ?? false;
 
@@ -408,7 +417,37 @@ export default function LetterDetail({ id }: LetterDetailProps) {
     );
   };
 
-  const handleOpenAttachmentPreview = (attachment: {
+  const handleDownload = async (url: string, filename: string) => {
+    try {
+      const token = localStorage.getItem('auth-storage')
+        ? JSON.parse(localStorage.getItem('auth-storage')!).state?.token
+        : null;
+
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(url, { headers });
+      if (!response.ok) throw new Error('Download failed');
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(blobUrl);
+      document.body.removeChild(a);
+    } catch (e) {
+      console.error(e);
+      toast.error('Gagal mengunduh file');
+    }
+  };
+
+  const handleOpenAttachmentPreview = async (attachment: {
     id: string;
     filename: string;
     category: string | null;
@@ -418,15 +457,36 @@ export default function LetterDetail({ id }: LetterDetailProps) {
     const isImage = ["jpg", "jpeg", "png", "gif", "webp"].includes(ext);
     const isPdf = ext === "pdf";
     const url = `${API_URL}/letter/${letter.id}/attachments/${attachment.id}/download`;
-    setPreviewAttachment({
-      id: attachment.id,
-      filename: attachment.filename,
-      url,
-      isImage,
-      isPdf,
-      category: attachment.category,
-      createdAt: attachment.createdAt,
-    });
+    
+    try {
+        const token = localStorage.getItem('auth-storage')
+            ? JSON.parse(localStorage.getItem('auth-storage')!).state?.token
+            : null;
+
+        const headers: Record<string, string> = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const res = await fetch(url, { headers });
+        if (!res.ok) throw new Error("Gagal memuat file");
+        
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+
+        setPreviewAttachment({
+        id: attachment.id,
+        filename: attachment.filename,
+        url: blobUrl,
+        isImage,
+        isPdf,
+        category: attachment.category,
+        createdAt: attachment.createdAt,
+        });
+    } catch (e) {
+        console.error(e);
+        toast.error("Gagal memuat preview attachment");
+    }
   };
 
   const handleAction = async () => {
@@ -633,14 +693,12 @@ export default function LetterDetail({ id }: LetterDetailProps) {
                               >
                                 Preview
                               </Button>
-                              <a
-                                href={downloadUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              <button
+                                onClick={() => handleDownload(downloadUrl, att.filename)}
                                 className="text-[#0071E3] hover:text-[#0051A3]"
                               >
                                 <Download className="w-4 h-4" />
-                              </a>
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -889,14 +947,12 @@ export default function LetterDetail({ id }: LetterDetailProps) {
                     {getAttachmentCategoryLabel(previewAttachment.category)} •{" "}
                     {formatDateTime(previewAttachment.createdAt)}
                   </p>
-                  <a
-                    href={previewAttachment.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    onClick={() => handleDownload(previewAttachment.url, previewAttachment.filename)}
                     className="mt-3 inline-flex items-center text-sm text-[#0071E3] hover:text-[#0051A3]"
                   >
                     Unduh
-                  </a>
+                  </button>
                 </div>
               </DialogHeader>
               <div className="bg-[#F7F7FA] p-4">

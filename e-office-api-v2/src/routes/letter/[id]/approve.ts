@@ -1,13 +1,13 @@
-import { authGuardPlugin } from "@backend/middlewares/auth.ts";
-import { Prisma } from "@backend/db/index.ts";
-import { MinioService } from "@backend/services/minio.service.ts";
+import { authGuardPlugin } from "@backend/middlewares/auth";
+import { Prisma } from "@backend/db/index";
+import { MinioService } from "@backend/services/minio.service";
 import {
     validateUserIsAssignee,
     getAssigneeForStep,
     PKL_WORKFLOW_STEPS,
     STEP_TO_ROLE,
-} from "@backend/services/workflow/pkl.workflow.service.ts";
-import { notificationService } from "@backend/services/notification.service.ts";
+} from "@backend/services/workflow/pkl.workflow.service";
+import { notificationService } from "@backend/services/notification.service";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()

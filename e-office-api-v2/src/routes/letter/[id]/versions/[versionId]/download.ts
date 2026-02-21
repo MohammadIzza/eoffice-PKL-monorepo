@@ -1,13 +1,13 @@
-import { authGuardPlugin } from "@backend/middlewares/auth.ts";
-import { Prisma } from "@backend/db/index.ts";
-import { MinioService } from "@backend/services/minio.service.ts";
+import { authGuardPlugin } from "@backend/middlewares/auth";
+import { Prisma } from "@backend/db/index";
+import { MinioService } from "@backend/services/minio.service";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()
 	.use(authGuardPlugin)
 	.get(
 		"/",
-		async ({ params: { id, versionId }, user }) => {
+		async ({ params: { id, versionId }, user, request }) => {
 			const version = parseInt(versionId);
 
 			const letter = await Prisma.letterInstance.findUnique({
@@ -66,11 +66,8 @@ export default new Elysia()
 				throw new Error("Dokumen versi ini belum tersedia");
 			}
 
-			const downloadUrl = await MinioService.getPresignedUrl(
-				"",
-				targetVersion.storageKey,
-				1 * 60 * 60,
-			);
+			const origin = new URL(request.url).origin;
+			const downloadUrl = `${origin}/letter/${letter.id}/preview/file?version=${targetVersion.version}`;
 
 			return {
 				success: true,

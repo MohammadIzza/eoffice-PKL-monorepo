@@ -11,8 +11,13 @@ export function useAuth() {
     setError(null);
 
     try {
-      const { user: loggedInUser } = await authService.login(email, password);
-      setUser(loggedInUser);
+      const { user: loggedInUser, token } = await authService.login(email, password);
+      // Use setAuth/setUser/setToken as defined in store. 
+      // The store update added setToken, so we can use that or a combined setter if available.
+      // Based on my previous edit to store: setAuth(user, token) exists.
+      // We need to cast useAuthStore() result or rely on the updated interface
+      const store = useAuthStore.getState();
+      store.setAuth(loggedInUser, token);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Login gagal';
       setError(errorMessage);
@@ -39,7 +44,7 @@ export function useAuth() {
   const verifySession = async (): Promise<void> => {
     await checkSession();
   };
-  
+
   return {
     user,
     isLoading,

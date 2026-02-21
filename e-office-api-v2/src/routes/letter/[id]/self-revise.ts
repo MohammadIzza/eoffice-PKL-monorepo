@@ -1,6 +1,6 @@
-import { authGuardPlugin } from "@backend/middlewares/auth.ts";
-import { Prisma } from "@backend/db/index.ts";
-import { calculateRollbackStep } from "@backend/services/workflow/pkl.workflow.service.ts";
+import { authGuardPlugin } from "@backend/middlewares/auth";
+import { Prisma } from "@backend/db/index";
+import { calculateRollbackStep } from "@backend/services/workflow/pkl.workflow.service";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()

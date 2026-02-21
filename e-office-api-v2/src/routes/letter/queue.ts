@@ -1,9 +1,9 @@
-import { authGuardPlugin } from "@backend/middlewares/auth.ts";
-import { Prisma } from "@backend/db/index.ts";
+import { authGuardPlugin } from "@backend/middlewares/auth";
+import { Prisma } from "@backend/db/index";
 import { 
     STEP_TO_ROLE, 
     getAssigneeForStep 
-} from "@backend/services/workflow/pkl.workflow.service.ts";
+} from "@backend/services/workflow/pkl.workflow.service";
 import { Elysia, t } from "elysia";
 
 const ROLE_TO_KEY: Record<string, string> = {

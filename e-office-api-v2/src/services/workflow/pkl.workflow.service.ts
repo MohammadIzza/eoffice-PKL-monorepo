@@ -1,5 +1,5 @@
-import { Prisma } from "@backend/db/index.ts";
-import type { LetterInstance, LetterStepHistory } from "@backend/db/index.ts";
+import { Prisma } from "@backend/db/index";
+import type { LetterInstance, LetterStepHistory } from "@backend/db/index";
 
 export const PKL_WORKFLOW_STEPS = {
 	DOSEN_PEMBIMBING: 1,

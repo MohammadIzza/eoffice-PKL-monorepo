@@ -72,21 +72,62 @@ export default function ProsesPage() {
   // Load preview: WD1 no number, UPA use previewNumber when set
   useEffect(() => {
     if (!letter?.id || !mode) return;
+    
+    let isMounted = true;
+    let blobUrl: string | null = null;
+    
     setIsLoadingPreview(true);
     const number = isUPA && previewNumber.trim() ? previewNumber.trim() : undefined;
+    
     letterService
       .getPreview(letter.id, number)
-      .then((p) => {
-        setPreviewData({
-          previewUrl: (p as any).previewUrl,
-          htmlContent: (p as any).htmlContent,
-        });
+      .then(async (p) => {
+        if (!isMounted) return;
+        
+        let url = (p as any).previewUrl;
+        if (url && !(p as any).htmlContent) {
+             try {
+                const token = localStorage.getItem('auth-storage')
+                    ? JSON.parse(localStorage.getItem('auth-storage')!).state?.token
+                    : null;
+                const headers: Record<string, string> = {};
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+                const res = await fetch(url, { headers });
+                if (res.ok) {
+                    const blob = await res.blob();
+                    url = URL.createObjectURL(blob);
+                    blobUrl = url;
+                }
+             } catch (e) {
+                 console.error(e);
+             }
+        }
+        
+        if (isMounted) {
+            setPreviewData({
+              previewUrl: url,
+              htmlContent: (p as any).htmlContent,
+            });
+        } else if (blobUrl) {
+            URL.revokeObjectURL(blobUrl);
+        }
       })
       .catch((e) => {
-        console.error('Preview load error:', e);
-        setPreviewData(null);
+        if (isMounted) {
+            console.error('Preview load error:', e);
+            setPreviewData(null);
+        }
       })
-      .finally(() => setIsLoadingPreview(false));
+      .finally(() => {
+          if (isMounted) setIsLoadingPreview(false);
+      });
+      
+    return () => {
+        isMounted = false;
+        if (blobUrl) {
+            URL.revokeObjectURL(blobUrl);
+        }
+    };
   }, [letter?.id, mode, isUPA, previewNumber]);
 
   // UPA: suggestion + default previewNumber
