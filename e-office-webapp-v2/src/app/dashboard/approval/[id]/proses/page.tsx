@@ -72,21 +72,62 @@ export default function ProsesPage() {
   // Load preview: WD1 no number, UPA use previewNumber when set
   useEffect(() => {
     if (!letter?.id || !mode) return;
+    
+    let isMounted = true;
+    let blobUrl: string | null = null;
+    
     setIsLoadingPreview(true);
     const number = isUPA && previewNumber.trim() ? previewNumber.trim() : undefined;
+    
     letterService
       .getPreview(letter.id, number)
-      .then((p) => {
-        setPreviewData({
-          previewUrl: (p as any).previewUrl,
-          htmlContent: (p as any).htmlContent,
-        });
+      .then(async (p) => {
+        if (!isMounted) return;
+        
+        let url = (p as any).previewUrl;
+        if (url && !(p as any).htmlContent) {
+             try {
+                const token = localStorage.getItem('auth-storage')
+                    ? JSON.parse(localStorage.getItem('auth-storage')!).state?.token
+                    : null;
+                const headers: Record<string, string> = {};
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+                const res = await fetch(url, { headers });
+                if (res.ok) {
+                    const blob = await res.blob();
+                    url = URL.createObjectURL(blob);
+                    blobUrl = url;
+                }
+             } catch (e) {
+                 console.error(e);
+             }
+        }
+        
+        if (isMounted) {
+            setPreviewData({
+              previewUrl: url,
+              htmlContent: (p as any).htmlContent,
+            });
+        } else if (blobUrl) {
+            URL.revokeObjectURL(blobUrl);
+        }
       })
       .catch((e) => {
-        console.error('Preview load error:', e);
-        setPreviewData(null);
+        if (isMounted) {
+            console.error('Preview load error:', e);
+            setPreviewData(null);
+        }
       })
-      .finally(() => setIsLoadingPreview(false));
+      .finally(() => {
+          if (isMounted) setIsLoadingPreview(false);
+      });
+      
+    return () => {
+        isMounted = false;
+        if (blobUrl) {
+            URL.revokeObjectURL(blobUrl);
+        }
+    };
   }, [letter?.id, mode, isUPA, previewNumber]);
 
   // UPA: suggestion + default previewNumber
@@ -577,8 +618,8 @@ export default function ProsesPage() {
           </div>
 
           {/* Right: Pratinjau Surat */}
-          <Card className="bg-white border border-[#E5E5E7] shadow-sm rounded-2xl overflow-hidden">
-            <CardHeader className="border-b border-[#E5E5E7] py-4 px-5 flex flex-row items-center justify-between">
+          <Card className="bg-white border border-[#E5E5E7] shadow-sm rounded-2xl overflow-hidden flex flex-col h-full min-h-[520px]">
+            <CardHeader className="border-b border-[#E5E5E7] py-4 px-5 flex flex-row items-center justify-between shrink-0">
               <CardTitle className="text-[16px] font-semibold text-[#1D1D1F]">
                 Pratinjau Surat
               </CardTitle>
@@ -586,26 +627,26 @@ export default function ProsesPage() {
                 <span className="text-xs text-[#86868B]">Nomor: {previewNumber}</span>
               )}
             </CardHeader>
-            <CardContent className="p-0">
-              <div className="min-h-[520px] bg-[#F5F5F7]">
+            <CardContent className="p-0 flex-1 flex flex-col">
+              <div className="flex-1 bg-[#F5F5F7] flex flex-col">
                 {isLoadingPreview ? (
-                  <div className="flex items-center justify-center h-[480px]">
+                  <div className="flex-1 flex items-center justify-center h-full min-h-[480px]">
                     <Loader2 className="w-8 h-8 animate-spin text-[#86868B]" />
                   </div>
                 ) : previewData?.htmlContent ? (
                   <iframe
                     srcDoc={previewData.htmlContent}
-                    className="w-full h-[520px] border-none rounded-b-2xl"
+                    className="w-full h-full flex-1 border-none rounded-b-2xl min-h-[520px]"
                     title="Pratinjau surat"
                   />
                 ) : previewData?.previewUrl ? (
                   <iframe
                     src={previewData.previewUrl}
-                    className="w-full h-[520px] border-none rounded-b-2xl"
+                    className="w-full h-full flex-1 border-none rounded-b-2xl min-h-[520px]"
                     title="Pratinjau surat"
                   />
                 ) : (
-                  <div className="flex items-center justify-center h-[480px] text-[#86868B] text-sm">
+                  <div className="flex-1 flex items-center justify-center text-[#86868B] text-sm h-full min-h-[480px]">
                     Preview tidak tersedia
                   </div>
                 )}

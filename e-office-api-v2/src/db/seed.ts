@@ -1,7 +1,7 @@
-import { Prisma } from "@backend/db/index.ts";
+import { Prisma } from "@backend/db/index";
 import { randomBytes, scryptSync } from "crypto";
 
-import { auth } from "@backend/lib/auth.ts";
+import { auth } from "@backend/lib/auth";
 
 async function main() {
 	console.log("Starting database seed...");

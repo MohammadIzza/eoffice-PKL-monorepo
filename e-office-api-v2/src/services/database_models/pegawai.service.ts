@@ -1,15 +1,14 @@
 // pegawai.service.ts
 
-import { Prisma, type Pegawai } from "@backend/db/index.ts";
-import type {
-	PegawaiDelegate,
-	PegawaiInclude,
-	PegawaiCreateInput,
-	PegawaiUpdateInput,
-	PegawaiUncheckedCreateInput,
-	PegawaiUncheckedUpdateInput,
-} from "@backend/generated/prisma/models.ts";
-import { CRUD } from "./__basicCRUD.ts";
+import { Prisma, type Pegawai } from "@backend/db/index";
+import type { Prisma as PrismaTypes } from "@backend/generated/prisma";
+type PegawaiDelegate = PrismaTypes.PegawaiDelegate;
+type PegawaiInclude = PrismaTypes.PegawaiInclude;
+type PegawaiCreateInput = PrismaTypes.PegawaiCreateInput;
+type PegawaiUpdateInput = PrismaTypes.PegawaiUpdateInput;
+type PegawaiUncheckedCreateInput = PrismaTypes.PegawaiUncheckedCreateInput;
+type PegawaiUncheckedUpdateInput = PrismaTypes.PegawaiUncheckedUpdateInput;
+import { CRUD } from "./__basicCRUD";
 
 export abstract class PegawaiService extends CRUD<
 	Pegawai,
@@ -24,7 +23,7 @@ export abstract class PegawaiService extends CRUD<
 
 	public static update(id: string, data: PegawaiUpdateInput | PegawaiUncheckedUpdateInput) {
 		return Prisma.pegawai.update({
-			where: { id: id},
+			where: { id: id },
 			data: data as any,
 		});
 	}

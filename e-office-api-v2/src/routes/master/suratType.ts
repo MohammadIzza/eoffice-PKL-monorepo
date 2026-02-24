@@ -1,6 +1,6 @@
-import { authGuardPlugin, requirePermission } from "@backend/middlewares/auth.ts";
+import { authGuardPlugin, requirePermission } from "@backend/middlewares/auth";
 import { Elysia, t } from "elysia";
-import { LetterTypeService } from "@backend/services/database_models/letterType.service.ts";
+import { LetterTypeService } from "@backend/services/database_models/letterType.service";
 
 export default new Elysia()
 	.use(authGuardPlugin)

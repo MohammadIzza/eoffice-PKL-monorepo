@@ -1,6 +1,6 @@
 import { Elysia, t } from "elysia";
-import { notificationService } from "@backend/services/notification.service.ts";
-import { isAuthenticated } from "@backend/middlewares/auth.ts";
+import { notificationService } from "@backend/services/notification.service";
+import { isAuthenticated } from "@backend/middlewares/auth";
 
 export const notificationRoutes = new Elysia({ prefix: "/notifications" })
     .use(isAuthenticated)

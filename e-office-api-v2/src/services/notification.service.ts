@@ -1,4 +1,4 @@
-import prisma from "@backend/db/index.ts";
+import prisma from "@backend/db/index";
 
 export const notificationService = {
     async create(

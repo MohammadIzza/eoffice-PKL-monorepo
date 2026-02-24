@@ -1,11 +1,11 @@
-import { authGuardPlugin, requirePermission } from "@backend/middlewares/auth.ts";
-import { Prisma } from "@backend/db/index.ts";
+import { authGuardPlugin, requirePermission } from "@backend/middlewares/auth";
+import { Prisma } from "@backend/db/index";
 import {
 	determineApproversForPKL,
 	validateOnlyOneActiveLetter,
 	PKL_WORKFLOW_STEPS,
-} from "@backend/services/workflow/pkl.workflow.service.ts";
-import { notificationService } from "@backend/services/notification.service.ts";
+} from "@backend/services/workflow/pkl.workflow.service";
+import { notificationService } from "@backend/services/notification.service";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()

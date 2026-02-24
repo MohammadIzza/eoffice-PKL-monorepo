@@ -1,5 +1,5 @@
 import { newEnforcer, type Enforcer } from "casbin";
-import { Prisma } from "@backend/db/index.ts";
+import { Prisma } from "@backend/db/index";
 import path from "node:path";
 
 let enforcer: Enforcer | null = null;

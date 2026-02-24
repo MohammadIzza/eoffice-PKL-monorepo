@@ -221,26 +221,35 @@ export default function ApprovalDetailPage() {
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
       letterService.getPreview(letter.id)
-        .then((preview) => {
-          let finalUrl = preview.previewUrl;
-          // Optimize HTML rendering: Create Blob URL instead of storing huge string
-          if ((preview as any).htmlContent) {
-             const blob = new Blob([(preview as any).htmlContent], { type: 'text/html' });
-             blobUrl = URL.createObjectURL(blob);
-             finalUrl = blobUrl;
+        .then(async (p) => {
+          let url = (p as any).previewUrl;
+          if (url && !(p as any).htmlContent) {
+               try {
+                  const token = localStorage.getItem('auth-storage')
+                      ? JSON.parse(localStorage.getItem('auth-storage')!).state?.token
+                      : null;
+                  const headers: Record<string, string> = {};
+                  if (token) headers['Authorization'] = `Bearer ${token}`;
+                  const res = await fetch(url, { headers });
+                  if (res.ok) {
+                      const blob = await res.blob();
+                      const bUrl = URL.createObjectURL(blob);
+                      blobUrl = bUrl;
+                      url = bUrl;
+                  }
+               } catch (e) {
+                   console.error(e);
+               }
           }
-
           setPreviewData({
-            previewUrl: finalUrl,
-            // Don't store htmlContent to avoid lag
-            isPDF: preview.isPDF,
-            format: preview.format,
+            previewUrl: url,
+            htmlContent: (p as any).htmlContent,
+            isPDF: (p as any).isPDF,
           });
         })
         .catch((err) => {
           if (err.name !== 'AbortError') {
              console.error('Error loading preview:', err);
-             // Show user friendly error in preview area instead of keeping "Loading..."
              setPreviewData(null); 
           }
         })
@@ -557,7 +566,36 @@ export default function ApprovalDetailPage() {
     }
   };
 
-  const handleOpenAttachmentPreview = (attachment: {
+  const handleDownload = async (url: string, filename: string) => {
+    try {
+      const token = localStorage.getItem('auth-storage')
+        ? JSON.parse(localStorage.getItem('auth-storage')!).state?.token
+        : null;
+
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(url, { headers });
+      if (!response.ok) throw new Error('Download failed');
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(blobUrl);
+      document.body.removeChild(a);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleOpenAttachmentPreview = async (attachment: {
     id: string;
     filename: string;
     category: string | null;
@@ -567,16 +605,44 @@ export default function ApprovalDetailPage() {
     const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension);
     const isPdf = fileExtension === 'pdf';
     const url = `${API_URL}/letter/${letter?.id}/attachments/${attachment.id}/download`;
-    setPreviewAttachment({
-      id: attachment.id,
-      filename: attachment.filename,
-      url,
-      isImage,
-      isPdf,
-      category: attachment.category,
-      createdAt: attachment.createdAt,
-    });
+
+    try {
+        const token = localStorage.getItem('auth-storage')
+            ? JSON.parse(localStorage.getItem('auth-storage')!).state?.token
+            : null;
+
+        const headers: Record<string, string> = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const res = await fetch(url, { headers });
+        if (!res.ok) throw new Error("Gagal memuat file");
+        
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+
+        setPreviewAttachment({
+          id: attachment.id,
+          filename: attachment.filename,
+          url: blobUrl,
+          isImage,
+          isPdf,
+          category: attachment.category,
+          createdAt: attachment.createdAt,
+        });
+    } catch (e) {
+        console.error(e);
+    }
   };
+
+  useEffect(() => {
+    return () => {
+      if (previewAttachment?.url && previewAttachment.url.startsWith('blob:')) {
+        URL.revokeObjectURL(previewAttachment.url);
+      }
+    };
+  }, [previewAttachment]);
 
   if (isLoading) {
     return (
@@ -893,7 +959,7 @@ export default function ApprovalDetailPage() {
                 {(letterNumber || letter.numbering?.numberString) && (
                   <DetailRow label="Nomor Surat" value={letterNumber} />
                 )}
-                <DetailRow label="Status" value={getStatusDisplayLabel(letter.status, letter.currentStep)} />
+                {/* <DetailRow label="Status" value={getStatusDisplayLabel(letter.status, letter.currentStep)} /> */}
               </CardContent>
             </Card>
 
@@ -949,14 +1015,12 @@ export default function ApprovalDetailPage() {
                               >
                                 Preview
                               </Button>
-                              <a
-                                href={downloadUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              <button
+                                onClick={() => handleDownload(downloadUrl, attachment.filename)}
                                 className="text-[#0071E3] hover:text-[#0051A3]"
                               >
                                 <Download className="w-4 h-4" />
-                              </a>
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -1500,14 +1564,12 @@ export default function ApprovalDetailPage() {
                   <p className="mt-1 text-xs text-[#86868B]">
                     {getAttachmentCategoryLabel(previewAttachment.category)} • {formatDateTime(previewAttachment.createdAt)}
                   </p>
-                  <a
-                    href={previewAttachment.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    onClick={() => handleDownload(previewAttachment.url, previewAttachment.filename)}
                     className="mt-3 inline-flex items-center text-sm text-[#0071E3] hover:text-[#0051A3]"
                   >
                     Unduh
-                  </a>
+                  </button>
                 </div>
               </DialogHeader>
               <div className="bg-[#F7F7FA] p-4">

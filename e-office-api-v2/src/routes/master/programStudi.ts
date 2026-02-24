@@ -1,5 +1,5 @@
-import { authGuardPlugin, requirePermission } from "@backend/middlewares/auth.ts";
-import { ProgramStudiService } from "@backend/services/database_models/programStudi.service.ts";
+import { authGuardPlugin, requirePermission } from "@backend/middlewares/auth";
+import { ProgramStudiService } from "@backend/services/database_models/programStudi.service";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()

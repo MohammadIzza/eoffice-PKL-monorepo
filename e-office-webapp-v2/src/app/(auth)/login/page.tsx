@@ -226,11 +226,11 @@ export default function LoginPage() {
                   )}
                 </Button>
 
-                {process.env.NODE_ENV === "development" && (
-                    <div className="pt-1">
-                         <DevLoginModal onLogin={handleDevLogin} isLoading={isLoading} />
+               
+                 <div className="pt-1">
+                   <DevLoginModal onLogin={handleDevLogin} isLoading={isLoading} />
                     </div>
-                )}
+               
               </form>
             </Form>
           </CardContent>

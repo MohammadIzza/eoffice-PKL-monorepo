@@ -62,11 +62,22 @@ export default function SignatureManagementPage() {
   const submitSignature = async (base64Data: string) => {
     try {
       setIsSubmitting(true);
+      
+      const token = localStorage.getItem('auth-storage') 
+          ? JSON.parse(localStorage.getItem('auth-storage')!).state?.token 
+          : null;
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const res = await fetch(`${API_URL}/me/signature`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         credentials: "include", 
         body: JSON.stringify({ signatureData: base64Data }),
       });

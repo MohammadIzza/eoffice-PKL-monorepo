@@ -1,6 +1,6 @@
-import { authGuardPlugin } from "@backend/middlewares/auth.ts";
-import { Prisma } from "@backend/db/index.ts";
-import { MinioService } from "@backend/services/minio.service.ts";
+import { authGuardPlugin } from "@backend/middlewares/auth";
+import { Prisma } from "@backend/db/index";
+import { MinioService } from "@backend/services/minio.service";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()
@@ -57,18 +57,21 @@ export default new Elysia()
 			}
 
 			const storageKey = `attachments/${letter.id}/${attachment.filename}`;
-			const downloadUrl = await MinioService.getPresignedUrl(
-				"",
-				storageKey,
-				1 * 60 * 60,
-			);
 
-			return new Response(null, {
-				status: 302,
-				headers: {
-					Location: downloadUrl,
-				},
-			});
+			try {
+				const { stat, stream } = await MinioService.getFileStream(storageKey);
+
+				return new Response(stream as any, {
+					headers: {
+						"Content-Type": stat.metaData["content-type"] || "application/octet-stream",
+						"Content-Disposition": `attachment; filename="${attachment.filename}"`,
+						"Content-Length": stat.size.toString(),
+					},
+				});
+			} catch (error) {
+				console.error("Error streaming file:", error);
+				throw new Error("Gagal mengunduh file");
+			}
 		},
 		{
 			params: t.Object({
@@ -148,7 +151,7 @@ export default new Elysia()
 						domain: "letter",
 						filename: nameReplace,
 						letterId: letter.id,
-					category: category || null,
+						category: category || null,
 						uploadedByUserId: user.id,
 						isActive: true,
 					},

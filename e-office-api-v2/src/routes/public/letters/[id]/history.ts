@@ -1,9 +1,9 @@
-import { Prisma } from "@backend/db/index.ts";
+import { Prisma } from "@backend/db/index";
 import { Elysia, t } from "elysia";
 
 export default new Elysia().get(
 	"/",
-	async ({ params: { id }, error }) => {
+	async ({ params: { id }, set }) => {
 		const letter = await Prisma.letterInstance.findUnique({
 			where: { id },
 			select: {
@@ -52,7 +52,8 @@ export default new Elysia().get(
 		});
 
 		if (!letter) {
-			return error(404, "Surat tidak ditemukan");
+			set.status = 404;
+			return "Surat tidak ditemukan";
 		}
 
 		return {

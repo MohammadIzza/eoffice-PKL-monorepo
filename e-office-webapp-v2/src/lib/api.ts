@@ -3,9 +3,54 @@ import { API_URL } from "./constants";
 
 type App = any;
 
-export const client = treaty<App>(API_URL, {
-	fetch: {
+const customFetch = async (url: RequestInfo | URL, options: RequestInit = {}) => {
+	console.log("[API DEBUG] Custom Fetch Called:", url);
+	if (typeof window !== 'undefined') {
+		try {
+			const storageStr = localStorage.getItem('auth-storage');
+			if (storageStr) {
+				const storage = JSON.parse(storageStr);
+				const token = storage?.state?.token;
+				if (token && typeof token === 'string') {
+					options.headers = {
+						...options.headers,
+						Authorization: `Bearer ${token}`,
+					};
+					console.log("[API DEBUG] Attached Bearer token via custom fetch");
+				}
+			}
+		} catch (e) {
+			console.error("Error in custom fetch:", e);
+		}
+	}
+
+	return fetch(url, {
+		...options,
 		credentials: "include",
+	});
+};
+
+export const client = treaty<App>(API_URL, {
+	fetch: customFetch as any,
+	headers: {
+		get Authorization() {
+			if (typeof window !== 'undefined') {
+				try {
+					const storageStr = localStorage.getItem('auth-storage');
+					if (storageStr) {
+						const storage = JSON.parse(storageStr);
+						const token = storage?.state?.token;
+						if (token && typeof token === 'string') {
+							console.log("[API DEBUG] Getter: Attached Token");
+							return `Bearer ${token}`;
+						}
+					}
+				} catch (e) {
+					console.error("Error reading token in getter:", e);
+				}
+			}
+			return "";
+		}
 	} as any,
 }) as any;
 
@@ -13,82 +58,82 @@ export function handleApiError(error: unknown): {
 	message: string;
 	status?: number;
 } {
-    console.log("[API DEBUG] Handling error:", error); // Add debug log
+	console.log("[API DEBUG] Handling error:", error); // Add debug log
 
 	// Try to extract error from treaty/elysia error structure
 	if (typeof error === 'object' && error !== null) {
 		const err = error as any;
-		
+
 		// Check for status code
 		const status = err.status || err.statusCode || err.response?.status;
-		
-        // If it's a DOMException (AbortError)
-        if (err.name === 'AbortError') {
-             return { message: "Request timed out", status: 408 };
-        }
+
+		// If it's a DOMException (AbortError)
+		if (err.name === 'AbortError') {
+			return { message: "Request timed out", status: 408 };
+		}
 
 		// Check for response data (plain text or object)
 		if (err.response) {
-            // ... rest of the code
+			// ... rest of the code
 			// If response is a string (plain text from server)
 			if (typeof err.response === 'string') {
 				return { message: err.response, status };
 			}
-			
+
 			// If response has data property
 			if (err.response.data !== undefined) {
 				if (typeof err.response.data === 'string') {
 					return { message: err.response.data, status };
 				}
 				if (typeof err.response.data === 'object') {
-					return { 
-						message: err.response.data.message || 
-						        err.response.data.error || 
-						        err.response.data.toString() ||
-						        JSON.stringify(err.response.data),
+					return {
+						message: err.response.data.message ||
+							err.response.data.error ||
+							err.response.data.toString() ||
+							JSON.stringify(err.response.data),
 						status
 					};
 				}
 			}
-			
+
 			// Check if response itself has text/body
 			if (err.response.text && typeof err.response.text === 'string') {
 				return { message: err.response.text, status };
 			}
 		}
-		
+
 		// Check for data property directly
 		if (err.data !== undefined) {
 			if (typeof err.data === 'string') {
 				return { message: err.data, status };
 			}
 			if (typeof err.data === 'object') {
-				return { 
+				return {
 					message: err.data.message || err.data.error || err.data.toString() || JSON.stringify(err.data),
 					status
 				};
 			}
 		}
-		
+
 		// Check for error property
 		if (err.error) {
 			if (typeof err.error === 'string') {
 				return { message: err.error, status };
 			}
 			if (typeof err.error === 'object') {
-				return { 
+				return {
 					message: err.error.message || err.error.error || err.error.toString() || JSON.stringify(err.error),
 					status
 				};
 			}
 		}
-		
+
 		// Check for message property
 		if (err.message && typeof err.message === 'string') {
 			return { message: err.message, status };
 		}
 	}
-	
+
 	if (error instanceof Error) {
 		const errorMessage = error.message || "Terjadi kesalahan";
 		if (errorMessage.includes("fetch") || errorMessage.includes("network")) {
@@ -96,9 +141,9 @@ export function handleApiError(error: unknown): {
 				message: "Tidak dapat terhubung ke server. Pastikan server berjalan.",
 			};
 		}
-		
+
 		return { message: errorMessage };
 	}
-	
+
 	return { message: "Terjadi kesalahan yang tidak diketahui" };
 }

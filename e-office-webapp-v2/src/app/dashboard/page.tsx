@@ -73,16 +73,35 @@ export default function DashboardPage() {
   // Calculate statistics
   const stats = useMemo(() => {
     const total = letters.length;
-    const draft = letters.filter(l => l.status === 'DRAFT').length;
-    const revision = letters.filter(l => isLetterInRevision(l)).length;
-    const pending = letters.filter(l => 
-      (l.status === 'PENDING' || l.status === 'PROCESSING') && !isLetterInRevision(l)
-    ).length;
-    const completed = letters.filter(l => l.status === 'COMPLETED').length;
-    const rejected = letters.filter(l => l.status === 'REJECTED' || l.status === 'CANCELLED').length;
+    let draft = 0;
+    let pending = 0;
+    let completed = 0;
+    let rejected = 0;
+    let revision = 0;
+
+    if (isApprover) {
+      const qLetters = letters as any[];
+      draft = 0;
+      pending = qLetters.filter(l => l.approvalStatus !== 'approved_by_me' && l.status !== 'REJECTED').length;
+      completed = qLetters.filter(l => l.approvalStatus === 'approved_by_me').length;
+      rejected = qLetters.filter(l => l.status === 'REJECTED').length;
+      revision = qLetters.filter(l => {
+        if (l.approvalStatus === 'approved_by_me') return false;
+        const stepHistory = l.stepHistory || [];
+        return stepHistory.some((h: any) => ['REVISED', 'SELF_REVISED'].includes(h.action));
+      }).length;
+    } else {
+      draft = letters.filter(l => l.status === 'DRAFT').length;
+      revision = letters.filter(l => isLetterInRevision(l)).length;
+      pending = letters.filter(l => 
+        (l.status === 'PENDING' || l.status === 'PROCESSING') && !isLetterInRevision(l)
+      ).length;
+      completed = letters.filter(l => l.status === 'COMPLETED').length;
+      rejected = letters.filter(l => l.status === 'REJECTED' || l.status === 'CANCELLED').length;
+    }
 
     return { total, draft, pending, completed, rejected, revision };
-  }, [letters]);
+  }, [letters, isApprover]);
 
   // Prepare chart data - Last 7 days
   const chartData = useMemo(() => {

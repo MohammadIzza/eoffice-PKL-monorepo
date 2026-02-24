@@ -1,5 +1,5 @@
-import { authGuardPlugin, requirePermission } from "@backend/middlewares/auth.ts";
-import { DepartemenService } from "@backend/services/database_models/departemen.service.ts";
+import { authGuardPlugin, requirePermission } from "@backend/middlewares/auth";
+import { DepartemenService } from "@backend/services/database_models/departemen.service";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()

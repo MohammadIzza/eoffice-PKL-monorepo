@@ -1,15 +1,15 @@
-import { authGuardPlugin } from "@backend/middlewares/auth.ts";
-import { Prisma } from "@backend/db/index.ts";
-import { DocumentService } from "@backend/services/document.service.ts";
-import { MinioService } from "@backend/services/minio.service.ts";
-import { PdfService } from "@backend/services/pdf.service.ts";
-import { config } from "@backend/config.ts";
-import { QRCodeService } from "@backend/services/qrcode.service.ts";
+import { authGuardPlugin } from "@backend/middlewares/auth";
+import { Prisma } from "@backend/db/index";
+import { DocumentService } from "@backend/services/document.service";
+import { MinioService } from "@backend/services/minio.service";
+import { PdfService } from "@backend/services/pdf.service";
+import { config } from "@backend/config";
+import { QRCodeService } from "@backend/services/qrcode.service";
 import {
     validateUserIsAssignee,
     PKL_WORKFLOW_STEPS,
-} from "@backend/services/workflow/pkl.workflow.service.ts";
-import { notificationService } from "@backend/services/notification.service.ts";
+} from "@backend/services/workflow/pkl.workflow.service";
+import { notificationService } from "@backend/services/notification.service";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()
@@ -155,21 +155,21 @@ export default new Elysia()
                 const htmlWithSignature =
                     letter.signatureUrl
                         ? htmlWithNumber.replace(
-                                /<img([^>]*alt=["']?Signature["']?[^>]*)>/i,
-                                (match) =>
-                                    match.includes("src=")
-                                        ? match.replace(/src=["'][^"']*["']/, `src="${letter.signatureUrl}"`)
-                                        : `<img src="${letter.signatureUrl}" ${match.replace("<img", "").replace(">", "").trim()}>`,
-                          )
+                            /<img([^>]*alt=["']?Signature["']?[^>]*)>/i,
+                            (match) =>
+                                match.includes("src=")
+                                    ? match.replace(/src=["'][^"']*["']/, `src="${letter.signatureUrl}"`)
+                                    : `<img src="${letter.signatureUrl}" ${match.replace("<img", "").replace(">", "").trim()}>`,
+                        )
                         : htmlWithNumber;
 
                 // Generate QR Code as Base64 (Using Base64 is reliable for PDF generation)
                 const trackingUrl = `${config.FE_URL}/cek-surat/${letter.id}`;
                 console.log(`[QR-DEBUG] Generating QR for URL: ${trackingUrl}`);
-                
+
                 const qrCodeDataUrl = await QRCodeService.generateQRCodeDataURL(trackingUrl);
                 console.log(`[QR-DEBUG] QR Data URL Length: ${qrCodeDataUrl.length}`);
-				
+
                 // Layout Update: Force Block Display with clear fix
                 const qrCodeHtml = `
                 <div id="qr-container" style="display: block; width: 100%; text-align: right; margin-top: 20px; clear: both; page-break-inside: avoid;">
@@ -178,10 +178,10 @@ export default new Elysia()
                 `;
 
                 let finalHtml = htmlWithSignature;
-                
+
                 // DEBUG: Check HTML content Structure
                 console.log(`[QR-DEBUG] HTML has body tag? ${/<\/body>/i.test(htmlWithSignature)}`);
-				
+
                 // Standardize HTML injection - Insert BEFORE </body>
                 const bodyCloseRegex = /<\/body>/i;
                 if (bodyCloseRegex.test(htmlWithSignature)) {
@@ -192,19 +192,19 @@ export default new Elysia()
                     finalHtml = htmlWithSignature + qrCodeHtml;
                     console.log("[QR-DEBUG] Appended QR to end of string");
                 }
-				
+
                 // Ensure simple wrapping if completely bare
                 if (!finalHtml.includes("<html") && !finalHtml.includes("<body")) {
-                     finalHtml = `<!DOCTYPE html><html><body style="padding: 40px;">${finalHtml}</body></html>`;
-                     console.log("[QR-DEBUG] Wrapped HTML with default structure");
+                    finalHtml = `<!DOCTYPE html><html><body style="padding: 40px;">${finalHtml}</body></html>`;
+                    console.log("[QR-DEBUG] Wrapped HTML with default structure");
                 }
-                
+
                 // DEBUG: Print last 500 chars to verify injection
                 console.log(`[QR-DEBUG] Final HTML Tail: ${finalHtml.slice(-500)}`);
 
                 const pdfBuffer = await PdfService.generatePdfFromHtml(finalHtml);
                 const pdfFile = new File(
-                    [pdfBuffer],
+                    [new Uint8Array(pdfBuffer)],
                     `document_v${pdfVersion}.pdf`,
                     { type: "application/pdf" },
                 );

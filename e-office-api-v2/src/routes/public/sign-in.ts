@@ -1,5 +1,5 @@
-import { auth } from "@backend/lib/auth.ts";
-import { Prisma } from "@backend/db/index.ts";
+import { auth } from "@backend/lib/auth";
+import { Prisma } from "@backend/db/index";
 import { Elysia, t } from "elysia";
 
 export default new Elysia().post(
@@ -11,7 +11,7 @@ export default new Elysia().post(
 				password: body.password,
 				rememberMe: true,
 			},
-			headers: headers,
+			headers: headers as HeadersInit,
 		});
 
 		if (data.user?.id) {
