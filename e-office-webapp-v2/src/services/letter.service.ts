@@ -507,6 +507,10 @@ export const letterService = {
 				date,
 			});
 
+			if (response.error) {
+				throw response.error;
+			}
+
 			if (!response.data || typeof response.data !== 'object') {
 				throw new Error('Invalid response from /letter/:id/numbering endpoint');
 			}

@@ -7,7 +7,7 @@ export default new Elysia()
 	.use(authGuardPlugin)
 	.get(
 		"/",
-		async ({ params: { id, versionId }, user, request }) => {
+		async ({ params: { id, versionId }, user, session, request }) => {
 			const version = parseInt(versionId);
 
 			const letter = await Prisma.letterInstance.findUnique({
@@ -56,7 +56,8 @@ export default new Elysia()
 				throw new Error("Dokumen tidak ditemukan");
 			}
 
-			const targetVersion = documentVersions.find((v) => v.version === version);
+			const versions = documentVersions.filter((v) => v.version === version);
+			const targetVersion = versions.find(v => v.isPDF && v.storageKey) || versions.find(v => v.storageKey) || versions[0];
 
 			if (!targetVersion) {
 				throw new Error(`Versi ${version} tidak ditemukan`);
@@ -67,7 +68,7 @@ export default new Elysia()
 			}
 
 			const origin = new URL(request.url).origin;
-			const downloadUrl = `${origin}/letter/${letter.id}/preview/file?version=${targetVersion.version}`;
+			const downloadUrl = `${origin}/letter/${letter.id}/preview/file?version=${targetVersion.version}${session?.token ? `&token=${session.token}` : ''}`;
 
 			return {
 				success: true,

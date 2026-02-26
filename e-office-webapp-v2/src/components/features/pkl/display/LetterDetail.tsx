@@ -1014,15 +1014,15 @@ export default function LetterDetail({ id }: LetterDetailProps) {
           <div className="bg-[#F7F7FA] p-4">
             {previewData ? (
               <div className="w-full h-[75vh] bg-white rounded-lg border border-[#E5E5E7] flex items-center justify-center overflow-hidden">
-                {previewData.htmlContent ? (
+                {previewData.isPDF ? (
                   <iframe
-                    srcDoc={previewData.htmlContent}
+                    src={previewData.previewUrl}
                     className="w-full h-full border-none"
                     title="Document Preview"
                   />
                 ) : (
                   <iframe
-                    src={previewData.previewUrl}
+                    srcDoc={previewData.htmlContent}
                     className="w-full h-full border-none"
                     title="Document Preview"
                   />
