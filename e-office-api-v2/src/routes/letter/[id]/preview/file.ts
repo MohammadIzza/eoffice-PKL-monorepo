@@ -83,7 +83,8 @@ export default new Elysia()
             const requestedVersion = query.version ? parseInt(query.version) : undefined;
 
             if (requestedVersion && documentVersions) {
-                targetVersion = documentVersions.find(v => v.version === requestedVersion);
+                const versions = documentVersions.filter(v => v.version === requestedVersion);
+                targetVersion = versions.find(v => v.isPDF && v.storageKey) || versions.find(v => v.storageKey) || versions[0];
             }
 
             // If no specific version requested, find latest (PDF preferred)

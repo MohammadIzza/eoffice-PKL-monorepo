@@ -153,6 +153,39 @@ export const authGuardPlugin = new Elysia({
 				}
 			}
 
+			// Try 5: Query parameter token (for iframes and direct links)
+			if (!session) {
+				const url = new URL(request.url);
+				const queryToken = url.searchParams.get("token");
+				if (queryToken) {
+					console.log("[AUTH DEBUG] Manual verification: token found in query param");
+
+					const { Prisma } = await import("@backend/db/index");
+					const sessionInDb = await Prisma.session.findFirst({
+						where: {
+							token: queryToken,
+							expiresAt: { gt: new Date() },
+						},
+						include: { user: true },
+					});
+
+					if (sessionInDb && sessionInDb.user) {
+						console.log("[AUTH DEBUG] Manual Query lookup: session found for user:", sessionInDb.user.email);
+						session = {
+							user: sessionInDb.user,
+							session: {
+								id: sessionInDb.id,
+								token: sessionInDb.token,
+								expiresAt: sessionInDb.expiresAt,
+								userId: sessionInDb.userId,
+							},
+						};
+					} else {
+						console.log("[AUTH DEBUG] Manual Query lookup: session not found or expired");
+					}
+				}
+			}
+
 			if (!session) {
 				console.log("[AUTH DEBUG] All attempts failed - 401 Unauthorized");
 				return status(401);

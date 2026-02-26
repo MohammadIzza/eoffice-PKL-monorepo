@@ -9,7 +9,7 @@ export default new Elysia()
 	.use(authGuardPlugin)
 	.get(
 		"/",
-		async ({ params: { id }, query, user, request }) => {
+		async ({ params: { id }, query, user, session, request }) => {
 			const letter = await Prisma.letterInstance.findUnique({
 				where: { id },
 				include: {
@@ -137,7 +137,7 @@ export default new Elysia()
 			}
 
 			const origin = new URL(request.url).origin;
-			const previewUrl = `${origin}/letter/${letter.id}/preview/file?version=${latestVersion.version}`;
+			const previewUrl = `${origin}/letter/${letter.id}/preview/file?version=${latestVersion.version}${session?.token ? `&token=${session.token}` : ''}`;
 
 			return {
 				success: true,
