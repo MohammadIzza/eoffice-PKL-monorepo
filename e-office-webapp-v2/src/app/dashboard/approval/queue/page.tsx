@@ -79,8 +79,8 @@ export default function ApprovalQueuePage() {
 
   const filteredLetters = useMemo(() => {
     if (statusFilter === 'pending') {
-      // exclude approved
-      return searchFiltered.filter((l) => (l as QueueLetter).approvalStatus !== 'approved_by_me');
+      // exclude approved and rejected
+      return searchFiltered.filter((l) => (l as QueueLetter).approvalStatus === 'pending');
     }
     if (statusFilter === 'approved') {
       return searchFiltered.filter((l) => (l as QueueLetter).approvalStatus === 'approved_by_me');
@@ -105,7 +105,7 @@ export default function ApprovalQueuePage() {
   }, [searchFiltered, statusFilter]);
 
   const totalPending = useMemo(
-    () => searchFiltered.filter((l) => (l as QueueLetter).approvalStatus !== 'approved_by_me' && l.status !== 'REJECTED').length,
+    () => searchFiltered.filter((l) => (l as QueueLetter).approvalStatus === 'pending').length,
     [searchFiltered]
   );
 
