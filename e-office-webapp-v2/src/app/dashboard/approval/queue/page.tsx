@@ -98,8 +98,8 @@ export default function ApprovalQueuePage() {
       });
     }
     if (statusFilter === 'rejected') {
-      // fallback: filter by status property if available
-      return searchFiltered.filter((l) => l.status === 'REJECTED');
+      // Hanya surat yang ditolak oleh user saat ini di step ini (backend set approvalStatus: 'rejected_by_me')
+      return searchFiltered.filter((l) => (l as QueueLetter).approvalStatus === 'rejected_by_me');
     }
     return searchFiltered;
   }, [searchFiltered, statusFilter]);
