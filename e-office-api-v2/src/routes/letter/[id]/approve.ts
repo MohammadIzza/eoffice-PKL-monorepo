@@ -199,12 +199,16 @@ export default new Elysia()
 
             // 1. Notifikasi ke DIRI SENDIRI (Actor)
             try {
+                const selfStepRole = STEP_TO_ROLE[currentStep as keyof typeof STEP_TO_ROLE];
+                const selfStepName = selfStepRole ? (STEP_ROLE_LABEL[selfStepRole] || selfStepRole) : `Step ${currentStep}`;
+                const selfStudentName = (letter.values as any)?.namaLengkap || "Mahasiswa";
+
                 // Tanda tangan: Hanya Wakil Dekan (Step 7)
                 if (currentStep === PKL_WORKFLOW_STEPS.WAKIL_DEKAN_1) {
                     await notificationService.create(
                         user.id,
                         "Tanda Tangan Berhasil",
-                        "Anda telah berhasil melakukan Tanda Tangan pada surat ini.",
+                        `Anda telah berhasil menandatangani surat PKL ${selfStudentName} sebagai ${selfStepName}.`,
                         `/dashboard/approval/${letter.id}`,
                         "SUCCESS",
                     );
@@ -214,7 +218,7 @@ export default new Elysia()
                      await notificationService.create(
                         user.id,
                         "Persetujuan Berhasil",
-                        "Anda telah berhasil menyetujui surat PKL ini.",
+                        `Anda telah berhasil menyetujui surat PKL ${selfStudentName} pada tahap ${selfStepName}.`,
                         `/dashboard/approval/${letter.id}`,
                         "SUCCESS",
                     );
@@ -224,7 +228,7 @@ export default new Elysia()
                      await notificationService.create(
                         user.id,
                         "Penomoran Berhasil",
-                        "Anda telah berhasil melakukan penomoran pada surat ini.",
+                        `Anda telah berhasil melakukan penomoran surat PKL ${selfStudentName}.`,
                         `/dashboard/approval/${letter.id}`,
                         "SUCCESS",
                     );
