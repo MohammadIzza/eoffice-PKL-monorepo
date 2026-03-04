@@ -80,7 +80,7 @@ export interface LetterListResponse {
 	data: Letter[];
 }
 
-export type ApprovalStatus = 'pending' | 'approved_by_me';
+export type ApprovalStatus = 'pending' | 'approved_by_me' | 'rejected_by_me';
 
 export interface QueueLetter extends Letter {
 	approvalStatus?: ApprovalStatus;
