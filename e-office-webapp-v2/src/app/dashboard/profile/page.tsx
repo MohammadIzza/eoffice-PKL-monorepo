@@ -311,7 +311,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
               )}
-              {userData.pegawai.programStudi && (
+              {userData.pegawai.programStudi && userData.pegawai.programStudi.name !== 'FSM' && (
                 <div className="space-y-1">
                   <p className="text-xs font-medium text-[#86868B] uppercase tracking-wide">Program Studi</p>
                   <div className="flex items-center gap-2">
@@ -322,7 +322,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
               )}
-              {userData.pegawai.departemen && (
+              {userData.pegawai.departemen && userData.pegawai.departemen.name !== 'FSM' && (
                 <div className="space-y-1">
                   <p className="text-xs font-medium text-[#86868B] uppercase tracking-wide">Departemen</p>
                   <div className="flex items-center gap-2">
