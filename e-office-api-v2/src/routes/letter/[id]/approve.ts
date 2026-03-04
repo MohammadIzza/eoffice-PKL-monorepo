@@ -288,7 +288,7 @@ export default new Elysia()
 						await notificationService.create(
 							nextAssigneeId,
 							"Surat Menunggu Persetujuan Anda",
-							`Surat PKL telah disetujui pada tahap ${stepName}. Sekarang menunggu persetujuan Anda sebagai ${nextStepName}.`,
+							`Surat PKL ${studentName} telah disetujui pada tahap ${stepName}. Sekarang menunggu persetujuan Anda sebagai ${nextStepName}.`,
 							`/dashboard/approval/${letter.id}`,
 							"INFO",
 						);

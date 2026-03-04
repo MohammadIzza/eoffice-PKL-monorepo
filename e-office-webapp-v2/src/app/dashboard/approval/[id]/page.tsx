@@ -489,8 +489,14 @@ export default function ApprovalDetailPage() {
         }
     }
 
-    setActionType(type);
-    setShowConfirmDialog(true);
+    // Clear error sebelum show dialog
+    setSubmitError(null);
+    
+    // Batch state updates dengan setTimeout untuk prevent flash
+    setTimeout(() => {
+      setActionType(type);
+      setShowConfirmDialog(true);
+    }, 0);
   };
 
   const confirmAction = async () => {
@@ -517,28 +523,35 @@ export default function ApprovalDetailPage() {
         await letterService.revise(letter.id, (comment || '').trim());
       }
 
-      await refetch();
-      await refetchQueue();
-
       const kind = actionType;
+
+      // Tutup dialog dan reset submitting DULU sebelum refetch
+      // agar tidak ada flash/modal muncul 2x saat re-render dari refetch
       setShowConfirmDialog(false);
-      setActionType(null);
-      setComment('');
-      clearSignatureCanvas();
-      if (signatureInputRef.current) signatureInputRef.current.value = '';
-      setSignatureError(null);
-      setSignatureData(null);
-      setSignaturePreview(null);
-      setSubmitError(null);
       setIsSubmitting(false);
 
-      const msg =
-        kind === 'approve'
-          ? 'Surat berhasil disetujui'
-          : kind === 'reject'
-            ? 'Surat ditolak'
-            : 'Surat berhasil direvisi';
-      showActionSuccess(kind, msg);
+      await refetch();
+      await refetchQueue();
+      
+      // Schedule cleanup dengan setTimeout untuk smooth transition
+      setTimeout(() => {
+        setActionType(null);
+        setComment('');
+        clearSignatureCanvas();
+        if (signatureInputRef.current) signatureInputRef.current.value = '';
+        setSignatureError(null);
+        setSignatureData(null);
+        setSignaturePreview(null);
+        setSubmitError(null);
+        
+        const msg =
+          kind === 'approve'
+            ? 'Surat berhasil disetujui'
+            : kind === 'reject'
+              ? 'Surat ditolak'
+              : 'Surat berhasil direvisi';
+        showActionSuccess(kind, msg);
+      }, 100);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Gagal memproses aksi';
       setSubmitError(errorMessage);
@@ -1507,7 +1520,14 @@ export default function ApprovalDetailPage() {
       </div>
 
       {/* Confirm Dialog */}
-      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+      <Dialog 
+        open={showConfirmDialog} 
+        onOpenChange={(open) => {
+          if (!isSubmitting) {
+            setShowConfirmDialog(open);
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
@@ -1528,7 +1548,11 @@ export default function ApprovalDetailPage() {
           <div className="flex gap-3 justify-end mt-4">
             <Button
               variant="outline"
-              onClick={() => setShowConfirmDialog(false)}
+              onClick={() => {
+                if (!isSubmitting) {
+                  setShowConfirmDialog(false);
+                }
+              }}
               disabled={isSubmitting}
             >
               Batal

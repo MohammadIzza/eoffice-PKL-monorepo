@@ -141,7 +141,7 @@ export default function DashboardNavbar() {
                       } else if (title.includes('disetujui')) {
                         icon = <span className="inline-flex items-center justify-center w-6 h-6 text-[#1E8E3E] mr-3"><svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></span>;
                         color = 'text-[#1E8E3E]';
-                      } else if (title.includes('menunggu') || title.includes('pending') || title.includes('persetujuan')) {
+                      } else if (title.includes('menunggu') || title.includes('pending') || title.includes('persetujuan') || title.includes('Siap untuk Review')) {
                         icon = <span className="inline-flex items-center justify-center w-6 h-6 text-[#1B5BD7] mr-3"><svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></span>;
                         color = 'text-[#1B5BD7]';
                       } else if (title.includes('baru') || title.includes('pengajuan')) {

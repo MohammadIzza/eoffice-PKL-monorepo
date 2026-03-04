@@ -99,6 +99,7 @@ export default new Elysia()
 
 			// Kirim notifikasi ke approver di rollback step (yang perlu approve ulang)
 			try {
+				const studentName = (letter.values as any)?.namaLengkap || "Mahasiswa";
 				const assignedApprovers = letter.assignedApprovers as Record<string, string>;
 				// Kembalikan stepRoleMap sesuai permintaan user
 				const stepRoleMap: Record<number, string> = {
@@ -124,7 +125,7 @@ export default new Elysia()
 					await notificationService.create(
 						rollbackAssigneeId,
 						"Surat Dikembalikan untuk Review Ulang",
-						`Surat PKL yang sebelumnya Anda setujui dikembalikan untuk revisi. Silakan review ulang setelah mahasiswa mengirim perbaikan.`,
+						`Surat PKL ${studentName} yang sebelumnya Anda setujui dikembalikan untuk revisi. Silakan review ulang setelah mahasiswa mengirim perbaikan.`,
 						`/dashboard/approval/${letter.id}`,
 						"INFO",
 					);
