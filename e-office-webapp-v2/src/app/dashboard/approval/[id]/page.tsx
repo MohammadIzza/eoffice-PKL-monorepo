@@ -791,10 +791,7 @@ export default function ApprovalDetailPage() {
     const StatusIcon = getTimelineIcon(action);
     const colorClass = getTimelineStatusColor(action);
     return (
-      <div
-        className="group relative pl-7 animate-in fade-in slide-in-from-left-2 duration-300"
-        style={{ animationDelay: `${animDelay}ms`, animationFillMode: 'both' }}
-      >
+      <div className="group relative pl-7">
         {!isLast && (
           <div
             className={`absolute left-[6px] top-5 bottom-0 w-px transition-colors duration-200 ${
