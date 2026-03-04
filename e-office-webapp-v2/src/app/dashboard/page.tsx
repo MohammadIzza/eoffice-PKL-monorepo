@@ -70,6 +70,19 @@ export default function DashboardPage() {
     return latestRevisionAction.action === 'REVISED' || latestRevisionAction.action === 'SELF_REVISED';
   };
 
+  const isApproverLetterInRevision = (letter: any): boolean => {
+    if ((letter as any).approvalStatus === 'approved_by_me') return false;
+    const stepHistory = letter.stepHistory || [];
+    const revisionRelated = stepHistory.filter((h: any) =>
+      ['REVISED', 'SELF_REVISED', 'RESUBMITTED'].includes(h.action)
+    );
+    if (revisionRelated.length === 0) return false;
+    const latestRevisionAction = [...revisionRelated].sort(
+      (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )[0];
+    return latestRevisionAction.action === 'REVISED' || latestRevisionAction.action === 'SELF_REVISED';
+  };
+
   // Calculate statistics
   const stats = useMemo(() => {
     const total = letters.length;
@@ -82,14 +95,14 @@ export default function DashboardPage() {
     if (isApprover) {
       const qLetters = letters as any[];
       draft = 0;
-      pending = qLetters.filter(l => l.approvalStatus !== 'approved_by_me' && l.status !== 'REJECTED').length;
+      pending = qLetters.filter(l => 
+        l.approvalStatus !== 'approved_by_me' && 
+        l.status !== 'REJECTED' && 
+        !isApproverLetterInRevision(l)
+      ).length;
       completed = qLetters.filter(l => l.approvalStatus === 'approved_by_me').length;
       rejected = qLetters.filter(l => l.status === 'REJECTED').length;
-      revision = qLetters.filter(l => {
-        if (l.approvalStatus === 'approved_by_me') return false;
-        const stepHistory = l.stepHistory || [];
-        return stepHistory.some((h: any) => ['REVISED', 'SELF_REVISED'].includes(h.action));
-      }).length;
+      revision = qLetters.filter((l) => isApproverLetterInRevision(l)).length;
     } else {
       draft = letters.filter(l => l.status === 'DRAFT').length;
       revision = letters.filter(l => isLetterInRevision(l)).length;

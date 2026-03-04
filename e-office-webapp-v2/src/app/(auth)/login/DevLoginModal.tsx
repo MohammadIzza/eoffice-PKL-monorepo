@@ -25,6 +25,32 @@ type DevUser = {
 // DATA DUMMY LENGKAP dari seed.ts
 const DATA_USERS: Record<string, DevUser[]> = {
   mahasiswa: [
+    // 24 PKL Testing Students (seed-pkl-testing.ts)
+    { name: "Agus Santoso", email: "test.mhs1@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214001" },
+    { name: "Budi Wijaya", email: "test.mhs2@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214002" },
+    { name: "Citra Kurniawan", email: "test.mhs3@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214003" },
+    { name: "Dian Pratama", email: "test.mhs4@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214004" },
+    { name: "Eko Sari", email: "test.mhs5@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214005" },
+    { name: "Fajar Saputra", email: "test.mhs6@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214006" },
+    { name: "Gita Wahyuni", email: "test.mhs7@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214007" },
+    { name: "Hadi Hidayat", email: "test.mhs8@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214008" },
+    { name: "Intan Setiawan", email: "test.mhs9@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214009" },
+    { name: "Joko Nugroho", email: "test.mhs10@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214010" },
+    { name: "Rina Siregar", email: "test.mhs11@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214011" },
+    { name: "Siti Nasution", email: "test.mhs12@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214012" },
+    { name: "Toni Simanjuntak", email: "test.mhs13@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214013" },
+    { name: "Wahyu Halim", email: "test.mhs14@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214014" },
+    { name: "Yudi Aditya", email: "test.mhs15@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214015" },
+    { name: "Bambang Santoso", email: "test.mhs16@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214016" },
+    { name: "Rini Wijaya", email: "test.mhs17@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214017" },
+    { name: "Sari Kurniawan", email: "test.mhs18@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214018" },
+    { name: "Dewi Pratama", email: "test.mhs19@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214019" },
+    { name: "Indra Sari", email: "test.mhs20@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214020" },
+    { name: "Putra Saputra", email: "test.mhs21@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214021" },
+    { name: "Putri Wahyuni", email: "test.mhs22@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214022" },
+    { name: "Surya Hidayat", email: "test.mhs23@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214023" },
+    { name: "Lestari Setiawan", email: "test.mhs24@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "2406012214024" },
+    // Original seed.ts mahasiswa
     { name: "Budi Santoso", email: "mahasiswa.informatika@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "240601..." },
     { name: "Siti Aminah", email: "mahasiswa2.informatika@students.undip.ac.id", role: "mahasiswa", dept: "Informatika", nim_nip: "240601..." },
     { name: "Rina Amelia", email: "mahasiswa.biologi@students.undip.ac.id", role: "mahasiswa", dept: "Biologi", nim_nip: "240201..." },
@@ -64,7 +90,6 @@ const DATA_USERS: Record<string, DevUser[]> = {
   adminfakultas: [
     { name: "Budi Admin Fak", email: "admin.fakultas@fsm.undip.ac.id", role: "admin_fakultas" },
     { name: "Super Admin", email: "superadmin@fsm.internal", role: "superadmin" },
-    { name: "Admin Sistem", email: "admin@university.ac.id", role: "admin_system" },
   ],
   supervisor: [
     { name: "Dr. Retno", email: "supervisor.test@fsm.undip.ac.id", role: "supervisor_akademik" },

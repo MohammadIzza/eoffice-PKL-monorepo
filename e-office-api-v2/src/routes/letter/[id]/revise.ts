@@ -85,10 +85,11 @@ export default new Elysia()
 
 			// 2. Notifikasi ke MAHASISWA & PREVIOUS APPROVER
 			try {
+				const studentName = (letter.values as any)?.namaLengkap || "Mahasiswa";
 				await notificationService.create(
 					letter.createdById,
 					"Surat Perlu Revisi",
-					`Surat PKL Anda dikembalikan untuk revisi. Catatan: "${comment}". Silakan perbaiki dan kirim ulang.`,
+					`Surat PKL ${studentName} dikembalikan untuk revisi. Catatan: "${comment}". Silakan perbaiki dan kirim ulang.`,
 					`/dashboard/surat/${letter.id}`,
 					"WARNING",
 				);

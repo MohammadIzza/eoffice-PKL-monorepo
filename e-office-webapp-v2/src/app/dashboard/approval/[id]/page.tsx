@@ -671,7 +671,10 @@ export default function ApprovalDetailPage() {
   const formValues = letter.values as Record<string, any>;
   const stepHistory = letter.stepHistory || [];
   const attachments = letter.attachments || [];
-  const sortedHistory = [...stepHistory].sort(
+  const hasSigned = stepHistory.some((h) => h.action === 'SIGNED');
+  const sortedHistory = [...stepHistory]
+    .filter((h) => !(h.action === 'APPROVED' && h.step === 7 && hasSigned))
+    .sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
   const letterNumber = letter.letterNumber || letter.numbering?.numberString || null;

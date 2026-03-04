@@ -1,6 +1,7 @@
 import { authGuardPlugin } from "@backend/middlewares/auth";
 import { Prisma } from "@backend/db/index";
 import { MinioService } from "@backend/services/minio.service";
+import { getUserRoles } from "@backend/lib/casbin";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()
@@ -21,27 +22,33 @@ export default new Elysia()
 				throw new Error("Surat tidak ditemukan");
 			}
 
-			const isCreator = letter.createdById === user.id;
-			const hasApproved = await Prisma.letterStepHistory.findFirst({
-				where: {
-					letterId: letter.id,
-					actorUserId: user.id,
-					action: { in: ["APPROVED", "REJECTED", "REVISED"] },
-				},
-			});
+			// Check if user is superadmin - superadmin can access everything
+			const userRoles = await getUserRoles(user.id);
+			const isSuperAdmin = userRoles.includes("superadmin");
 
-			let isAssignee = false;
-			if (!isCreator && !hasApproved) {
-				const assignedApprovers = letter.assignedApprovers as
-					| Record<string, string>
-					| null;
-				isAssignee = assignedApprovers
-					? Object.values(assignedApprovers).includes(user.id)
-					: false;
-			}
+			if (!isSuperAdmin) {
+				const isCreator = letter.createdById === user.id;
+				const hasApproved = await Prisma.letterStepHistory.findFirst({
+					where: {
+						letterId: letter.id,
+						actorUserId: user.id,
+						action: { in: ["APPROVED", "REJECTED", "REVISED"] },
+					},
+				});
 
-			if (!isCreator && !hasApproved && !isAssignee) {
-				throw new Error("Anda tidak berhak mengunduh lampiran surat ini");
+				let isAssignee = false;
+				if (!isCreator && !hasApproved) {
+					const assignedApprovers = letter.assignedApprovers as
+						| Record<string, string>
+						| null;
+					isAssignee = assignedApprovers
+						? Object.values(assignedApprovers).includes(user.id)
+						: false;
+				}
+
+				if (!isCreator && !hasApproved && !isAssignee) {
+					throw new Error("Anda tidak berhak mengunduh lampiran surat ini");
+				}
 			}
 
 			const attachment = await Prisma.attachment.findFirst({

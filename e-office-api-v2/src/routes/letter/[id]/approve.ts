@@ -6,6 +6,7 @@ import {
     getAssigneeForStep,
     PKL_WORKFLOW_STEPS,
     STEP_TO_ROLE,
+    STEP_ROLE_LABEL,
 } from "@backend/services/workflow/pkl.workflow.service";
 import { notificationService } from "@backend/services/notification.service";
 import { Elysia, t } from "elysia";
@@ -234,7 +235,9 @@ export default new Elysia()
 
             // 2. Notifikasi ke ORANG LAIN (Next Approver & Mahasiswa)
 			try {
-				const stepName = STEP_TO_ROLE[currentStep as keyof typeof STEP_TO_ROLE] ?? `Step ${currentStep}`;
+                const stepRole = STEP_TO_ROLE[currentStep as keyof typeof STEP_TO_ROLE];
+                const stepName = stepRole ? (STEP_ROLE_LABEL[stepRole] || stepRole) : `Step ${currentStep}`;
+				const studentName = (letter.values as any)?.namaLengkap || "Mahasiswa";
 				
 				// Notifikasi ke mahasiswa
 				if (currentStep === PKL_WORKFLOW_STEPS.UPA) {
@@ -242,7 +245,7 @@ export default new Elysia()
 					await notificationService.create(
 						letter.createdById,
 						"Surat PKL Selesai",
-						`Selamat! Surat PKL Anda telah selesai diproses dan disetujui oleh semua pihak.`,
+						`Selamat ${studentName}! Surat PKL Anda telah selesai diproses dan disetujui oleh semua pihak.`,
 						`/dashboard/surat/${letter.id}`,
 						"SUCCESS",
 					);
@@ -251,7 +254,7 @@ export default new Elysia()
 					await notificationService.create(
 						letter.createdById,
 						"Status Surat Diperbarui",
-						`Surat PKL Anda telah disetujui pada tahap ${stepName}. Menunggu proses selanjutnya.`,
+						`Surat PKL ${studentName} telah disetujui pada tahap ${stepName}. Menunggu proses selanjutnya.`,
 						`/dashboard/surat/${letter.id}`,
 						"SUCCESS",
 					);
@@ -280,7 +283,8 @@ export default new Elysia()
                     }
 					
 					if (nextAssigneeId) {
-						const nextStepName = STEP_TO_ROLE[nextStep as keyof typeof STEP_TO_ROLE] ?? `Step ${nextStep}`;
+                        const nextStepRole = STEP_TO_ROLE[nextStep as keyof typeof STEP_TO_ROLE];
+                        const nextStepName = nextStepRole ? (STEP_ROLE_LABEL[nextStepRole] || nextStepRole) : `Step ${nextStep}`;
 						await notificationService.create(
 							nextAssigneeId,
 							"Surat Menunggu Persetujuan Anda",

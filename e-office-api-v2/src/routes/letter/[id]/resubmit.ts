@@ -63,10 +63,11 @@ export default new Elysia()
 			// Kirim notifikasi ke approver di current step
 			try {
 				// 1. Notifikasi ke DIRI SENDIRI (Mahasiswa)
+				const studentName = (letter.values as any)?.namaLengkap || "Mahasiswa";
 				await notificationService.create(
 					user.id,
 					"Revisi Terkirim",
-					"Anda telah berhasil mengirimkan perbaikan revisi surat.",
+					`Anda telah berhasil mengirimkan perbaikan revisi surat PKL.`,
 					`/dashboard/surat/${letter.id}`,
 					"SUCCESS",
 				);
@@ -93,7 +94,7 @@ export default new Elysia()
 					await notificationService.create(
 						currentAssigneeId,
 						"Surat Siap untuk Review",
-						`Mahasiswa telah melakukan perbaikan dan mengirim ulang surat PKL. Silakan review kembali.`,
+						`Surat PKL ${studentName} telah diperbaiki dan siap untuk review ulang.`,
 						`/dashboard/approval/${letter.id}`,
 						"INFO",
 					);

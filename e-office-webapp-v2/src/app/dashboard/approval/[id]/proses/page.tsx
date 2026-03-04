@@ -54,6 +54,7 @@ export default function ProsesPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const previewNumberDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isWD1 = letter?.currentStep === WD1_STEP;
@@ -303,9 +304,11 @@ export default function ProsesPage() {
         method: signatureMode === 'draw' ? 'DRAW' : signatureMode === 'upload' ? 'UPLOAD' : 'SAVED',
         data: signatureMode === 'saved' ? user?.signatureUrl || '' : signatureData!,
       });
+      setIsRedirecting(true);
       await refetch();
       router.replace(`/dashboard/approval/${letter.id}`);
     } catch (err) {
+      setIsRedirecting(false);
       setSubmitError(err instanceof Error ? err.message : 'Gagal menyimpan tanda tangan');
     } finally {
       setIsSubmitting(false);
@@ -321,9 +324,11 @@ export default function ProsesPage() {
     setSubmitError(null);
     try {
       await letterService.assignNumber(letter.id, numberInput.trim().toUpperCase(), numberDate);
+      setIsRedirecting(true);
       await refetch();
       router.replace(`/dashboard/approval/${letter.id}`);
     } catch (err) {
+      setIsRedirecting(false);
       setSubmitError(err instanceof Error ? err.message : 'Gagal menerbitkan nomor');
     } finally {
       setIsSubmitting(false);
@@ -333,7 +338,7 @@ export default function ProsesPage() {
   const handleBack = () => router.push(`/dashboard/approval/${id}`);
   const handleTutup = () => router.push('/dashboard/approval/queue');
 
-  if (isLoading || !letter) {
+  if (isLoading || !letter || isRedirecting) {
     return (
       <div className="flex-1 px-6 py-8 max-w-7xl mx-auto">
         <Skeleton className="h-8 w-48 mb-6" />

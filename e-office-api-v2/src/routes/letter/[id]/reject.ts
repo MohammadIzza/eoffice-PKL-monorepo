@@ -75,10 +75,11 @@ export default new Elysia()
 
 			// 2. Notifikasi ke MAHASISWA
 			try {
+				const studentName = (letter.values as any)?.namaLengkap || "Mahasiswa";
 				await notificationService.create(
 					letter.createdById,
 					"Surat Ditolak",
-					`Surat PKL Anda dikembalikan dengan catatan: "${comment}"`,
+					`Surat PKL ${studentName} dikembalikan dengan catatan: "${comment}"`,
 					`/dashboard/surat/${letter.id}`,
 					"WARNING",
 				);

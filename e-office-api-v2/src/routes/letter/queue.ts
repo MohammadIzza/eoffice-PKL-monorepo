@@ -52,6 +52,13 @@ export default new Elysia()
 				},
 				include: {
 					letterType: true,
+					stepHistory: {
+						select: {
+							action: true,
+							createdAt: true,
+						},
+						orderBy: { createdAt: "desc" },
+					},
 					createdBy: {
 						select: {
 							id: true,
@@ -109,6 +116,13 @@ export default new Elysia()
 					letter: {
 						include: {
 							letterType: true,
+							stepHistory: {
+								select: {
+									action: true,
+									createdAt: true,
+								},
+								orderBy: { createdAt: "desc" },
+							},
 							createdBy: {
 								select: {
 									id: true,
