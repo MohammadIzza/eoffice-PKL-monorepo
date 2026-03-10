@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/api/useAuth";
+import { withBasePath } from "@/lib/navigation";
 import { DevLoginModal } from "./DevLoginModal";
 
 const loginSchema = z.object({
@@ -61,13 +62,13 @@ export default function LoginPage() {
     
     try {
       await login(data.email, data.password);
-      router.push("/dashboard"); 
+      window.location.href = withBasePath("/dashboard"); 
     } catch (error: any) {
       setErrorMessage("Email atau password yang Anda masukkan salah.");
     }
   };
 
-  const backgroundImageUrl = "/ACINTYA.jpeg"; 
+  const backgroundImageUrl = withBasePath("/ACINTYA.jpeg"); 
 
   const handleSSOLogin = () => {
     // Architectural Requirement: Direct redirection to External SSO
@@ -90,13 +91,13 @@ export default function LoginPage() {
         <div className="relative z-10 flex h-full flex-col justify-between p-10 text-white">
           <div className="flex items-center gap-3">
             <div className="bg-white/10 p-2 rounded-xl backdrop-blur-sm border border-white/20">
-               <Image 
-                 src="/Undip.png" 
-                 alt="Logo Undip" 
-                 width={40} 
-                 height={40} 
-                 className="object-contain"
-               />
+                <img 
+                  src={withBasePath("/Undip.png")} 
+                  alt="Logo Undip" 
+                  width={40} 
+                  height={40} 
+                  className="object-contain"
+                />
             </div>
             <div className="flex flex-col">
               <span className="text-lg font-bold">E-Office FSM</span>
@@ -125,13 +126,13 @@ export default function LoginPage() {
           
           {/* Mobile Logo */}
           <div className="flex flex-col items-center justify-center lg:hidden mb-6">
-               <Image 
-                 src="/Undip.png" 
-                 alt="Logo Undip" 
-                 width={40} 
-                 height={40} 
-                 className="mb-1.5"
-               />
+                <img 
+                  src={withBasePath("/Undip.png")} 
+                  alt="Logo Undip" 
+                  width={40} 
+                  height={40} 
+                  className="mb-1.5"
+                />
                <h2 className="text-base font-bold text-slate-900">E-Office FSM</h2>
           </div>
 

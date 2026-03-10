@@ -11,6 +11,7 @@ import { useLetter } from '@/hooks/api';
 import { useAuthStore } from '@/stores/authStore';
 import { letterService } from '@/services';
 import { formatDate, formatDateTime } from '@/lib/utils/date.utils';
+import { withBasePath } from '@/lib/navigation';
 import {
   Loader2,
   AlertCircle,
@@ -65,7 +66,7 @@ export default function ProsesPage() {
   useEffect(() => {
     if (isLoading || !letter) return;
     if (!mode || letter.status === 'COMPLETED') {
-      router.replace(`/dashboard/approval/${id}`);
+      router.replace(withBasePath(`/dashboard/approval/${id}`));
       return;
     }
   }, [id, isLoading, letter, mode, router]);
@@ -306,7 +307,7 @@ export default function ProsesPage() {
       });
       setIsRedirecting(true);
       await refetch();
-      router.replace(`/dashboard/approval/${letter.id}`);
+      router.replace(withBasePath(`/dashboard/approval/${letter.id}`));
     } catch (err) {
       setIsRedirecting(false);
       setSubmitError(err instanceof Error ? err.message : 'Gagal menyimpan tanda tangan');
@@ -326,7 +327,7 @@ export default function ProsesPage() {
       await letterService.assignNumber(letter.id, numberInput.trim().toUpperCase(), numberDate);
       setIsRedirecting(true);
       await refetch();
-      router.replace(`/dashboard/approval/${letter.id}`);
+      router.replace(withBasePath(`/dashboard/approval/${letter.id}`));
     } catch (err) {
       setIsRedirecting(false);
       setSubmitError(err instanceof Error ? err.message : 'Gagal menerbitkan nomor');
@@ -335,8 +336,8 @@ export default function ProsesPage() {
     }
   };
 
-  const handleBack = () => router.push(`/dashboard/approval/${id}`);
-  const handleTutup = () => router.push('/dashboard/approval/queue');
+  const handleBack = () => router.push(withBasePath(`/dashboard/approval/${id}`));
+  const handleTutup = () => router.push(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/dashboard/approval/queue`);
 
   if (isLoading || !letter || isRedirecting) {
     return (
@@ -359,7 +360,7 @@ export default function ProsesPage() {
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error || 'Akses ditolak. Halaman ini hanya untuk WD1 atau UPA.'}</AlertDescription>
         </Alert>
-        <Button variant="outline" onClick={() => router.push(`/dashboard/approval/${id}`)} className="mt-4">
+        <Button variant="outline" onClick={() => router.push(withBasePath(`/dashboard/approval/${id}`))} className="mt-4">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Kembali ke Detail
         </Button>
@@ -379,14 +380,14 @@ export default function ProsesPage() {
         {/* Breadcrumb */}
         <div className="flex items-center text-[16px] text-[#86868B] mb-6 font-lexend">
           <button
-            onClick={() => router.push('/dashboard/approval/queue')}
+            onClick={() => router.push(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/dashboard/approval/queue`)}
             className="text-[#0071E3] hover:text-[#0051A3] transition-colors"
           >
             Antrian Approval
           </button>
           <span className="mx-2 text-[#CBD5E1]">/</span>
           <button
-            onClick={() => router.push(`/dashboard/approval/${id}`)}
+            onClick={() => router.push(withBasePath(`/dashboard/approval/${id}`))}
             className="text-[#0071E3] hover:text-[#0051A3] transition-colors"
           >
             Detail Approval
@@ -560,7 +561,7 @@ export default function ProsesPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => router.push('/dashboard/profile')}
+                            onClick={() => router.push(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/dashboard/profile`)}
                             className="bg-white hover:bg-gray-50 text-xs h-8"
                           >
                             Ke Profil Saya

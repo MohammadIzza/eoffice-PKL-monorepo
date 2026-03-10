@@ -23,6 +23,7 @@ import { useAuthStore } from "@/stores";
 import { useRouter } from "next/navigation";
 import { authService } from "@/services/auth.service";
 import Link from "next/link";
+import { withBasePath } from "@/lib/navigation";
 import { useNotifications } from "@/hooks/api/useNotifications";
 import { formatDistanceToNow } from "date-fns";
 import { id as indonesia } from "date-fns/locale";
@@ -50,14 +51,14 @@ export default function DashboardNavbar() {
       logout();
       document.cookie = 'better-auth.session_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
       localStorage.removeItem('auth-storage');
-      router.push('/login');
+      window.location.href = withBasePath("/login");
     }
   };
 
   const handleNotificationClick = async (notif: any) => {
     await markAsRead(notif.id);
     if (notif.link) {
-      router.push(notif.link);
+      router.push(withBasePath(notif.link));
     }
   };
 
@@ -67,7 +68,7 @@ export default function DashboardNavbar() {
         {/* Logo Section */}
         <div className="flex items-center h-8">
           <img 
-            src="/logofsm.svg" 
+            src={withBasePath("/logofsm.svg")} 
             alt="FSM Undip" 
             className="h-full w-auto object-contain brightness-0 invert"
           />
@@ -224,7 +225,7 @@ export default function DashboardNavbar() {
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="my-1" />
               <DropdownMenuItem className="cursor-pointer rounded-lg py-2" asChild>
-                <Link href="/dashboard/profile" className="flex items-center w-full">
+                <Link href={withBasePath("/dashboard/profile")} className="flex items-center w-full">
                   <User className="mr-2 h-4 w-4 text-gray-500" />
                   <span>Profil</span>
                 </Link>

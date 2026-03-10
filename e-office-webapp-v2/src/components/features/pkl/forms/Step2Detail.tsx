@@ -1,5 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
+import { withBasePath } from "@/lib/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,7 +30,7 @@ export default function Step2Detail() {
   useEffect(() => {
     if (!isMahasiswa || lettersLoading) return;
     if (hasLetterInProgress && !isRevisi) {
-      router.replace("/dashboard/surat?blocked=1");
+      router.replace(withBasePath("/dashboard/surat?blocked=1"));
     }
   }, [isMahasiswa, lettersLoading, hasLetterInProgress, isRevisi, router]);
   const prodiId = user?.mahasiswa?.programStudi?.id || formData.programStudiId || null;
@@ -93,7 +94,7 @@ export default function Step2Detail() {
       ...formData,
       ...data,
     });
-    router.push("/dashboard/pengajuan/pkl/lampiran");
+    router.push(withBasePath("/dashboard/pengajuan/pkl/lampiran"));
   };
 
   const cardClass = "w-full max-w-5xl bg-white rounded-3xl border border-[rgba(0,0,0,0.08)] shadow-sm flex flex-col p-6";
@@ -329,7 +330,7 @@ export default function Step2Detail() {
             </div>
           </div>
           <div className="w-full max-w-5xl flex justify-between items-center">
-            <Button type="button" variant="outline" size="default" onClick={() => router.push("/dashboard/pengajuan/pkl/identitas")} className="min-w-[84px]">
+            <Button type="button" variant="outline" size="default" onClick={() => router.push(withBasePath("/dashboard/pengajuan/pkl/identitas"))} className="min-w-[84px]">
               Kembali
             </Button>
             <Button type="submit" size="default" className="min-w-[84px]">

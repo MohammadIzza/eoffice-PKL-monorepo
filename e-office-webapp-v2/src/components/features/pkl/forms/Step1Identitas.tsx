@@ -1,5 +1,6 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
+import { withBasePath } from "@/lib/navigation";
 import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -38,7 +39,7 @@ export default function Step1Identitas() {
   useEffect(() => {
     if (!isMahasiswa || lettersLoading) return;
     if (hasLetterInProgress && !isRevisi) {
-      router.replace("/dashboard/surat?blocked=1");
+      router.replace(withBasePath("/dashboard/surat?blocked=1"));
       return;
     }
   }, [isMahasiswa, lettersLoading, hasLetterInProgress, isRevisi, router]);
@@ -122,7 +123,7 @@ export default function Step1Identitas() {
       programStudiId: user?.mahasiswa?.programStudi?.id || "",
       departemenId: user?.mahasiswa?.departemen?.id || "",
     });
-    router.push("/dashboard/pengajuan/pkl/detail-pengajuan");
+    router.push(withBasePath("/dashboard/pengajuan/pkl/detail-pengajuan"));
   };
 
   const readOnlyClass = "h-9 bg-muted border-muted text-foreground cursor-default text-sm pr-10";

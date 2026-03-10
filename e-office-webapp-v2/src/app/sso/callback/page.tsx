@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
+import { withBasePath } from "@/lib/navigation";
 import { Loader2 } from "lucide-react";
 
 function SSOCallbackComponent() {
@@ -48,8 +49,8 @@ function SSOCallbackComponent() {
         // 3. Persist Local Token + JSON Profile into Zustand Global Storage (and localStorage natively underneath)
         setAuth(userProfile, token);
 
-        // 4. Force Push to Protected Inner Application
-        router.push("/dashboard");
+        // 4. Force Push to Protected Inner Application securely resolving the Nginx proxy mask
+        window.location.href = withBasePath("/dashboard");
         
       } catch (err: any) {
         console.error("SSO Callback processing failed:", err);
@@ -67,7 +68,7 @@ function SSOCallbackComponent() {
           <h2 className="text-red-600 font-bold mb-2">Autentikasi Gagal</h2>
           <p className="text-sm text-red-700 mb-4">{error}</p>
           <button 
-            onClick={() => router.push("/login")}
+            onClick={() => router.push(withBasePath("/login"))}
             className="px-4 py-2 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition"
           >
             Kembali ke Login

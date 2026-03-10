@@ -20,14 +20,17 @@ export function middleware(request: NextRequest) {
   const isAuthRoute = authRoutes.some(route => pathname.startsWith(route));
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
 
+  // Get base path from Env
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+
   // Redirect authenticated users away from auth pages
   if (hasCookie && isAuthRoute) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return NextResponse.redirect(new URL(`${basePath}/dashboard`, request.url));
   }
 
   // Redirect unauthenticated users to login
   // if (!hasCookie && isProtectedRoute) {
-  //   const loginUrl = new URL('/login', request.url);
+  //   const loginUrl = new URL(`${basePath}/login`, request.url);
   //   loginUrl.searchParams.set('redirect', pathname);
   //   return NextResponse.redirect(loginUrl);
   // }

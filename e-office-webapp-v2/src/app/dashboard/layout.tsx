@@ -4,6 +4,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardNavbar from '@/components/layouts/DashboardNavbar';
 import PKLSidebar from '@/components/features/pkl/navigation/PKLSidebar';
+import { withBasePath } from '@/lib/navigation';
 import { useAuthStore } from '@/stores';
 import { PageLoading } from '@/components/shared';
 
@@ -19,7 +20,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       const currentUser = useAuthStore.getState().user;
       if (!currentUser) {
         // No user found, redirect to login
-        router.push('/login');
+        router.push(withBasePath('/login'));
         return;
       }
       setIsChecking(false);

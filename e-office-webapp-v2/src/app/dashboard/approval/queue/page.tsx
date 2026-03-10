@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useApprovalQueue } from '@/hooks/api/useApprovalQueue';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { withBasePath } from '@/lib/navigation';
 import { 
   FileText, 
   AlertCircle, 
@@ -335,7 +336,7 @@ export default function ApprovalQueuePage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => router.push(`/dashboard/approval/${letter.id}${(isApproved || isRejected) ? '?view=1' : ''}`)}
+                              onClick={() => router.push(withBasePath(`/dashboard/approval/${letter.id}${(isApproved || isRejected) ? '?view=1' : ''}`))}
                               className="h-8 gap-1.5 rounded-full border border-[#E5E5E7] text-sm font-medium text-[#1D1D1F] hover:bg-[#0071E3] hover:border-[#0071E3] hover:text-white transition-colors duration-200"
                             >
                               <Eye className="w-4 h-4" />

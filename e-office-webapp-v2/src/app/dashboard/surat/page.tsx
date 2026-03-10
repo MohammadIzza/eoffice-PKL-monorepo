@@ -32,6 +32,7 @@ import Link from 'next/link';
 import { useMyLetters, useApprovalQueue } from '@/hooks/api';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { withBasePath } from '@/lib/navigation';
 import { 
   Loader2, 
   FileText, 
@@ -306,7 +307,7 @@ export default function SuratListPage() {
               Buat Pengajuan Baru
             </Button>
           ) : (
-            <Link href="/dashboard/pengajuan/pkl/identitas">
+            <Link href={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/dashboard/pengajuan/pkl/identitas`}>
               <Button size="default" className="gap-2">
                 <Plus className="w-4 h-4" />
                 Buat Pengajuan Baru
@@ -335,7 +336,7 @@ export default function SuratListPage() {
                     Buat Pengajuan Baru
                   </Button>
                 ) : (
-                  <Link href="/dashboard/pengajuan/pkl/identitas">
+                  <Link href={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/dashboard/pengajuan/pkl/identitas`}>
                     <Button size="default" className="gap-2">
                       <Plus className="w-3.5 h-3.5" />
                       Buat Pengajuan Baru
@@ -506,7 +507,7 @@ export default function SuratListPage() {
                           </TableCell>
                           <TableCell className="py-4 w-[100px]">
                             <div className="flex items-center justify-center">
-                              <Link href={isApprover ? `/dashboard/approval/${letter.id}` : `/dashboard/surat/${letter.id}`}>
+                              <Link href={withBasePath(isApprover ? `/dashboard/approval/${letter.id}` : `/dashboard/surat/${letter.id}`)}>
                                 <Button 
                                   variant="ghost" 
                                   size="sm" 

@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { formatDate, formatDateTime } from '@/lib/utils/date.utils';
+import { withBasePath } from '@/lib/navigation';
 import { API_URL } from '@/lib/constants';
 
 const ROLE_TO_STEP: Record<string, number> = {
@@ -855,7 +856,7 @@ export default function ApprovalDetailPage() {
         {/* Breadcrumb */}
         <div className="flex items-center text-[16px] text-[#86868B] mb-[32px] font-lexend">
           <button
-            onClick={() => router.push('/dashboard/approval/queue')}
+            onClick={() => router.push(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/dashboard/approval/queue`)}
             className="text-[#0071E3] hover:text-[#0051A3] transition-colors"
           >
             Antrian Approval
@@ -899,7 +900,7 @@ export default function ApprovalDetailPage() {
             </div>
             <Button
               variant="outline"
-              onClick={() => router.push('/dashboard/approval/queue')}
+              onClick={() => router.push(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/dashboard/approval/queue`)}
               className="bg-white border-[#E5E5E7] text-[#1D1D1F] hover:bg-[#F5F5F7]"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -1056,7 +1057,7 @@ export default function ApprovalDetailPage() {
               <CardContent className="p-6 space-y-4">
                 {/* {isSupervisor && (
                   <Button
-                    onClick={() => router.push(`/dashboard/approval/${letter.id}/edit`)}
+                    onClick={() => router.push(withBasePath(`/dashboard/approval/${letter.id}/edit`))}
                     className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3]"
                   >
                     <Edit className="w-4 h-4 mr-2" />
@@ -1164,7 +1165,7 @@ export default function ApprovalDetailPage() {
                     Masuk ke halaman proses penomoran untuk mengisi nomor surat dan menerbitkannya.
                   </p>
                   <Button
-                    onClick={() => router.push(`/dashboard/approval/${letter.id}/proses`)}
+                    onClick={() => router.push(withBasePath(`/dashboard/approval/${letter.id}/proses`))}
                     className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3]"
                   >
                     Proses Penomoran
@@ -1201,7 +1202,7 @@ export default function ApprovalDetailPage() {
                       Masuk ke halaman proses tanda tangan untuk menandatangani dan menyetujui surat.
                     </p>
                     <Button
-                      onClick={() => router.push(`/dashboard/approval/${letter.id}/proses`)}
+                      onClick={() => router.push(withBasePath(`/dashboard/approval/${letter.id}/proses`))}
                       className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3]"
                     >
                       Proses TTD
@@ -1385,7 +1386,7 @@ export default function ApprovalDetailPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => router.push('/dashboard/profile')}
+                                onClick={() => router.push(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/dashboard/profile`)}
                                 className="bg-white"
                               >
                                 Ke Profil Saya

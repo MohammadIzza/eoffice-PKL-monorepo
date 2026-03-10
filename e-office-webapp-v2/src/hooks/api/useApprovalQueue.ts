@@ -3,6 +3,7 @@ import { letterService, type QueueLetter } from '@/services';
 import { useAuthStore } from '@/stores';
 import { useRouter } from 'next/navigation';
 import { handleApiError } from '@/lib/api';
+import { withBasePath } from "@/lib/navigation";
 
 export function useApprovalQueue() {
   const router = useRouter();
@@ -14,7 +15,7 @@ export function useApprovalQueue() {
   // Determine active role from user roles
   const getActiveRole = (): string | null => {
     if (!user?.roles) return null;
-    
+
     const approverRoles = [
       'dosen_pembimbing',
       'dosen_koordinator',
@@ -25,7 +26,7 @@ export function useApprovalQueue() {
       'wakil_dekan_1',
       'upa'
     ];
-    
+
     // Get first approver role from user
     const userRoleNames = user.roles.map(r => r.name);
     return userRoleNames.find(role => approverRoles.includes(role)) || null;
@@ -33,7 +34,7 @@ export function useApprovalQueue() {
 
   useEffect(() => {
     const activeRole = getActiveRole();
-    
+
     if (!activeRole) {
       setIsLoading(false);
       setLetters([]);
@@ -43,7 +44,7 @@ export function useApprovalQueue() {
     const fetchQueue = async () => {
       setIsLoading(true);
       setError(null);
-      
+
       try {
         const data = await letterService.getQueue(activeRole);
         setLetters(data);
@@ -51,7 +52,7 @@ export function useApprovalQueue() {
         const errorData = handleApiError(err);
 
         if (errorData.status === 401) {
-          router.push('/login');
+          window.location.href = withBasePath("/login");
           return;
         }
 
@@ -73,7 +74,7 @@ export function useApprovalQueue() {
     refetch: async () => {
       const activeRole = getActiveRole();
       if (!activeRole) return;
-      
+
       setIsLoading(true);
       setError(null);
       try {
@@ -81,11 +82,11 @@ export function useApprovalQueue() {
         setLetters(data);
       } catch (err) {
         const errorData = handleApiError(err);
-         if (errorData.status === 401) {
-             router.push('/login');
-             return;
-         }
-         setError(errorData.message);
+        if (errorData.status === 401) {
+          window.location.href = withBasePath("/login");
+          return;
+        }
+        setError(errorData.message);
       } finally {
         setIsLoading(false);
       }
