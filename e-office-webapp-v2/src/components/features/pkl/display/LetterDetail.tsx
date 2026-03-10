@@ -588,7 +588,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
               </CardHeader>
               <CardContent className="p-0">
                 <DetailRow label="Nama Lengkap" value={formValues.namaLengkap || letter.createdBy?.name} />
-                <DetailRow label="NIM/NIP" value={formValues.nim} />
+                <DetailRow label="NIM" value={formValues.nim} />
                 <DetailRow label="Email" value={formValues.email || letter.createdBy?.email} />
                 <DetailRow label="Departemen" value={formValues.departemen} />
                 <DetailRow label="Program Studi" value={formValues.programStudi} />

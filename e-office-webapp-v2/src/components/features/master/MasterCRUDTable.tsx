@@ -80,7 +80,12 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 	const [submitError, setSubmitError] = useState<string | null>(null);
 
 	const handleCreate = () => {
-		setFormData({});
+		// Pre-init formData with empty strings so optional fields don't send undefined
+		const initialData: Record<string, any> = {};
+		formFields.forEach((field) => {
+			initialData[field.key] = '';
+		});
+		setFormData(initialData);
 		setSubmitError(null);
 		setIsCreateOpen(true);
 	};
@@ -88,7 +93,8 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 	const handleEdit = (item: T) => {
 		setEditingItem(item);
 		const initialData: Record<string, any> = {};
-		formFields.forEach((field) => {
+		// Use effectiveEditFields to pre-populate edit form correctly
+		effectiveEditFields.forEach((field) => {
 			initialData[field.key] = item[field.key] ?? '';
 		});
 		setFormData(initialData);

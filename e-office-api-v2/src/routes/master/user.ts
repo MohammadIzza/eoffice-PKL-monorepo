@@ -8,31 +8,47 @@ export default new Elysia()
 	.get(
 		"/all",
 		async () => {
-			return UserService.getAll();
+			const users = await Prisma.user.findMany({
+				include: {
+					userRole: {
+						include: { role: true },
+					},
+				},
+				orderBy: { name: 'asc' },
+			});
+			return { success: true, data: users };
 		},
 		{
 			...requirePermission("user", "read"),
-			body: t.Object({}),
 		},
 	)
 	.get(
 		"/:id",
 		async ({ params: { id } }) => {
-			return UserService.get(id);
+			const user = await Prisma.user.findUnique({
+				where: { id },
+				include: { userRole: { include: { role: true } } },
+			});
+			return { success: true, data: user };
 		},
 		{
 			...requirePermission("user", "read"),
-			body: t.Object({}),
 		},
 	)
 	.post(
 		"/",
-		async ({ body: { name, email } }) => {
+		async ({ body: { name, email, roleId } }) => {
 			const letter = await UserService.create({
 				name: name,
 				email: email,
 				isAnonymous: false,
 			});
+
+			if (roleId) {
+				await Prisma.userRole.create({
+					data: { userId: letter.id, roleId },
+				});
+			}
 
 			return {
 				message: "User created successfully",
@@ -44,15 +60,26 @@ export default new Elysia()
 			body: t.Object({
 				name: t.String(),
 				email: t.String(),
+				roleId: t.Optional(t.String()),
 			}),
 		},
 	)
 	.patch(
 		"/",
-		async ({ body: { id, name } }) => {
+		async ({ body: { id, name, roleId } }) => {
 			const letter = await UserService.update(id, {
 				name: name,
 			});
+
+			if (roleId !== undefined) {
+				// Replace existing role
+				await Prisma.userRole.deleteMany({ where: { userId: id } });
+				if (roleId) {
+					await Prisma.userRole.create({
+						data: { userId: id, roleId },
+					});
+				}
+			}
 
 			return {
 				message: "User update successfully",
@@ -64,6 +91,7 @@ export default new Elysia()
 			body: t.Object({
 				id: t.String(),
 				name: t.Optional(t.String()),
+				roleId: t.Optional(t.String()),
 			}),
 		},
 	)

@@ -39,7 +39,9 @@ export default new Elysia().use(authGuardPlugin).get(
 			email: userWithRelations.email,
 			emailVerified: userWithRelations.emailVerified,
 			image: userWithRelations.image,
-			signatureUrl: userWithRelations.signatureUrl,
+			signatureUrl: userWithRelations.signatureUrl
+				? MinioService.toPublicUrl(userWithRelations.signatureUrl)
+				: null,
 			roles: userWithRelations.userRole.map((ur) => ({
 				id: ur.role.id,
 				name: ur.role.name,

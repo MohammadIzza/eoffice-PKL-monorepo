@@ -6,6 +6,14 @@ export interface User {
 	email: string;
 	emailVerified: boolean;
 	image: string | null;
+	roleId?: string; // computed from userRole[0] for form pre-population
+	userRole?: Array<{
+		roleId: string;
+		role: {
+			id: string;
+			name: string;
+		};
+	}>;
 }
 
 export interface UserListResponse {
@@ -48,7 +56,7 @@ export const userService = {
 		}
 	},
 
-	create: async (data: { name: string; email: string }): Promise<void> => {
+	create: async (data: { name: string; email: string; roleId?: string }): Promise<void> => {
 		try {
 			const response = await client.master.user.post(data);
 			if (!response.data || typeof response.data !== 'object') {
@@ -59,7 +67,7 @@ export const userService = {
 		}
 	},
 
-	update: async (id: string, data: { name?: string }): Promise<void> => {
+	update: async (id: string, data: { name?: string; roleId?: string }): Promise<void> => {
 		try {
 			const response = await client.master.user.patch({ id, ...data });
 			if (!response.data || typeof response.data !== 'object') {

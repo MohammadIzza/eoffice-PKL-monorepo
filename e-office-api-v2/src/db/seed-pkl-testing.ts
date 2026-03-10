@@ -338,8 +338,8 @@ async function main() {
                 "upa",
             ];
 
-            // For step 7 and above, include step 7 in history. Otherwise, go up to targetStep - 1
-            const maxHistoricalStep = targetStep >= 7 ? 7 : targetStep - 1;
+            // For step 8 (UPA), include step 7 in history. For step 7 (WD1 pending), go up to step 6.
+            const maxHistoricalStep = targetStep > 7 ? 7 : targetStep - 1;
             for (let historicalStep = 1; historicalStep <= maxHistoricalStep; historicalStep++) {
                 currentDate.setHours(currentDate.getHours() + 1); // 1 hour later
 

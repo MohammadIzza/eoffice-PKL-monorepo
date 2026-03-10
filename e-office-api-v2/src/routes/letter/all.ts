@@ -11,6 +11,14 @@ export default new Elysia()
 				include: {
 					letterType: true,
 					numbering: true,
+					stepHistory: {
+						select: {
+							action: true,
+							step: true,
+							createdAt: true,
+						},
+						orderBy: { createdAt: "desc" },
+					},
 					createdBy: {
 						select: {
 							id: true,
