@@ -71,8 +71,12 @@ export default function LoginPage() {
   const backgroundImageUrl = withBasePath("/ACINTYA.jpeg"); 
 
   const handleSSOLogin = () => {
-    // Architectural Requirement: Direct redirection to External SSO
-    window.location.href = "https://apps-fsm.undip.ac.id/sso";
+    // Architectural Requirement: Explicit Bounce URL with Client ID and Redirect URI for Auto-Login Bypass
+    // Correct Client ID from SSO Database Dump: "persuratan-pengantar-pkl"
+    const clientId = "41b3c97a-1fc0-42ee-9bf3-9a36c4f720d3";
+    // Must EXACTLY match application_url_callback in SSO DB!
+    const redirectUri = encodeURIComponent("http://apps-fsm.undip.ac.id/persuratan-pengantar-pkl-api/auth/sso");
+    window.location.href = `https://apps-fsm.undip.ac.id/sso/?client_id=${clientId}&redirect_uri=${redirectUri}`;
   };
 
   return (

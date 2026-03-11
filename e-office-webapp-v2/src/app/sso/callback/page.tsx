@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import { withBasePath } from "@/lib/navigation";
+import { authService } from "@/services";
 import { Loader2 } from "lucide-react";
 
 function SSOCallbackComponent() {
@@ -14,7 +15,6 @@ function SSOCallbackComponent() {
   const [error, setError] = useState<string | null>(null);
   
   // Access global state safely
-  const logout = useAuthStore((state) => state.logout);
   const setAuth = useAuthStore((state) => state.setAuth);
 
   useEffect(() => {
@@ -25,26 +25,8 @@ function SSOCallbackComponent() {
           return;
         }
 
-        // 1. Destroy lingering local sessions to avoid state conflicts
-        logout();
-
-        // 2. Hydrate Headers and Request User Profile from Internal Backend
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://10.137.58.124:20062";
-        
-        const response = await fetch(`${API_URL}/master/user/me`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error("Gagal mengambil profil paska validasi SSO. Token mungkin kedaluwarsa.");
-        }
-
-        const data = await response.json();
-        const userProfile = data.data || data;
+        // Use internal authService to properly construct header and fetch profile
+        const userProfile = await authService.getMe(token);
 
         // 3. Persist Local Token + JSON Profile into Zustand Global Storage (and localStorage natively underneath)
         setAuth(userProfile, token);
@@ -59,7 +41,7 @@ function SSOCallbackComponent() {
     };
 
     processSSO();
-  }, [token, router, logout, setAuth]);
+  }, [token, router, setAuth]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50">
