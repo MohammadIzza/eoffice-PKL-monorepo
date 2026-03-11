@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { letterService, type Letter } from '@/services';
 import { useRouter } from 'next/navigation';
-import { handleApiError } from '@/lib/api';
+import { client, handleApiError } from '@/lib/api';
+import { withBasePath } from '@/lib/navigation';
 
 export function useMyLetters() {
   const router = useRouter();
@@ -13,7 +14,7 @@ export function useMyLetters() {
     const fetchLetters = async () => {
       setIsLoading(true);
       setError(null);
-      
+
       try {
         const data = await letterService.getMyLetters();
         setLetters(data);
@@ -21,8 +22,8 @@ export function useMyLetters() {
         const errorData = handleApiError(err);
 
         if (errorData.status === 401) {
-            router.push('/login');
-            return;
+          window.location.href = withBasePath("/login");
+          return;
         }
 
         setError(errorData.message);
@@ -53,8 +54,8 @@ export function useMyLetters() {
       } catch (err) {
         const errorData = handleApiError(err);
         if (errorData.status === 401) {
-             router.push('/login');
-             return;
+          window.location.href = withBasePath("/login");
+          return;
         }
         setError(errorData.message);
       } finally {

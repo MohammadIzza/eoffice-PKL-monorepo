@@ -263,15 +263,25 @@ export default new Elysia()
 
             // Notifikasi untuk UPA (Surat Berhasil Dinomori)
             try {
+                const studentName = (letter.values as any)?.namaLengkap || "Mahasiswa";
                 await notificationService.create(
                     user.id,
                     "Surat Berhasil Dinomori",
-                    `Surat telah diberi nomor ${numberString} dan statusnya selesai.`,
+                    `Surat PKL ${studentName} telah diberi nomor ${numberString} dan statusnya selesai.`,
+                    `/dashboard/surat/${letter.id}`,
+                    "SUCCESS",
+                );
+
+                // Notifikasi untuk Mahasiswa pembuat surat
+                await notificationService.create(
+                    letter.createdById,
+                    "Surat PKL Selesai",
+                    `Selamat ${studentName}! Surat PKL Anda telah selesai diproses dan diberi nomor ${numberString}.`,
                     `/dashboard/surat/${letter.id}`,
                     "SUCCESS",
                 );
             } catch (e) {
-                console.error("Gagal mengirim notifikasi numbering ke UPA:", e);
+                console.error("Gagal mengirim notifikasi numbering ke UPA atau Mahasiswa:", e);
             }
 
             return {

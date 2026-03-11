@@ -6,6 +6,7 @@ import {
     getAssigneeForStep,
     PKL_WORKFLOW_STEPS,
     STEP_TO_ROLE,
+    STEP_ROLE_LABEL,
 } from "@backend/services/workflow/pkl.workflow.service";
 import { notificationService } from "@backend/services/notification.service";
 import { Elysia, t } from "elysia";
@@ -198,12 +199,16 @@ export default new Elysia()
 
             // 1. Notifikasi ke DIRI SENDIRI (Actor)
             try {
+                const selfStepRole = STEP_TO_ROLE[currentStep as keyof typeof STEP_TO_ROLE];
+                const selfStepName = selfStepRole ? (STEP_ROLE_LABEL[selfStepRole] || selfStepRole) : `Step ${currentStep}`;
+                const selfStudentName = (letter.values as any)?.namaLengkap || "Mahasiswa";
+
                 // Tanda tangan: Hanya Wakil Dekan (Step 7)
                 if (currentStep === PKL_WORKFLOW_STEPS.WAKIL_DEKAN_1) {
                     await notificationService.create(
                         user.id,
                         "Tanda Tangan Berhasil",
-                        "Anda telah berhasil melakukan Tanda Tangan pada surat ini.",
+                        `Anda telah berhasil menandatangani surat PKL ${selfStudentName} sebagai ${selfStepName}.`,
                         `/dashboard/approval/${letter.id}`,
                         "SUCCESS",
                     );
@@ -213,7 +218,7 @@ export default new Elysia()
                      await notificationService.create(
                         user.id,
                         "Persetujuan Berhasil",
-                        "Anda telah berhasil menyetujui surat PKL ini.",
+                        `Anda telah berhasil menyetujui surat PKL ${selfStudentName} pada tahap ${selfStepName}.`,
                         `/dashboard/approval/${letter.id}`,
                         "SUCCESS",
                     );
@@ -223,7 +228,7 @@ export default new Elysia()
                      await notificationService.create(
                         user.id,
                         "Penomoran Berhasil",
-                        "Anda telah berhasil melakukan penomoran pada surat ini.",
+                        `Anda telah berhasil melakukan penomoran surat PKL ${selfStudentName}.`,
                         `/dashboard/approval/${letter.id}`,
                         "SUCCESS",
                     );
@@ -234,7 +239,9 @@ export default new Elysia()
 
             // 2. Notifikasi ke ORANG LAIN (Next Approver & Mahasiswa)
 			try {
-				const stepName = STEP_TO_ROLE[currentStep as keyof typeof STEP_TO_ROLE] ?? `Step ${currentStep}`;
+                const stepRole = STEP_TO_ROLE[currentStep as keyof typeof STEP_TO_ROLE];
+                const stepName = stepRole ? (STEP_ROLE_LABEL[stepRole] || stepRole) : `Step ${currentStep}`;
+				const studentName = (letter.values as any)?.namaLengkap || "Mahasiswa";
 				
 				// Notifikasi ke mahasiswa
 				if (currentStep === PKL_WORKFLOW_STEPS.UPA) {
@@ -242,7 +249,7 @@ export default new Elysia()
 					await notificationService.create(
 						letter.createdById,
 						"Surat PKL Selesai",
-						`Selamat! Surat PKL Anda telah selesai diproses dan disetujui oleh semua pihak.`,
+						`Selamat ${studentName}! Surat PKL Anda telah selesai diproses dan disetujui oleh semua pihak.`,
 						`/dashboard/surat/${letter.id}`,
 						"SUCCESS",
 					);
@@ -251,7 +258,7 @@ export default new Elysia()
 					await notificationService.create(
 						letter.createdById,
 						"Status Surat Diperbarui",
-						`Surat PKL Anda telah disetujui pada tahap ${stepName}. Menunggu proses selanjutnya.`,
+						`Surat PKL ${studentName} telah disetujui pada tahap ${stepName}. Menunggu proses selanjutnya.`,
 						`/dashboard/surat/${letter.id}`,
 						"SUCCESS",
 					);
@@ -280,11 +287,12 @@ export default new Elysia()
                     }
 					
 					if (nextAssigneeId) {
-						const nextStepName = STEP_TO_ROLE[nextStep as keyof typeof STEP_TO_ROLE] ?? `Step ${nextStep}`;
+                        const nextStepRole = STEP_TO_ROLE[nextStep as keyof typeof STEP_TO_ROLE];
+                        const nextStepName = nextStepRole ? (STEP_ROLE_LABEL[nextStepRole] || nextStepRole) : `Step ${nextStep}`;
 						await notificationService.create(
 							nextAssigneeId,
 							"Surat Menunggu Persetujuan Anda",
-							`Surat PKL telah disetujui pada tahap ${stepName}. Sekarang menunggu persetujuan Anda sebagai ${nextStepName}.`,
+							`Surat PKL ${studentName} telah disetujui pada tahap ${stepName}. Sekarang menunggu persetujuan Anda sebagai ${nextStepName}.`,
 							`/dashboard/approval/${letter.id}`,
 							"INFO",
 						);

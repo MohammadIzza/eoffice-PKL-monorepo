@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/api/useAuth";
+import { withBasePath } from "@/lib/navigation";
 import { DevLoginModal } from "./DevLoginModal";
 
 const loginSchema = z.object({
@@ -61,13 +62,22 @@ export default function LoginPage() {
     
     try {
       await login(data.email, data.password);
-      router.push("/dashboard"); 
+      window.location.href = withBasePath("/dashboard"); 
     } catch (error: any) {
       setErrorMessage("Email atau password yang Anda masukkan salah.");
     }
   };
 
-  const backgroundImageUrl = "/ACINTYA.jpeg"; 
+  const backgroundImageUrl = withBasePath("/ACINTYA.jpeg"); 
+
+  const handleSSOLogin = () => {
+    // Architectural Requirement: Explicit Bounce URL with Client ID and Redirect URI for Auto-Login Bypass
+    // Correct Client ID from SSO Database Dump: "persuratan-pengantar-pkl"
+    const clientId = "41b3c97a-1fc0-42ee-9bf3-9a36c4f720d3";
+    // Must EXACTLY match application_url_callback in SSO DB!
+    const redirectUri = encodeURIComponent("http://apps-fsm.undip.ac.id/persuratan-pengantar-pkl-api/auth/sso");
+    window.location.href = `https://apps-fsm.undip.ac.id/sso/?client_id=${clientId}&redirect_uri=${redirectUri}`;
+  };
 
   return (
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 xl:min-h-screen">
@@ -85,13 +95,13 @@ export default function LoginPage() {
         <div className="relative z-10 flex h-full flex-col justify-between p-10 text-white">
           <div className="flex items-center gap-3">
             <div className="bg-white/10 p-2 rounded-xl backdrop-blur-sm border border-white/20">
-               <Image 
-                 src="/Undip.png" 
-                 alt="Logo Undip" 
-                 width={40} 
-                 height={40} 
-                 className="object-contain"
-               />
+                <img 
+                  src={withBasePath("/Undip.png")} 
+                  alt="Logo Undip" 
+                  width={40} 
+                  height={40} 
+                  className="object-contain"
+                />
             </div>
             <div className="flex flex-col">
               <span className="text-lg font-bold">E-Office FSM</span>
@@ -120,13 +130,13 @@ export default function LoginPage() {
           
           {/* Mobile Logo */}
           <div className="flex flex-col items-center justify-center lg:hidden mb-6">
-               <Image 
-                 src="/Undip.png" 
-                 alt="Logo Undip" 
-                 width={40} 
-                 height={40} 
-                 className="mb-1.5"
-               />
+                <img 
+                  src={withBasePath("/Undip.png")} 
+                  alt="Logo Undip" 
+                  width={40} 
+                  height={40} 
+                  className="mb-1.5"
+                />
                <h2 className="text-base font-bold text-slate-900">E-Office FSM</h2>
           </div>
 
@@ -134,7 +144,7 @@ export default function LoginPage() {
           <CardHeader className="space-y-0.5 text-center pb-4 pt-6">
             <CardTitle className="text-lg font-bold text-slate-900">Selamat Datang Kembali</CardTitle>
             <CardDescription className="text-xs text-slate-500">
-              Silakan masuk dengan akun Undip / SSO Anda
+              Silakan masuk dengan akun sistem atau SSO Anda
             </CardDescription>
           </CardHeader>
           
@@ -148,12 +158,12 @@ export default function LoginPage() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-medium">Email Undip / SSO</FormLabel>
+                      <FormLabel className="text-xs font-medium">Email Terdaftar</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Mail className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
                           <Input 
-                            placeholder="Masukkan email Anda" 
+                            placeholder="Masukkan email" 
                             className="pl-8 h-9 border-slate-200 text-sm" 
                             {...field} 
                           />
@@ -176,7 +186,7 @@ export default function LoginPage() {
                           <Lock className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
                           <Input 
                             type={showPassword ? "text" : "password"} 
-                            placeholder="Masukkan password Anda" 
+                            placeholder="Masukkan password" 
                             className="pl-8 pr-9 h-9 border-slate-200 text-sm" 
                             {...field} 
                           />
@@ -213,7 +223,7 @@ export default function LoginPage() {
                 {/* Submit Button */}
                 <Button 
                   type="submit" 
-                  className="w-full h-9 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors" 
+                  className="w-full h-9 text-xs font-medium bg-slate-900 hover:bg-slate-800 text-white transition-colors" 
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -222,17 +232,35 @@ export default function LoginPage() {
                       Memproses...
                     </>
                   ) : (
-                    "Masuk ke Portal"
+                    "Masuk"
                   )}
                 </Button>
 
                
-                 <div className="pt-1">
+                 <div className="pt-1 text-center">
                    <DevLoginModal onLogin={handleDevLogin} isLoading={isLoading} />
-                    </div>
+                 </div>
                
               </form>
             </Form>
+
+            <div className="relative my-5">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-slate-200" />
+              </div>
+              <div className="relative flex justify-center text-[10px] uppercase font-medium">
+                <span className="bg-white px-2 text-slate-400">Atau</span>
+              </div>
+            </div>
+
+            <Button 
+              onClick={handleSSOLogin}
+              type="button"
+              className="w-full h-9 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors flex items-center justify-center gap-2" 
+            >
+              <Lock className="w-3.5 h-3.5" />
+              Login dengan SSO FSM UNDIP
+            </Button>
           </CardContent>
           <div className="px-5 pb-5 text-center text-[11px] text-slate-500 border-t pt-4">
              Belum punya akun? <a href="#" className="text-blue-600 hover:underline">Hubungi Administrator</a>

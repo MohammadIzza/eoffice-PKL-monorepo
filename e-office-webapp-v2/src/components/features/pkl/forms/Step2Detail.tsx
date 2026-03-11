@@ -1,5 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
+import { withBasePath } from "@/lib/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormInputWithInfo } from "@/components/ui/form-input-with-info";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Info } from "lucide-react";
+import { Info, Lock } from "lucide-react";
 import { useDosenPembimbing, useKoordinatorKaprodi, useMyLetters } from "@/hooks/api";
 import { usePKLFormStore } from "@/stores/pklFormStore";
 import { useAuthStore } from "@/stores";
@@ -29,7 +30,7 @@ export default function Step2Detail() {
   useEffect(() => {
     if (!isMahasiswa || lettersLoading) return;
     if (hasLetterInProgress && !isRevisi) {
-      router.replace("/dashboard/surat?blocked=1");
+      router.replace(withBasePath("/dashboard/surat?blocked=1"));
     }
   }, [isMahasiswa, lettersLoading, hasLetterInProgress, isRevisi, router]);
   const prodiId = user?.mahasiswa?.programStudi?.id || formData.programStudiId || null;
@@ -93,7 +94,7 @@ export default function Step2Detail() {
       ...formData,
       ...data,
     });
-    router.push("/dashboard/pengajuan/pkl/lampiran");
+    router.push(withBasePath("/dashboard/pengajuan/pkl/lampiran"));
   };
 
   const cardClass = "w-full max-w-5xl bg-white rounded-3xl border border-[rgba(0,0,0,0.08)] shadow-sm flex flex-col p-6";
@@ -182,58 +183,82 @@ export default function Step2Detail() {
               <FormField control={form.control} name="dosenPembimbingId" render={({ field }) => (
                 <FormItem>
                   <FormLabel className={labelClass}>Nama Dosen Pembimbing</FormLabel>
-                  <div className="relative">
-                    <Select 
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        handleDosenChange(value);
-                      }} 
-                      value={field.value}
-                      disabled={isLoadingDosen || !prodiId}
-                    >
-                      <FormControl>
-                        <SelectTrigger className={`${editInput} pr-12`}>
-                          <SelectValue placeholder={isLoadingDosen ? "Memuat..." : dosenError ? "Error memuat dosen" : "Pilih Dosen"} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {dosen.map((d) => (
-                          <SelectItem key={d.id} value={d.id}>
-                            {d.name}
-                          </SelectItem>
-                        ))}
-                        {dosen.length === 0 && !isLoadingDosen && (
-                          <SelectItem value="" disabled>Tidak ada dosen tersedia</SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <TooltipProvider delayDuration={0}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              className="inline-flex items-center justify-center rounded-full hover:bg-[rgba(0,0,0,0.04)] transition-colors focus:outline-none pointer-events-auto"
-                              onClick={(e) => e.preventDefault()}
-                            >
-                              <Info className="w-3.5 h-3.5 text-[#86868B] hover:text-[#0071E3] transition-colors" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent 
-                            side="left" 
-                            className="max-w-xs text-xs p-3 rounded-xl shadow-lg bg-[#1D1D1F] text-white border-0"
-                            sideOffset={8}
-                          >
-                            <p className="leading-relaxed">Pilih dosen pembimbing yang akan membimbing Anda selama melaksanakan PKL. Dosen pembimbing akan memantau dan memberikan bimbingan terkait kegiatan PKL Anda.</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                  {isRevisi ? (
+                    <div className="space-y-2">
+                      <div className="relative">
+                        <Input 
+                          value={selectedDosen?.name || "Memuat..."}
+                          readOnly
+                          disabled
+                          className={`${readOnlyInput} pr-10`}
+                          placeholder="Dosen Pembimbing"
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <Lock className="w-3.5 h-3.5 text-[#86868B]" />
+                        </div>
+                      </div>
+                      {selectedDosen && selectedDosen.nip && (
+                        <p className="text-xs text-muted-foreground">NIP: {selectedDosen.nip}</p>
+                      )}
+                      <div className="flex items-center gap-2 text-xs text-amber-600">
+                        <Lock className="w-3 h-3" />
+                        <span>Dosen pembimbing tidak dapat diubah saat revisi</span>
+                      </div>
                     </div>
-                  </div>
-                  <FormMessage />
-                  {selectedDosen && selectedDosen.nip && (
-                    <p className="text-xs text-muted-foreground mt-1">NIP: {selectedDosen.nip}</p>
+                  ) : (
+                    <div className="relative">
+                      <Select 
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          handleDosenChange(value);
+                        }} 
+                        value={field.value}
+                        disabled={isLoadingDosen || !prodiId}
+                      >
+                        <FormControl>
+                          <SelectTrigger className={`${editInput} pr-12`}>
+                            <SelectValue placeholder={isLoadingDosen ? "Memuat..." : dosenError ? "Error memuat dosen" : "Pilih Dosen"} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {dosen.map((d) => (
+                            <SelectItem key={d.id} value={d.id}>
+                              {d.name}
+                            </SelectItem>
+                          ))}
+                          {dosen.length === 0 && !isLoadingDosen && (
+                            <SelectItem value="" disabled>Tidak ada dosen tersedia</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <TooltipProvider delayDuration={0}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                className="inline-flex items-center justify-center rounded-full hover:bg-[rgba(0,0,0,0.04)] transition-colors focus:outline-none pointer-events-auto"
+                                onClick={(e) => e.preventDefault()}
+                              >
+                                <Info className="w-3.5 h-3.5 text-[#86868B] hover:text-[#0071E3] transition-colors" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent 
+                              side="left" 
+                              className="max-w-xs text-xs p-3 rounded-xl shadow-lg bg-[#1D1D1F] text-white border-0"
+                              sideOffset={8}
+                            >
+                              <p className="leading-relaxed">Pilih dosen pembimbing yang akan membimbing Anda selama melaksanakan PKL. Dosen pembimbing akan memantau dan memberikan bimbingan terkait kegiatan PKL Anda.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      {selectedDosen && selectedDosen.nip && (
+                        <p className="text-xs text-muted-foreground mt-1">NIP: {selectedDosen.nip}</p>
+                      )}
+                    </div>
                   )}
+                  <FormMessage />
                 </FormItem>
               )} />
               <div className="space-y-2">
@@ -305,7 +330,7 @@ export default function Step2Detail() {
             </div>
           </div>
           <div className="w-full max-w-5xl flex justify-between items-center">
-            <Button type="button" variant="outline" size="default" onClick={() => router.push("/dashboard/pengajuan/pkl/identitas")} className="min-w-[84px]">
+            <Button type="button" variant="outline" size="default" onClick={() => router.push(withBasePath("/dashboard/pengajuan/pkl/identitas"))} className="min-w-[84px]">
               Kembali
             </Button>
             <Button type="submit" size="default" className="min-w-[84px]">

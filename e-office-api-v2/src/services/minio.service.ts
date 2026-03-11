@@ -7,14 +7,52 @@ export abstract class MinioService {
 	private static _client: Client | null = null;
 	private static _bucketName: string | null = null;
 
+	/**
+	 * Replace the internal MinIO hostname in a presigned URL with the public endpoint.
+	 * Needed because the MinIO client connects via localhost internally, but presigned
+	 * URLs must be accessible from browsers using the public IP.
+	 */
+	public static toPublicUrl(internalUrl: string): string {
+		const publicEndpoint = env.get("S3_ENDPOINT").asString();
+		if (!publicEndpoint) return internalUrl;
+		try {
+			const internal = new URL(internalUrl);
+			const pub = new URL(publicEndpoint);
+			// Replace scheme + host + port with public endpoint
+			internal.protocol = pub.protocol;
+			internal.hostname = pub.hostname;
+			internal.port = pub.port;
+			return internal.toString();
+		} catch {
+			return internalUrl;
+		}
+	}
+
 	private static get client(): Client {
 		if (!MinioService._client) {
+			// Prefer S3_ENDPOINT env var, fall back to MINIO_ENDPOINT
+			const s3Endpoint = env.get("S3_ENDPOINT").asString();
+			let endPoint = env.get("MINIO_ENDPOINT").default("localhost").asString();
+			let port = env.get("MINIO_PORT").default(9000).asPortNumber();
+			let useSSL = env.get("MINIO_USE_SSL").default("false").asBoolStrict();
+
+			if (s3Endpoint) {
+				try {
+					const parsed = new URL(s3Endpoint);
+					endPoint = parsed.hostname;
+					port = parsed.port ? parseInt(parsed.port) : (parsed.protocol === "https:" ? 443 : 9000);
+					useSSL = parsed.protocol === "https:";
+				} catch {
+					// keep defaults
+				}
+			}
+
 			MinioService._client = new Client({
-				endPoint: env.get("MINIO_ENDPOINT").default("localhost").asString(),
-				port: env.get("MINIO_PORT").default(9000).asPortNumber(),
-				useSSL: env.get("MINIO_USE_SSL").default("false").asBoolStrict(),
-				accessKey: env.get("MINIO_ACCESS_KEY").default("minioadmin").asString(),
-				secretKey: env.get("MINIO_SECRET_KEY").default("minioadmin").asString(),
+				endPoint,
+				port,
+				useSSL,
+				accessKey: env.get("S3_ACCESS_KEY").default(env.get("MINIO_ACCESS_KEY").default("minioadmin").asString()).asString(),
+				secretKey: env.get("S3_SECRET_KEY").default(env.get("MINIO_SECRET_KEY").default("minioadmin").asString()).asString(),
 				region: env.get("MINIO_REGION").default("us-east-1").asString(),
 			});
 		}
@@ -24,8 +62,8 @@ export abstract class MinioService {
 	private static get bucketName(): string {
 		if (!MinioService._bucketName) {
 			MinioService._bucketName = env
-				.get("MINIO_BUCKET_NAME")
-				.default("e-office")
+				.get("S3_BUCKET")
+				.default(env.get("MINIO_BUCKET_NAME").default("e-office").asString())
 				.asString();
 		}
 		return MinioService._bucketName;
@@ -95,14 +133,14 @@ export abstract class MinioService {
 
 		fs.unlinkSync(tempFilePath);
 
-		const url = await MinioService.client.presignedUrl(
+		const rawUrl = await MinioService.client.presignedUrl(
 			"GET",
 			MinioService.bucketName,
 			folderBucket + nameReplace,
 			7 * 24 * 60 * 60,
 		);
 
-		return url;
+		return MinioService.toPublicUrl(rawUrl);
 	}
 
 	public static async uploadFile(
@@ -137,14 +175,14 @@ export abstract class MinioService {
 
 			fs.unlinkSync(tempFilePath);
 
-			const url = await MinioService.client.presignedUrl(
+			const rawUrl = await MinioService.client.presignedUrl(
 				"GET",
 				MinioService.bucketName,
 				category_file + nameReplace,
 				7 * 24 * 60 * 60,
 			);
 
-			return { url, nameReplace };
+			return { url: MinioService.toPublicUrl(rawUrl), nameReplace };
 		} catch (error) {
 			console.error(" MINIO ERROR:");
 			if (error instanceof Error) {
@@ -183,13 +221,13 @@ export abstract class MinioService {
 			folderBucket = "";
 		}
 
-		const url = await MinioService.client.presignedUrl(
+		const rawUrl = await MinioService.client.presignedUrl(
 			"GET",
 			MinioService.bucketName,
 			folderBucket + objectName,
 			expirySeconds,
 		);
-		return url;
+		return MinioService.toPublicUrl(rawUrl);
 	}
 
 	public static async listObjects(prefix = ""): Promise<string[]> {

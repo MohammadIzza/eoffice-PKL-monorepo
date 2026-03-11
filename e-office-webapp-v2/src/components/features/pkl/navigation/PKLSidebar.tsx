@@ -25,6 +25,7 @@ import { useAuthStore } from "@/stores";
 import { usePKLFormStore } from "@/stores/pklFormStore";
 import { useMyLetters } from "@/hooks/api";
 import type { UserRoleName } from "@/types";
+import { withBasePath } from "@/lib/navigation";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -128,10 +129,11 @@ export default function PKLSidebar() {
   const menuItems = getMenuItems();
 
   const isActive = (href: string): boolean => {
-    if (href === '/dashboard') {
-      return pathname === '/dashboard';
+    const fullHref = withBasePath(href);
+    if (href === '/dashboard' || fullHref === withBasePath('/dashboard')) {
+      return pathname === withBasePath('/dashboard');
     }
-    return pathname?.startsWith(href);
+    return pathname?.startsWith(fullHref);
   };
 
   return (
@@ -223,7 +225,7 @@ export default function PKLSidebar() {
                       </span>
                     </span>
                   ) : (
-                    <Link key={item.href} href={item.href} className={baseClass}>
+                    <Link key={item.href} href={withBasePath(item.href)} className={baseClass}>
                       <Icon className={cn(
                         "shrink-0 transition-all duration-200",
                         active ? "w-5 h-5" : "w-5 h-5",

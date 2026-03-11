@@ -8,16 +8,17 @@ import { useAuthStore } from '@/stores';
 import { useMyLetters, useApprovalQueue } from '@/hooks/api';
 import Link from 'next/link';
 import { 
-  FileText, 
-  Plus, 
-  Clock, 
-  CheckCircle2, 
-  XCircle, 
+  FileText,
+  Plus,
+  Clock,
+  CheckCircle2,
+  XCircle,
   AlertCircle,
   TrendingUp,
   BarChart3,
   ClipboardList
 } from 'lucide-react';
+import { withBasePath } from '@/lib/navigation';
 import { DashboardChartsWrapper } from '@/components/features/dashboard/DashboardChartsWrapper';
 import { SuperAdminDashboard } from '@/components/features/dashboard/SuperAdminDashboard';
 import { format } from 'date-fns';
@@ -70,6 +71,19 @@ export default function DashboardPage() {
     return latestRevisionAction.action === 'REVISED' || latestRevisionAction.action === 'SELF_REVISED';
   };
 
+  const isApproverLetterInRevision = (letter: any): boolean => {
+    if ((letter as any).approvalStatus === 'approved_by_me') return false;
+    const stepHistory = letter.stepHistory || [];
+    const revisionRelated = stepHistory.filter((h: any) =>
+      ['REVISED', 'SELF_REVISED', 'RESUBMITTED'].includes(h.action)
+    );
+    if (revisionRelated.length === 0) return false;
+    const latestRevisionAction = [...revisionRelated].sort(
+      (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )[0];
+    return latestRevisionAction.action === 'REVISED' || latestRevisionAction.action === 'SELF_REVISED';
+  };
+
   // Calculate statistics
   const stats = useMemo(() => {
     const total = letters.length;
@@ -82,14 +96,14 @@ export default function DashboardPage() {
     if (isApprover) {
       const qLetters = letters as any[];
       draft = 0;
-      pending = qLetters.filter(l => l.approvalStatus !== 'approved_by_me' && l.status !== 'REJECTED').length;
+      pending = qLetters.filter(l => 
+        l.approvalStatus !== 'approved_by_me' && 
+        l.status !== 'REJECTED' && 
+        !isApproverLetterInRevision(l)
+      ).length;
       completed = qLetters.filter(l => l.approvalStatus === 'approved_by_me').length;
       rejected = qLetters.filter(l => l.status === 'REJECTED').length;
-      revision = qLetters.filter(l => {
-        if (l.approvalStatus === 'approved_by_me') return false;
-        const stepHistory = l.stepHistory || [];
-        return stepHistory.some((h: any) => ['REVISED', 'SELF_REVISED'].includes(h.action));
-      }).length;
+      revision = qLetters.filter((l) => isApproverLetterInRevision(l)).length;
     } else {
       draft = letters.filter(l => l.status === 'DRAFT').length;
       revision = letters.filter(l => isLetterInRevision(l)).length;
@@ -203,7 +217,7 @@ export default function DashboardPage() {
                     Buat Pengajuan Baru
                   </Button>
                 ) : (
-                  <Link href="/dashboard/pengajuan/pkl/identitas">
+                  <Link href={withBasePath('/dashboard/pengajuan/pkl/identitas')}>
                     <Button className="gap-2" size="default">
                       <Plus className="w-4 h-4" />
                       Buat Pengajuan Baru
@@ -212,7 +226,7 @@ export default function DashboardPage() {
                 )
               )}
               {/* {isApprover && (
-                <Link href="/dashboard/approval/queue">
+                <Link href={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/dashboard/approval/queue`}>
                   <Button className="gap-2" size="default">
                     <ClipboardList className="w-4 h-4" />
                     Antrian Approval
@@ -225,7 +239,7 @@ export default function DashboardPage() {
 
         {/* Bento Grid Stats Section */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 animate-slide-up">
-          <Link href={isApprover ? "/dashboard/approval/queue" : "/dashboard/surat"}>
+          <Link href={withBasePath(isApprover ? "/dashboard/approval/queue" : "/dashboard/surat")}>
             <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
               <CardContent className="p-6">
                 <div className="space-y-2">
@@ -242,7 +256,7 @@ export default function DashboardPage() {
             </Card>
           </Link>
           
-          <Link href={isApprover ? "/dashboard/approval/queue?status=pending" : "/dashboard/surat?status=PENDING,PROCESSING"}>
+          <Link href={withBasePath(isApprover ? "/dashboard/approval/queue?status=pending" : "/dashboard/surat?status=PENDING,PROCESSING")}>
             <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
               <CardContent className="p-6">
                 <div className="space-y-2">
@@ -259,7 +273,7 @@ export default function DashboardPage() {
             </Card>
           </Link>
           
-          <Link href={isApprover ? "/dashboard/approval/queue?status=approved" : "/dashboard/surat?status=COMPLETED"}>
+          <Link href={withBasePath(isApprover ? "/dashboard/approval/queue?status=approved" : "/dashboard/surat?status=COMPLETED")}>
             <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
               <CardContent className="p-6">
                 <div className="space-y-2">
@@ -276,7 +290,7 @@ export default function DashboardPage() {
             </Card>
           </Link>
           
-          <Link href={isApprover ? "/dashboard/approval/queue?status=revision" : "/dashboard/surat?status=REVISION"}>
+          <Link href={withBasePath(isApprover ? "/dashboard/approval/queue?status=revision" : "/dashboard/surat?status=REVISION")}>
             <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
               <CardContent className="p-6">
                 <div className="space-y-2">
@@ -299,7 +313,7 @@ export default function DashboardPage() {
 
         {/* Quick Actions - Apple Style */}
         {/* <div className="flex items-center gap-4 animate-slide-up">
-          <Link href="/dashboard/surat" className="flex-1">
+          <Link href={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/dashboard/surat`} className="flex-1">
             <Card className="border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden bg-white hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
               <CardContent className="p-6">
                 <Button variant="ghost" className="w-full justify-start gap-3 h-auto p-0 hover:bg-transparent">

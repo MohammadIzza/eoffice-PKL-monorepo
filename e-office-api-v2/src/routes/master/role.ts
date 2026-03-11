@@ -1,5 +1,6 @@
 import { authGuardPlugin, requirePermission } from "@backend/middlewares/auth";
 import { RoleService } from "@backend/services/database_models/role.service";
+import { Prisma } from "@backend/db/index";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()
@@ -76,6 +77,9 @@ export default new Elysia()
 	.delete(
 		"/:id",
 		async ({ params: { id } }) => {
+			// Delete UserRole and RolePermission records first (no cascade in schema)
+			await Prisma.userRole.deleteMany({ where: { roleId: id } });
+			await Prisma.rolePermission.deleteMany({ where: { roleId: id } });
 			await RoleService.delete(id);
 			return {
 				message: "Role deleted successfully",

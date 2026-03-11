@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { usePKLFormStore } from '@/stores/pklFormStore';
 import { letterService } from '@/services';
 import { handleApiError } from '@/lib/api';
+import { withBasePath } from '@/lib/navigation';
 
 interface UseFormSubmissionOptions {
   onSuccess?: () => void;
@@ -53,7 +54,7 @@ export function useFormSubmission(options?: UseFormSubmissionOptions) {
         if (typeof window !== 'undefined') {
           sessionStorage.setItem('pkl-fromResubmit', '1');
         }
-        router.push(`/dashboard/surat/${letterId}`);
+        router.push(withBasePath(`/dashboard/surat/${letterId}`));
         return;
       }
 
@@ -106,7 +107,7 @@ export function useFormSubmission(options?: UseFormSubmissionOptions) {
 
       resetForm();
       options?.onSuccess?.();
-      router.push(`/dashboard/surat/${result.letterId}`);
+      router.push(withBasePath(`/dashboard/surat/${result.letterId}`));
     } catch (err) {
       const apiError = handleApiError(err);
       const errorMessage = apiError.message || 'Gagal mengajukan surat. Silakan coba lagi.';

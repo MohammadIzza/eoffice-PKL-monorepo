@@ -1,5 +1,6 @@
 import { authGuardPlugin, requirePermission } from "@backend/middlewares/auth";
 import { DepartemenService } from "@backend/services/database_models/departemen.service";
+import { Prisma } from "@backend/db/index";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()
@@ -73,6 +74,19 @@ export default new Elysia()
 	.delete(
 		"/:id",
 		async ({ params: { id } }) => {
+			// Check if any related data exists
+			const prodiCount = await Prisma.programStudi.count({ where: { departemenId: id } });
+			if (prodiCount > 0) {
+				throw new Error(`Departemen tidak dapat dihapus karena masih memiliki ${prodiCount} Program Studi. Hapus atau pindahkan Program Studi terlebih dahulu.`);
+			}
+			const mahasiswaCount = await Prisma.mahasiswa.count({ where: { departemenId: id } });
+			if (mahasiswaCount > 0) {
+				throw new Error(`Departemen tidak dapat dihapus karena direferensikan oleh ${mahasiswaCount} data Mahasiswa.`);
+			}
+			const pegawaiCount = await Prisma.pegawai.count({ where: { departemenId: id } });
+			if (pegawaiCount > 0) {
+				throw new Error(`Departemen tidak dapat dihapus karena direferensikan oleh ${pegawaiCount} data Pegawai.`);
+			}
 			await DepartemenService.delete(id);
 			return {
 				message: "Departemen deleted successfully",

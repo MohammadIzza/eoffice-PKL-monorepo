@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { withBasePath } from "@/lib/navigation";
 import Stepper from "@/components/features/pkl/navigation/Stepper";
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertCircle, ChevronDown, FileText } from "lucide-react";
@@ -34,7 +35,7 @@ export default function Step4Review() {
   useEffect(() => {
     if (!isMahasiswa || lettersLoading) return;
     if (hasLetterInProgress && !isRevisi) {
-      router.replace("/dashboard/surat?blocked=1");
+      router.replace(withBasePath("/dashboard/surat?blocked=1"));
     }
   }, [isMahasiswa, lettersLoading, hasLetterInProgress, isRevisi, router]);
 
@@ -277,7 +278,7 @@ export default function Step4Review() {
             <Button
               variant="outline"
               size="default"
-              onClick={() => router.push("/dashboard/pengajuan/pkl/lampiran")}
+              onClick={() => router.push(withBasePath("/dashboard/pengajuan/pkl/lampiran"))}
               disabled={isSubmitting}
             >
               Kembali

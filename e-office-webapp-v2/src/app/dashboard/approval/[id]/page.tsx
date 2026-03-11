@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { formatDate, formatDateTime } from '@/lib/utils/date.utils';
+import { withBasePath } from '@/lib/navigation';
 import { API_URL } from '@/lib/constants';
 
 const ROLE_TO_STEP: Record<string, number> = {
@@ -489,8 +490,14 @@ export default function ApprovalDetailPage() {
         }
     }
 
-    setActionType(type);
-    setShowConfirmDialog(true);
+    // Clear error sebelum show dialog
+    setSubmitError(null);
+    
+    // Batch state updates dengan setTimeout untuk prevent flash
+    setTimeout(() => {
+      setActionType(type);
+      setShowConfirmDialog(true);
+    }, 0);
   };
 
   const confirmAction = async () => {
@@ -517,28 +524,35 @@ export default function ApprovalDetailPage() {
         await letterService.revise(letter.id, (comment || '').trim());
       }
 
-      await refetch();
-      await refetchQueue();
-
       const kind = actionType;
+
+      // Tutup dialog dan reset submitting DULU sebelum refetch
+      // agar tidak ada flash/modal muncul 2x saat re-render dari refetch
       setShowConfirmDialog(false);
-      setActionType(null);
-      setComment('');
-      clearSignatureCanvas();
-      if (signatureInputRef.current) signatureInputRef.current.value = '';
-      setSignatureError(null);
-      setSignatureData(null);
-      setSignaturePreview(null);
-      setSubmitError(null);
       setIsSubmitting(false);
 
-      const msg =
-        kind === 'approve'
-          ? 'Surat berhasil disetujui'
-          : kind === 'reject'
-            ? 'Surat ditolak'
-            : 'Surat berhasil direvisi';
-      showActionSuccess(kind, msg);
+      await refetch();
+      await refetchQueue();
+      
+      // Schedule cleanup dengan setTimeout untuk smooth transition
+      setTimeout(() => {
+        setActionType(null);
+        setComment('');
+        clearSignatureCanvas();
+        if (signatureInputRef.current) signatureInputRef.current.value = '';
+        setSignatureError(null);
+        setSignatureData(null);
+        setSignaturePreview(null);
+        setSubmitError(null);
+        
+        const msg =
+          kind === 'approve'
+            ? 'Surat berhasil disetujui'
+            : kind === 'reject'
+              ? 'Surat ditolak'
+              : 'Surat berhasil direvisi';
+        showActionSuccess(kind, msg);
+      }, 100);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Gagal memproses aksi';
       setSubmitError(errorMessage);
@@ -671,7 +685,10 @@ export default function ApprovalDetailPage() {
   const formValues = letter.values as Record<string, any>;
   const stepHistory = letter.stepHistory || [];
   const attachments = letter.attachments || [];
-  const sortedHistory = [...stepHistory].sort(
+  const hasSigned = stepHistory.some((h) => h.action === 'SIGNED');
+  const sortedHistory = [...stepHistory]
+    .filter((h) => !(h.action === 'APPROVED' && h.step === 7 && hasSigned))
+    .sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
   const letterNumber = letter.letterNumber || letter.numbering?.numberString || null;
@@ -791,10 +808,7 @@ export default function ApprovalDetailPage() {
     const StatusIcon = getTimelineIcon(action);
     const colorClass = getTimelineStatusColor(action);
     return (
-      <div
-        className="group relative pl-7 animate-in fade-in slide-in-from-left-2 duration-300"
-        style={{ animationDelay: `${animDelay}ms`, animationFillMode: 'both' }}
-      >
+      <div className="group relative pl-7">
         {!isLast && (
           <div
             className={`absolute left-[6px] top-5 bottom-0 w-px transition-colors duration-200 ${
@@ -842,7 +856,7 @@ export default function ApprovalDetailPage() {
         {/* Breadcrumb */}
         <div className="flex items-center text-[16px] text-[#86868B] mb-[32px] font-lexend">
           <button
-            onClick={() => router.push('/dashboard/approval/queue')}
+            onClick={() => router.push(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/dashboard/approval/queue`)}
             className="text-[#0071E3] hover:text-[#0051A3] transition-colors"
           >
             Antrian Approval
@@ -886,7 +900,7 @@ export default function ApprovalDetailPage() {
             </div>
             <Button
               variant="outline"
-              onClick={() => router.push('/dashboard/approval/queue')}
+              onClick={() => router.push(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/dashboard/approval/queue`)}
               className="bg-white border-[#E5E5E7] text-[#1D1D1F] hover:bg-[#F5F5F7]"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -1043,7 +1057,7 @@ export default function ApprovalDetailPage() {
               <CardContent className="p-6 space-y-4">
                 {/* {isSupervisor && (
                   <Button
-                    onClick={() => router.push(`/dashboard/approval/${letter.id}/edit`)}
+                    onClick={() => router.push(withBasePath(`/dashboard/approval/${letter.id}/edit`))}
                     className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3]"
                   >
                     <Edit className="w-4 h-4 mr-2" />
@@ -1151,7 +1165,7 @@ export default function ApprovalDetailPage() {
                     Masuk ke halaman proses penomoran untuk mengisi nomor surat dan menerbitkannya.
                   </p>
                   <Button
-                    onClick={() => router.push(`/dashboard/approval/${letter.id}/proses`)}
+                    onClick={() => router.push(withBasePath(`/dashboard/approval/${letter.id}/proses`))}
                     className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3]"
                   >
                     Proses Penomoran
@@ -1188,7 +1202,7 @@ export default function ApprovalDetailPage() {
                       Masuk ke halaman proses tanda tangan untuk menandatangani dan menyetujui surat.
                     </p>
                     <Button
-                      onClick={() => router.push(`/dashboard/approval/${letter.id}/proses`)}
+                      onClick={() => router.push(withBasePath(`/dashboard/approval/${letter.id}/proses`))}
                       className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3]"
                     >
                       Proses TTD
@@ -1372,7 +1386,7 @@ export default function ApprovalDetailPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => router.push('/dashboard/profile')}
+                                onClick={() => router.push(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/dashboard/profile`)}
                                 className="bg-white"
                               >
                                 Ke Profil Saya
@@ -1507,7 +1521,14 @@ export default function ApprovalDetailPage() {
       </div>
 
       {/* Confirm Dialog */}
-      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+      <Dialog 
+        open={showConfirmDialog} 
+        onOpenChange={(open) => {
+          if (!isSubmitting) {
+            setShowConfirmDialog(open);
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
@@ -1528,7 +1549,11 @@ export default function ApprovalDetailPage() {
           <div className="flex gap-3 justify-end mt-4">
             <Button
               variant="outline"
-              onClick={() => setShowConfirmDialog(false)}
+              onClick={() => {
+                if (!isSubmitting) {
+                  setShowConfirmDialog(false);
+                }
+              }}
               disabled={isSubmitting}
             >
               Batal

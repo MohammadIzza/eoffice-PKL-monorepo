@@ -26,6 +26,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "E-Office FSM UNDIP",
   description: "Sistem Persuratan Fakultas Sains dan Matematika UNDIP",
+  icons: {
+    icon: "/persuratan-pengantar-pkl/Undip.png",
+    apple: "/persuratan-pengantar-pkl/Undip.png",
+  },
 };
 
 export default function RootLayout({

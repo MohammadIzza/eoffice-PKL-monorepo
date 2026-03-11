@@ -3,10 +3,12 @@
 import { useEffect, useState } from 'react';
 import { MasterCRUDTable, type Column } from '@/components/features/master/MasterCRUDTable';
 import { userService, type User } from '@/services';
+import { roleService } from '@/services';
 import { handleApiError } from '@/lib/api';
 
 export default function MasterUserPage() {
 	const [data, setData] = useState<User[]>([]);
+	const [roleList, setRoleList] = useState<Array<{ value: string; label: string }>>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
@@ -14,8 +16,17 @@ export default function MasterUserPage() {
 		setIsLoading(true);
 		setError(null);
 		try {
-			const result = await userService.getAll();
-			setData(result);
+			const [userResult, roles] = await Promise.all([
+				userService.getAll(),
+				roleService.getAll(),
+			]);
+			// Flatten roleId for form pre-population
+			const usersWithRole = userResult.map(u => ({
+				...u,
+				roleId: u.userRole?.[0]?.roleId || '',
+			}));
+			setData(usersWithRole);
+			setRoleList(roles.map((r) => ({ value: r.id, label: r.name })));
 		} catch (err) {
 			setError(handleApiError(err).message);
 		} finally {
@@ -31,6 +42,14 @@ export default function MasterUserPage() {
 		{ key: 'name', header: 'Nama' },
 		{ key: 'email', header: 'Email' },
 		{
+			key: 'userRole',
+			header: 'Role',
+			render: (item) => {
+				const roles = item.userRole?.map((ur) => ur.role?.name).filter(Boolean);
+				return roles && roles.length > 0 ? roles.join(', ') : '-';
+			},
+		},
+		{
 			key: 'emailVerified',
 			header: 'Status',
 			render: (item) => (item.emailVerified ? 'Terverifikasi' : 'Belum Terverifikasi'),
@@ -41,6 +60,7 @@ export default function MasterUserPage() {
 		await userService.create({
 			name: formData.name,
 			email: formData.email,
+			roleId: formData.roleId || undefined,
 		});
 		await fetchData();
 	};
@@ -48,6 +68,7 @@ export default function MasterUserPage() {
 	const handleUpdate = async (id: string, formData: Record<string, any>) => {
 		await userService.update(id, {
 			name: formData.name,
+			roleId: formData.roleId !== undefined ? (formData.roleId || '') : undefined,
 		});
 		await fetchData();
 	};
@@ -73,7 +94,23 @@ export default function MasterUserPage() {
 			formFields={[
 				{ key: 'name', label: 'Nama', required: true },
 				{ key: 'email', label: 'Email', type: 'email', required: true },
+				{
+					key: 'roleId',
+					label: 'Role',
+					type: 'select',
+					options: roleList,
+				},
+			]}
+			editFormFields={[
+				{ key: 'name', label: 'Nama', required: true },
+				{
+					key: 'roleId',
+					label: 'Role',
+					type: 'select',
+					options: roleList,
+				},
 			]}
 		/>
 	);
 }
+

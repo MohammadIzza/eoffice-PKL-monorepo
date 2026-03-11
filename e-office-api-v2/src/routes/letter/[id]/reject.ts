@@ -1,6 +1,6 @@
 import { authGuardPlugin } from "@backend/middlewares/auth";
 import { Prisma } from "@backend/db/index";
-import { validateUserIsAssignee, PKL_WORKFLOW_STEPS } from "@backend/services/workflow/pkl.workflow.service";
+import { validateUserIsAssignee, PKL_WORKFLOW_STEPS, STEP_TO_ROLE, STEP_ROLE_LABEL } from "@backend/services/workflow/pkl.workflow.service";
 import { notificationService } from "@backend/services/notification.service";
 import { Elysia, t } from "elysia";
 
@@ -59,12 +59,16 @@ export default new Elysia()
 
             // 1. Notifikasi ke DIRI SENDIRI (Actor)
             try {
+                const selfStepRole = STEP_TO_ROLE[currentStep as keyof typeof STEP_TO_ROLE];
+                const selfStepName = selfStepRole ? (STEP_ROLE_LABEL[selfStepRole] || selfStepRole) : `Step ${currentStep}`;
+                const selfStudentName = (letter.values as any)?.namaLengkap || "Mahasiswa";
+
                 // Tolak: Dospem (1) s/d Wakil Dekan (7)
                 if (currentStep >= PKL_WORKFLOW_STEPS.DOSEN_PEMBIMBING && currentStep <= PKL_WORKFLOW_STEPS.WAKIL_DEKAN_1) {
                     await notificationService.create(
                         user.id,
                         "Penolakan Berhasil",
-                        "Anda telah berhasil menolak surat PKL ini.",
+                        `Anda telah berhasil menolak surat PKL ${selfStudentName} pada tahap ${selfStepName}.`,
                         `/dashboard/approval/${letter.id}`,
                         "ERROR",
                     );
@@ -75,10 +79,11 @@ export default new Elysia()
 
 			// 2. Notifikasi ke MAHASISWA
 			try {
+				const studentName = (letter.values as any)?.namaLengkap || "Mahasiswa";
 				await notificationService.create(
 					letter.createdById,
 					"Surat Ditolak",
-					`Surat PKL Anda dikembalikan dengan catatan: "${comment}"`,
+					`Surat PKL ${studentName} dikembalikan dengan catatan: "${comment}"`,
 					`/dashboard/surat/${letter.id}`,
 					"WARNING",
 				);

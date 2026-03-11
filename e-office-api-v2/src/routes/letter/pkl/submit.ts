@@ -83,10 +83,11 @@ export default new Elysia()
 			// (Opsional) Kirim notifikasi ke dosen pembimbing yang ditugaskan
 		try {
             // 1. Notifikasi ke DIRI SENDIRI (Mahasiswa)
+            const studentName = (formData as any)?.namaLengkap || "Mahasiswa";
             await notificationService.create(
                 user.id,
                 "Pengajuan Berhasil",
-                "Anda telah berhasil mengajukan surat PKL.",
+                `Anda telah berhasil mengajukan surat PKL ${studentName}.`,
                 `/dashboard/surat/${letter.id}`,
                 "SUCCESS",
             );
@@ -96,7 +97,7 @@ export default new Elysia()
 				await notificationService.create(
 					dospemId,
 					"Pengajuan Surat Baru",
-					"Seorang mahasiswa mengajukan surat PKL dan menunggu persetujuan Anda.",
+					`Mahasiswa ${studentName} mengajukan surat PKL dan menunggu persetujuan Anda.`,
 					`/dashboard/approval/${letter.id}`,
 					"INFO",
 				);

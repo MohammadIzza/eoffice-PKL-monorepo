@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/stores';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { withBasePath } from '@/lib/navigation';
 import dynamic from 'next/dynamic';
 
 // Dynamic import untuk Quill (client-side only)
@@ -130,7 +131,7 @@ export default function DocumentEditorPage() {
       await refetch();
       
       // Redirect to approval detail
-      router.push(`/dashboard/approval/${letter.id}`);
+      router.push(withBasePath(`/dashboard/approval/${letter.id}`));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Gagal mempublish versi';
       setSaveError(errorMessage);
@@ -204,7 +205,7 @@ export default function DocumentEditorPage() {
         {/* Breadcrumb */}
         <div className="flex items-center text-[16px] text-[#86868B] mb-[32px] font-lexend">
           <button
-            onClick={() => router.push(`/dashboard/approval/${letter.id}`)}
+            onClick={() => router.push(withBasePath(`/dashboard/approval/${letter.id}`))}
             className="text-[#0071E3] hover:text-[#0051A3] transition-colors"
           >
             Detail Approval
@@ -226,7 +227,7 @@ export default function DocumentEditorPage() {
             </div>
             <Button
               variant="outline"
-              onClick={() => router.push(`/dashboard/approval/${letter.id}`)}
+              onClick={() => router.push(withBasePath(`/dashboard/approval/${letter.id}`))}
               className="bg-white border-[#E5E5E7] text-[#1D1D1F] hover:bg-[#F5F5F7]"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />

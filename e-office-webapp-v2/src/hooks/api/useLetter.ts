@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { letterService, type Letter } from '@/services';
 import { handleApiError } from '@/lib/api';
+import { withBasePath } from '@/lib/navigation';
 
 export function useLetter(id: string | null) {
 	const router = useRouter();
@@ -20,21 +21,21 @@ export function useLetter(id: string | null) {
 			setIsLoading(true);
 			setError(null);
 			setIsForbidden(false);
-			
+
 			try {
 				const data = await letterService.getLetterDetail(id);
 				setLetter(data);
 			} catch (err) {
 				const apiError = handleApiError(err);
 				const errorMessage = apiError.message || 'Gagal memuat detail surat';
-				
+
 				// Check if it's a 403 Forbidden error
 				if (apiError.status === 403 || errorMessage.includes('tidak berhak')) {
 					setIsForbidden(true);
 					setError('Anda tidak berhak mengakses surat ini');
 				} else if (apiError.status === 401) {
 					// Unauthorized - redirect to login
-					router.push('/login');
+					window.location.href = withBasePath("/login");
 				} else {
 					setError(errorMessage);
 				}
@@ -54,7 +55,7 @@ export function useLetter(id: string | null) {
 		isForbidden,
 		refetch: async () => {
 			if (!id) return;
-			
+
 			setIsLoading(true);
 			setError(null);
 			setIsForbidden(false);
@@ -64,7 +65,7 @@ export function useLetter(id: string | null) {
 			} catch (err) {
 				const apiError = handleApiError(err);
 				const errorMessage = apiError.message || 'Gagal memuat detail surat';
-				
+
 				if (apiError.status === 403 || errorMessage.includes('tidak berhak')) {
 					setIsForbidden(true);
 					setError('Anda tidak berhak mengakses surat ini');

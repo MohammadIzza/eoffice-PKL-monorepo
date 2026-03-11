@@ -20,6 +20,7 @@ import {
   ChevronRight,
   LayoutDashboard
 } from 'lucide-react';
+import { withBasePath } from '@/lib/navigation';
 import { DashboardChartsWrapper } from './DashboardChartsWrapper';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
@@ -63,16 +64,10 @@ export function SuperAdminDashboard({ userName }: SuperAdminDashboardProps) {
   useEffect(() => {
     const fetchLetters = async () => {
       try {
-        console.log('[SuperAdminDashboard] Fetching all letters...');
         const data = await letterService.getAllLetters();
-        console.log('[SuperAdminDashboard] Fetched letters:', data?.length || 0);
         setLetters(data);
       } catch (error: any) {
-        console.error('[SuperAdminDashboard] Error fetching all letters:', {
-          message: error?.message || 'Unknown error',
-          status: error?.status,
-          error: error
-        });
+        console.error('Error fetching letters:', error?.message || error);
       } finally {
         setIsLoadingLetters(false);
       }
@@ -272,7 +267,7 @@ export function SuperAdminDashboard({ userName }: SuperAdminDashboardProps) {
             
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
                 <MasterDataTile 
-                    href="/dashboard/master/user"
+                    href={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/dashboard/master/user`}
                     icon={Users} 
                     label="Users" 
                     count={masterDataStats.totalUsers} 
@@ -280,7 +275,7 @@ export function SuperAdminDashboard({ userName }: SuperAdminDashboardProps) {
                     bgClass="bg-[#E1F0FF]"
                 />
                 <MasterDataTile 
-                    href="/dashboard/master/mahasiswa"
+                    href={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/dashboard/master/mahasiswa`}
                     icon={UserCog} 
                     label="Mahasiswa" 
                     count={masterDataStats.totalMahasiswa} 
@@ -288,7 +283,7 @@ export function SuperAdminDashboard({ userName }: SuperAdminDashboardProps) {
                     bgClass="bg-[#FFEDF1]"
                 />
                 <MasterDataTile 
-                    href="/dashboard/master/pegawai"
+                    href={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/dashboard/master/pegawai`}
                     icon={Briefcase} 
                     label="Pegawai" 
                     count={masterDataStats.totalPegawai} 
@@ -296,7 +291,7 @@ export function SuperAdminDashboard({ userName }: SuperAdminDashboardProps) {
                     bgClass="bg-[#FFF5E0]"
                 />
                 <MasterDataTile 
-                    href="/dashboard/master/departemen"
+                    href={withBasePath("/dashboard/master/departemen")}
                     icon={Building2} 
                     label="Departemen" 
                     count={masterDataStats.totalDepartemen} 
@@ -304,7 +299,7 @@ export function SuperAdminDashboard({ userName }: SuperAdminDashboardProps) {
                     bgClass="bg-[#EFEEFC]"
                 />
                 <MasterDataTile 
-                    href="/dashboard/master/program-studi"
+                    href={withBasePath("/dashboard/master/program-studi")}
                     icon={GraduationCap} 
                     label="Prodi" 
                     count={masterDataStats.totalProdi} 
@@ -312,7 +307,7 @@ export function SuperAdminDashboard({ userName }: SuperAdminDashboardProps) {
                     bgClass="bg-[#E4F9E9]"
                 />
                 <MasterDataTile 
-                    href="/dashboard/master/role"
+                    href={withBasePath("/dashboard/master/role")}
                     icon={Shield} 
                     label="Roles" 
                     count={masterDataStats.totalRole} 
@@ -320,7 +315,7 @@ export function SuperAdminDashboard({ userName }: SuperAdminDashboardProps) {
                     bgClass="bg-[#F6E6FC]"
                 />
                 <MasterDataTile 
-                    href="/dashboard/master/surat-type"
+                    href={withBasePath("/dashboard/master/surat-type")}
                     icon={FileBadge} 
                     label="Tipe Surat" 
                     count={masterDataStats.totalLetterType} 
@@ -338,7 +333,7 @@ export function SuperAdminDashboard({ userName }: SuperAdminDashboardProps) {
                 <h2 className="text-lg font-bold text-[#1D1D1F] tracking-tight px-1">Overview Surat</h2>
                 <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
                     {/* Total */}
-                    <Link href="/dashboard/surat" className="col-span-2">
+                    <Link href={withBasePath("/dashboard/surat")} className="col-span-2">
                       <div className="bg-[#1D1D1F] text-white rounded-[24px] p-5 shadow-lg relative overflow-hidden group cursor-pointer hover:shadow-xl transition-all duration-300">
                           <div className="relative z-10">
                               <div className="flex items-center gap-2 mb-3 text-white/60">
@@ -360,7 +355,7 @@ export function SuperAdminDashboard({ userName }: SuperAdminDashboardProps) {
                         subLabel="surat"
                         color="text-[#007AFF]"
                         iconBg="bg-[#E1F0FF]"
-                        href="/dashboard/surat?status=PENDING,PROCESSING"
+                        href={withBasePath("/dashboard/surat?status=PENDING,PROCESSING")}
                     />
 
                     <StatWidget 
@@ -370,7 +365,7 @@ export function SuperAdminDashboard({ userName }: SuperAdminDashboardProps) {
                         subLabel="surat"
                         color="text-[#FF9500]"
                         iconBg="bg-[#FFF5E0]"
-                        href="/dashboard/surat?status=REVISION"
+                        href={withBasePath("/dashboard/surat?status=REVISION")}
                     />
 
                     <StatWidget 
@@ -380,7 +375,7 @@ export function SuperAdminDashboard({ userName }: SuperAdminDashboardProps) {
                         subLabel="surat"
                         color="text-[#34C759]"
                         iconBg="bg-[#E4F9E9]"
-                        href="/dashboard/surat?status=COMPLETED"
+                        href={withBasePath("/dashboard/surat?status=COMPLETED")}
                     />
                 </div>
             </div>

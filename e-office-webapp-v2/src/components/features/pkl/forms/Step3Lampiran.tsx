@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { withBasePath } from "@/lib/navigation";
 import Stepper from "@/components/features/pkl/navigation/Stepper";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,7 +33,7 @@ export default function Step3Lampiran() {
   useEffect(() => {
     if (!isMahasiswa || lettersLoading) return;
     if (hasLetterInProgress && !isRevisi) {
-      router.replace("/dashboard/surat?blocked=1");
+      router.replace(withBasePath("/dashboard/surat?blocked=1"));
     }
   }, [isMahasiswa, lettersLoading, hasLetterInProgress, isRevisi, router]);
 
@@ -615,7 +616,7 @@ export default function Step3Lampiran() {
         <Button
           variant="outline"
           size="default"
-          onClick={() => router.push("/dashboard/pengajuan/pkl/detail-pengajuan")}
+          onClick={() => router.push(withBasePath("/dashboard/pengajuan/pkl/detail-pengajuan"))}
         >
           Kembali
         </Button>
@@ -626,7 +627,7 @@ export default function Step3Lampiran() {
               setError('File Proposal dan File KTM wajib diunggah');
               return;
             }
-            router.push("/dashboard/pengajuan/pkl/review");
+            router.push(withBasePath("/dashboard/pengajuan/pkl/review"));
           }}
         >
           Lanjut

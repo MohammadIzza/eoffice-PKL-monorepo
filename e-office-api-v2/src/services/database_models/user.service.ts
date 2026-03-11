@@ -28,6 +28,10 @@ export abstract class UserService extends CRUD<User, UserDelegate, UserInclude>(
 		await Prisma.pegawai.deleteMany({
 			where: { userId: id }
 		});
+		// Delete UserRole entries
+		await Prisma.userRole.deleteMany({
+			where: { userId: id }
+		});
 		// Then delete the User
 		return await Prisma.user.delete({
 			where: { id: id }

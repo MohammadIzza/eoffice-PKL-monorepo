@@ -1,5 +1,6 @@
 import { authGuardPlugin, requirePermission } from "@backend/middlewares/auth";
 import { ProgramStudiService } from "@backend/services/database_models/programStudi.service";
+import { Prisma } from "@backend/db/index";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()
@@ -83,6 +84,14 @@ export default new Elysia()
 	.delete(
 		"/:id",
 		async ({ params: { id } }) => {
+			const mahasiswaCount = await Prisma.mahasiswa.count({ where: { programStudiId: id } });
+			if (mahasiswaCount > 0) {
+				throw new Error(`Program Studi tidak dapat dihapus karena masih digunakan oleh ${mahasiswaCount} data Mahasiswa.`);
+			}
+			const pegawaiCount = await Prisma.pegawai.count({ where: { programStudiId: id } });
+			if (pegawaiCount > 0) {
+				throw new Error(`Program Studi tidak dapat dihapus karena masih digunakan oleh ${pegawaiCount} data Pegawai.`);
+			}
 			await ProgramStudiService.delete(id);
 			return {
 				message: "Program Studi deleted successfully",

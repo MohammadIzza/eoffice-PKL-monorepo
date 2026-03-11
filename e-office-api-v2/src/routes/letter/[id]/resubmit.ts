@@ -1,6 +1,7 @@
 import { authGuardPlugin } from "@backend/middlewares/auth";
 import { Prisma } from "@backend/db/index";
 import { notificationService } from "@backend/services/notification.service";
+import { getAssigneeForStep } from "@backend/services/workflow/pkl.workflow.service";
 import { Elysia, t } from "elysia";
 
 export default new Elysia()
@@ -61,32 +62,39 @@ export default new Elysia()
 
 			// Kirim notifikasi ke approver di current step
 			try {
-                // 1. Notifikasi ke DIRI SENDIRI (Mahasiswa)
-                await notificationService.create(
-                    user.id,
-                    "Revisi Terkirim",
-                    "Anda telah berhasil mengirimkan perbaikan revisi surat.",
-                    `/dashboard/surat/${letter.id}`,
-                    "SUCCESS",
-                );
+				// 1. Notifikasi ke DIRI SENDIRI (Mahasiswa)
+				const studentName = (letter.values as any)?.namaLengkap || "Mahasiswa";
+				await notificationService.create(
+					user.id,
+					"Revisi Terkirim",
+					`Anda telah berhasil mengirimkan perbaikan revisi surat PKL.`,
+					`/dashboard/surat/${letter.id}`,
+					"SUCCESS",
+				);
 
-				const assignedApprovers = letter.assignedApprovers as Record<string, any>;
+				const assignedApprovers = letter.assignedApprovers as Record<string, string>;
 				const stepRoleMap: Record<number, string> = {
 					1: "dospem",
 					2: "koordinator",
 					3: "kaprodi",
-					4: "admin",
+					4: "adminFakultas",
 					5: "supervisor",
-					6: "manajer",
-					7: "wd1",
+					6: "manajerTu",
+					7: "wakilDekan1",
 					8: "upa",
 				};
-				const currentRoleKey = stepRoleMap[letter.currentStep!];
-				if (currentRoleKey && assignedApprovers[currentRoleKey]) {
+
+				let currentAssigneeId = getAssigneeForStep(assignedApprovers, letter.currentStep!);
+
+				if (!currentAssigneeId && stepRoleMap[letter.currentStep!]) {
+					currentAssigneeId = assignedApprovers[stepRoleMap[letter.currentStep!]];
+				}
+
+				if (currentAssigneeId) {
 					await notificationService.create(
-						assignedApprovers[currentRoleKey],
+						currentAssigneeId,
 						"Surat Siap untuk Review",
-						`Mahasiswa telah melakukan perbaikan dan mengirim ulang surat PKL. Silakan review kembali.`,
+						`Surat PKL ${studentName} telah diperbaiki dan siap untuk review ulang.`,
 						`/dashboard/approval/${letter.id}`,
 						"INFO",
 					);

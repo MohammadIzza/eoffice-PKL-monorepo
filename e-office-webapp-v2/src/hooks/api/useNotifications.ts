@@ -3,6 +3,7 @@ import { client, handleApiError } from "@/lib/api";
 import { Notification } from "@/types/notification.types";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { withBasePath } from "@/lib/navigation";
 
 export const useNotifications = () => {
     const router = useRouter();
@@ -12,7 +13,7 @@ export const useNotifications = () => {
 
     const fetchNotifications = useCallback(async () => {
         try {
-            const { data, error } = await client .notifications.index.get();
+            const { data, error } = await client.notifications.index.get();
 
             if (error) throw error;
 
@@ -23,10 +24,10 @@ export const useNotifications = () => {
         } catch (err) {
             const errorData = handleApiError(err);
 
-                if (errorData.status === 401) {
-                    router.push('/login');
-                    return;
-                }
+            if (errorData.status === 401) {
+                window.location.href = withBasePath("/login");
+                return;
+            }
 
             console.error("Failed to fetch notifications", err);
         } finally {
@@ -61,7 +62,7 @@ export const useNotifications = () => {
         } catch (error) {
             const err = handleApiError(error);
             if (err.status === 401) {
-                router.push('/login');
+                window.location.href = withBasePath("/login");
                 return;
             }
             toast.error(err.message);

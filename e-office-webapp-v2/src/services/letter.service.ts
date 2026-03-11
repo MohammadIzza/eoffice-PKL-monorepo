@@ -133,26 +133,19 @@ export const letterService = {
 
 	getAllLetters: async (): Promise<Letter[]> => {
 		try {
-			console.log('[letterService] Calling /letter/all endpoint...');
 			const response = await client.letter.all.get();
 
-			console.log('[letterService] Response status:', response.status);
-			console.log('[letterService] Response error:', response.error);
-
 			if (response.error) {
-				console.error('[letterService] API returned error:', response.error);
 				throw response.error;
 			}
 
 			if (response.data && typeof response.data === 'object') {
 				const data = response.data as LetterListResponse;
-				console.log('[letterService] Successfully fetched', data.data?.length || 0, 'letters');
 				return data.data || [];
 			}
 
 			throw new Error('Invalid response from /letter/all endpoint');
 		} catch (error) {
-			console.error('[letterService] Exception in getAllLetters:', error);
 			throw handleApiError(error);
 		}
 	},

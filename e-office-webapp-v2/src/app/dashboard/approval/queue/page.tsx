@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useApprovalQueue } from '@/hooks/api/useApprovalQueue';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { withBasePath } from '@/lib/navigation';
 import { 
   FileText, 
   AlertCircle, 
@@ -64,6 +65,19 @@ export default function ApprovalQueuePage() {
 
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'revision' | 'rejected'>(initialStatusFilter);
 
+  const isRevisionPending = (letter: QueueLetter): boolean => {
+    if (letter.approvalStatus === 'approved_by_me' || letter.approvalStatus === 'rejected_by_me') return false;
+    const stepHistory = letter.stepHistory || [];
+    const revisionRelated = stepHistory.filter((h) =>
+      ['REVISED', 'SELF_REVISED', 'RESUBMITTED'].includes(h.action)
+    );
+    if (revisionRelated.length === 0) return false;
+    const latestRevisionAction = [...revisionRelated].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )[0];
+    return latestRevisionAction.action === 'REVISED' || latestRevisionAction.action === 'SELF_REVISED';
+  };
+
   const searchFiltered = useMemo(() => {
     return letters.filter((letter) => {
       const v = letter.values as Record<string, any> | undefined;
@@ -79,23 +93,17 @@ export default function ApprovalQueuePage() {
 
   const filteredLetters = useMemo(() => {
     if (statusFilter === 'pending') {
-      // exclude approved and rejected
-      return searchFiltered.filter((l) => (l as QueueLetter).approvalStatus === 'pending');
+      // exclude approved, rejected, and revision
+      return searchFiltered.filter((l) => 
+        (l as QueueLetter).approvalStatus === 'pending' && 
+        !isRevisionPending(l as QueueLetter)
+      );
     }
     if (statusFilter === 'approved') {
       return searchFiltered.filter((l) => (l as QueueLetter).approvalStatus === 'approved_by_me');
     }
     if (statusFilter === 'revision') {
-      // Filter surat yang pending dan ada history revisi (kembali ke step ini setelah di-revise step berikutnya)
-      return searchFiltered.filter((l) => {
-        if ((l as QueueLetter).approvalStatus === 'approved_by_me') return false;
-        const stepHistory = l.stepHistory || [];
-        // Cek apakah ada REVISED/SELF_REVISED action yang menyebabkan surat kembali ke step ini
-        const hasRevisionHistory = stepHistory.some(h => 
-          ['REVISED', 'SELF_REVISED'].includes(h.action)
-        );
-        return hasRevisionHistory;
-      });
+      return searchFiltered.filter((l) => isRevisionPending(l as QueueLetter));
     }
     if (statusFilter === 'rejected') {
       // Hanya surat yang ditolak oleh user saat ini di step ini (backend set approvalStatus: 'rejected_by_me')
@@ -105,7 +113,10 @@ export default function ApprovalQueuePage() {
   }, [searchFiltered, statusFilter]);
 
   const totalPending = useMemo(
-    () => searchFiltered.filter((l) => (l as QueueLetter).approvalStatus === 'pending').length,
+    () => searchFiltered.filter((l) => 
+      (l as QueueLetter).approvalStatus === 'pending' && 
+      !isRevisionPending(l as QueueLetter)
+    ).length,
     [searchFiltered]
   );
 
@@ -261,6 +272,7 @@ export default function ApprovalQueuePage() {
                       const name = values?.namaLengkap || letter.createdBy?.name || '-';
                       const approvalStatus = (letter as QueueLetter).approvalStatus;
                       const isApproved = approvalStatus === 'approved_by_me';
+                      const isRevision = isRevisionPending(letter as QueueLetter);
                       const isRejected = letter.status === 'REJECTED';
                       return (
                         <TableRow
@@ -298,6 +310,11 @@ export default function ApprovalQueuePage() {
                                 <AlertCircle className="w-4 h-4" />
                                 Ditolak
                               </span>
+                            ) : isRevision ? (
+                              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#FF9500]">
+                                <AlertCircle className="w-4 h-4" />
+                                Revisi
+                              </span>
                             ) : (
                               <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0071E3]">
                                 <Clock className="w-4 h-4" />
@@ -319,7 +336,7 @@ export default function ApprovalQueuePage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => router.push(`/dashboard/approval/${letter.id}${(isApproved || isRejected) ? '?view=1' : ''}`)}
+                              onClick={() => router.push(withBasePath(`/dashboard/approval/${letter.id}${(isApproved || isRejected) ? '?view=1' : ''}`))}
                               className="h-8 gap-1.5 rounded-full border border-[#E5E5E7] text-sm font-medium text-[#1D1D1F] hover:bg-[#0071E3] hover:border-[#0071E3] hover:text-white transition-colors duration-200"
                             >
                               <Eye className="w-4 h-4" />

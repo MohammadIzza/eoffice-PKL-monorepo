@@ -41,6 +41,7 @@ import { useAuthStore } from "@/stores";
 import { usePKLFormStore } from "@/stores/pklFormStore";
 import { letterService } from "@/services";
 import { formatDate, formatDateTime } from "@/lib/utils/date.utils";
+import { withBasePath } from "@/lib/navigation";
 import { API_URL } from "@/lib/constants";
 import { toast } from "sonner";
 
@@ -276,7 +277,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
             </p>
             <Button
               variant="outline"
-              onClick={() => router.push("/dashboard/surat")}
+              onClick={() => router.push(withBasePath("/dashboard/surat"))}
               className="mt-6 bg-white border-[#E5E5E7] text-[#1D1D1F] hover:bg-[#F5F5F7]"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -298,7 +299,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
           </Alert>
           <Button
             variant="outline"
-            onClick={() => router.push("/dashboard/surat")}
+            onClick={() => router.push(withBasePath("/dashboard/surat"))}
             className="mt-4 bg-white border-[#E5E5E7] text-[#1D1D1F] hover:bg-[#F5F5F7]"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -500,7 +501,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
       } else if (actionType === "self-revise") {
         await letterService.selfRevise(letter.id, selfReviseMessage || undefined);
         setSelfReviseMessage("");
-        router.push(`/dashboard/pengajuan/pkl/identitas?revisi=${letter.id}`);
+        router.push(withBasePath(`/dashboard/pengajuan/pkl/identitas?revisi=${letter.id}`));
         setActionType(null);
         return;
       } else if (actionType === "resubmit") {
@@ -521,7 +522,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
         {/* Breadcrumb */}
         <div className="flex items-center text-[16px] text-[#86868B] mb-[32px] font-lexend">
           <Link
-            href="/dashboard/surat"
+            href={withBasePath("/dashboard/surat")}
             className="text-[#0071E3] hover:text-[#0051A3] transition-colors"
           >
             Daftar Surat
@@ -543,7 +544,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
             </div>
             <Button
               variant="outline"
-              onClick={() => router.push("/dashboard/surat")}
+              onClick={() => router.push(withBasePath("/dashboard/surat"))}
               className="bg-white border-[#E5E5E7] text-[#1D1D1F] hover:bg-[#F5F5F7]"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -588,7 +589,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
               </CardHeader>
               <CardContent className="p-0">
                 <DetailRow label="Nama Lengkap" value={formValues.namaLengkap || letter.createdBy?.name} />
-                <DetailRow label="NIM/NIP" value={formValues.nim} />
+                <DetailRow label="NIM" value={formValues.nim} />
                 <DetailRow label="Email" value={formValues.email || letter.createdBy?.email} />
                 <DetailRow label="Departemen" value={formValues.departemen} />
                 <DetailRow label="Program Studi" value={formValues.programStudi} />
@@ -723,7 +724,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
                   <div className="flex flex-col gap-2">
                     {canResubmit && wasRevisedByApprover && (
                       <Button
-                        onClick={() => router.push(`/dashboard/pengajuan/pkl/identitas?revisi=${letter.id}`)}
+                        onClick={() => router.push(withBasePath(`/dashboard/pengajuan/pkl/identitas?revisi=${letter.id}`))}
                         className="w-full bg-[#0071E3] text-white hover:bg-[#0051A3]"
                       >
                         Perbaikan
