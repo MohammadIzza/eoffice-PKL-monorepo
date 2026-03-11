@@ -45,7 +45,6 @@ export const authService = {
 
   getMe: async (token?: string): Promise<User> => {
     try {
-      console.log("[AuthService] getMe called. TokenArg present:", !!token);
       const api = client as any;
 
       if (!token && typeof window !== 'undefined') {
@@ -54,7 +53,6 @@ export const authService = {
           if (storageStr) {
             const storage = JSON.parse(storageStr);
             token = storage?.state?.token;
-            console.log("[AuthService] Token from storage:", !!token);
           }
         } catch (e) {
           console.error("[AuthService] Error reading storage:", e);

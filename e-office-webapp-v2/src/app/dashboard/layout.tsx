@@ -7,6 +7,7 @@ import PKLSidebar from '@/components/features/pkl/navigation/PKLSidebar';
 import { withBasePath } from '@/lib/navigation';
 import { useAuthStore } from '@/stores';
 import { PageLoading } from '@/components/shared';
+import { CompleteProfileModal } from '@/components/features/profile/CompleteProfileModal';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -39,8 +40,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     return null;
   }
 
+  const handleProfileCompleted = async () => {
+    // Re-fetch user data so mahasiswa/pegawai is populated
+    await checkSession();
+  };
+
   return (
     <div className="min-h-screen w-full bg-white">
+      <CompleteProfileModal user={user} onCompleted={handleProfileCompleted} />
       <DashboardNavbar />
       <div className="flex min-h-[calc(100vh-64px)] w-full">
         <PKLSidebar />

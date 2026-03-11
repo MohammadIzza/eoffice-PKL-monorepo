@@ -6,9 +6,6 @@ import env from "env-var";
 export default new Elysia().get(
     "/",
     async ({ request, set }) => {
-        console.log("[SSO DEBUG] Incoming GET from SSO Engine");
-        console.log("[SSO DEBUG] Headers:", Object.fromEntries(request.headers.entries()));
-
         // 1. Extract Authorization Header
         // SSO backend strips "Bearer " prefix before forwarding — header arrives as raw token
         const authHeader = request.headers.get("authorization");
@@ -20,7 +17,6 @@ export default new Elysia().get(
         }
 
         if (!ssoToken) {
-            console.log("[SSO DEBUG] No token found in Authorization header");
             set.status = 400;
             return { message: "Token missing" };
         }
@@ -41,7 +37,6 @@ export default new Elysia().get(
             }
 
             const ssoData = await ssoResponse.json();
-            console.log("[SSO DEBUG] Full response from SSO /users/me:", JSON.stringify(ssoData, null, 2));
             const userEmail = ssoData?.data?.username;
 
             if (!userEmail || typeof userEmail !== "string") {
@@ -56,8 +51,6 @@ export default new Elysia().get(
             });
 
             if (!user) {
-                console.log("[SSO DEBUG] User not found locally, auto-registering:", userEmail);
-
                 // Determine role from email domain
                 // @students.undip.ac.id → mahasiswa
                 // @lecturer.undip.ac.id → dosen_pembimbing
@@ -84,13 +77,9 @@ export default new Elysia().get(
                     const localRole = await Prisma.role.findFirst({ where: { name: roleName } });
                     if (localRole) {
                         await Prisma.userRole.create({ data: { userId: created.id, roleId: localRole.id } });
-                        console.log("[SSO DEBUG] Auto-assigned role:", roleName);
-                    } else {
-                        console.log("[SSO DEBUG] Role not found in DB:", roleName);
                     }
-                } else {
-                    console.log("[SSO DEBUG] No role assigned — email domain not recognized:", userEmail);
                 }
+
 
                 // NOTE: mahasiswa/pegawai profile records are NOT created here.
                 // They require nim/nip, departemenId, programStudiId which SSO does not provide.
@@ -141,19 +130,36 @@ export default new Elysia().get(
                 },
             });
 
-            // 9. Return relative callback_url — SSO frontend prepends redirectUri automatically
-            // SSO frontend: window.open(redirectUri + callback_url)
-            // redirectUri  = "https://apps-fsm.undip.ac.id/persuratan-pengantar-pkl"
-            // callback_url = "/sso/callback?token=..."
-            // Result       = "https://apps-fsm.undip.ac.id/persuratan-pengantar-pkl/sso/callback?token=..."
+            // 9. Return redirect path.
+            // SSO concatenates application_url_callback + callback_url (raw string concat).
+            // application_url_callback = "https://.../persuratan-pengantar-pkl-api/auth/sso"
+            // So returning "/redirect?token=..." → SSO redirects browser to:
+            //   "https://.../persuratan-pengantar-pkl-api/auth/sso/redirect?token=..."
+            // That hits our GET /auth/sso/redirect endpoint below, which does the final 302
+            // redirect to the frontend URL.
             return {
                 success: true,
-                callback_url: `/sso/callback?token=${localToken}`,
+                callback_url: `/redirect?token=${localToken}`,
             };
         } catch (error) {
             console.error("SSO Bridge Error:", error);
             set.status = 500;
             return { message: "Internal server error during SSO processing" };
         }
+    }
+)
+.get(
+    "/redirect",
+    ({ query, set }) => {
+        const token = query.token;
+        const frontendUrl = env.get("FRONTEND_URL").required().asString();
+        if (!token) {
+            set.status = 400;
+            return { message: "Token missing" };
+        }
+        // Redirect browser to frontend callback page
+        set.status = 302;
+        set.headers["location"] = `${frontendUrl}/sso/callback?token=${token}`;
+        return;
     }
 );

@@ -64,16 +64,10 @@ export function SuperAdminDashboard({ userName }: SuperAdminDashboardProps) {
   useEffect(() => {
     const fetchLetters = async () => {
       try {
-        console.log('[SuperAdminDashboard] Fetching all letters...');
         const data = await letterService.getAllLetters();
-        console.log('[SuperAdminDashboard] Fetched letters:', data?.length || 0);
         setLetters(data);
       } catch (error: any) {
-        console.error('[SuperAdminDashboard] Error fetching all letters:', {
-          message: error?.message || 'Unknown error',
-          status: error?.status,
-          error: error
-        });
+        console.error('Error fetching letters:', error?.message || error);
       } finally {
         setIsLoadingLetters(false);
       }
