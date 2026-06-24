@@ -122,7 +122,7 @@ export default function ApprovalQueuePage() {
 
   if (isLoading) {
     return (
-      <div className="flex-1 px-[40px] py-[32px] overflow-y-auto bg-white">
+      <div className="flex-1 px-4 py-6 sm:px-10 sm:py-8 overflow-y-auto bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
             <Skeleton className="h-8 w-64 mb-2" />
@@ -144,7 +144,7 @@ export default function ApprovalQueuePage() {
 
   if (error) {
     return (
-      <div className="flex-1 px-[40px] py-[32px] overflow-y-auto bg-white">
+      <div className="flex-1 px-4 py-6 sm:px-10 sm:py-8 overflow-y-auto bg-white">
         <div className="max-w-7xl mx-auto">
           <Alert className="bg-white border-none text-[#1B5BD7]">
             <AlertCircle className="h-4 w-4 text-[#1B5BD7]" />
@@ -157,7 +157,7 @@ export default function ApprovalQueuePage() {
 
   if (!activeRole) {
     return (
-      <div className="flex-1 px-[40px] py-[32px] overflow-y-auto bg-white">
+      <div className="flex-1 px-4 py-6 sm:px-10 sm:py-8 overflow-y-auto bg-white">
         <div className="max-w-7xl mx-auto">
           <Alert className="bg-white border-none text-[#1B5BD7]">
             <AlertCircle className="h-4 w-4 text-[#1B5BD7]" />
@@ -171,10 +171,10 @@ export default function ApprovalQueuePage() {
   }
 
   return (
-    <div className="flex-1 px-[40px] py-[32px] overflow-y-auto bg-white">
+    <div className="flex-1 px-4 py-6 sm:px-10 sm:py-8 overflow-y-auto bg-white">
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumb */}
-        <div className="flex items-center text-[16px] text-[#86868B] mb-[32px] font-lexend">
+        <div className="flex items-center text-sm sm:text-base text-[#86868B] mb-6 sm:mb-8 font-lexend">
           <span className="text-[#86868B]">Dashboard</span>
           <span className="mx-2 text-[#CBD5E1]">/</span>
           <span className="font-medium text-[#1D1D1F]">Antrian Approval</span>
@@ -182,10 +182,10 @@ export default function ApprovalQueuePage() {
 
         {/* Header */}
         <div className="mb-[32px]">
-          <h1 className="font-lexend font-bold text-[30px] leading-[36px] tracking-[-0.5px] text-[#1D1D1F] mb-2">
+          <h1 className="font-lexend font-bold text-xl sm:text-[30px] sm:leading-[36px] tracking-[-0.5px] text-[#1D1D1F] mb-2">
             Antrian Approval
           </h1>
-          <p className="font-lexend font-normal text-[16px] leading-[24px] text-[#86868B]">
+          <p className="font-lexend font-normal text-sm sm:text-base text-[#86868B]">
             {/* Semua surat yang melewati Anda{activeRole && letters.length > 0 && ` sebagai ${getStepLabel(letters[0]?.currentStep ?? null)}`} — menunggu persetujuan dan sudah disetujui */}
             Daftar surat yang menunggu persetujuan dan sudah disetujui
           </p>

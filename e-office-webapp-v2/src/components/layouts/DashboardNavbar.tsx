@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Bell, LogOut, User, Settings, CheckCheck, Inbox } from "lucide-react";
+import { Bell, LogOut, User, Menu, CheckCheck, Inbox } from "lucide-react";
 import { useAuthStore } from "@/stores";
 import { useRouter } from "next/navigation";
 import { authService } from "@/services/auth.service";
@@ -28,11 +28,15 @@ import { useNotifications } from "@/hooks/api/useNotifications";
 import { formatDistanceToNow } from "date-fns";
 import { id as indonesia } from "date-fns/locale";
 
-export default function DashboardNavbar() {
+interface DashboardNavbarProps {
+  onMenuClick?: () => void;
+}
+
+export default function DashboardNavbar({ onMenuClick }: DashboardNavbarProps) {
   const { user, logout } = useAuthStore();
   const router = useRouter();
   const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotifications();
-  
+
   const getInitials = (name: string | null | undefined): string => {
     if (!name) return 'U';
     const parts = name.trim().split(' ');
@@ -64,24 +68,34 @@ export default function DashboardNavbar() {
 
   return (
     <header className="w-full h-16 bg-blue-600/90 backdrop-blur-md sticky top-0 z-100 border-b border-blue-700/50 shadow-lg">
-      <div className="container mx-auto h-full px-6 flex items-center justify-between">
-        {/* Logo Section */}
-        <div className="flex items-center h-8">
-          <img 
-            src={withBasePath("/logofsm.svg")} 
-            alt="FSM Undip" 
-            className="h-full w-auto object-contain brightness-0 invert"
-          />
+      <div className="container mx-auto h-full px-4 sm:px-6 flex items-center justify-between">
+        {/* Left Section: Hamburger (mobile) + Logo */}
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onMenuClick}
+            className="lg:hidden text-white hover:bg-white/20 transition-colors shrink-0"
+            aria-label="Buka menu"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          <div className="flex items-center h-8">
+            <img
+              src={withBasePath("/logofsm.svg")}
+              alt="FSM Undip"
+              className="h-full w-auto object-contain brightness-0 invert"
+            />
+          </div>
         </div>
 
-        {/* Center Section */}
-        <div className="flex-1 max-w-xl mx-8 hidden md:block">
-        </div>
+        {/* Center Section (desktop only) */}
+        <div className="flex-1 max-w-xl mx-8 hidden md:block" />
 
         {/* Right Section */}
-        <div className="flex items-center gap-3">
-          
-          {/* [MODIFIKASI] Notifications Popover */}
+        <div className="flex items-center gap-2 sm:gap-3">
+
+          {/* Notifications Popover */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -91,8 +105,8 @@ export default function DashboardNavbar() {
               >
                 <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
-                  <Badge 
-                    variant="destructive" 
+                  <Badge
+                    variant="destructive"
                     className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] border-2 border-blue-600 rounded-full animate-in zoom-in"
                   >
                     {unreadCount > 9 ? '9+' : unreadCount}
@@ -100,13 +114,13 @@ export default function DashboardNavbar() {
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-80 p-0 shadow-xl bg-white border-slate-200 z-[110]">
+            <PopoverContent align="end" className="w-[calc(100vw-2rem)] sm:w-80 p-0 shadow-xl bg-white border-slate-200 z-[110]">
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
                 <h4 className="font-semibold text-sm text-slate-900">Notifikasi</h4>
                 {unreadCount > 0 && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="h-auto p-0 text-xs text-blue-600 hover:text-blue-700 hover:bg-transparent"
                     onClick={() => markAllAsRead()}
                   >
@@ -115,7 +129,7 @@ export default function DashboardNavbar() {
                   </Button>
                 )}
               </div>
-              
+
               <ScrollArea className="h-75">
                 {isLoading ? (
                   <div className="p-4 text-center text-xs text-slate-500">Memuat...</div>
@@ -127,12 +141,9 @@ export default function DashboardNavbar() {
                 ) : (
                   <div className="flex flex-col">
                     {notifications.map((notif) => {
-                      // Bedakan warna/icon sesuai tipe notifikasi
                       let icon = null;
                       let color = '';
-                      // Penentuan tipe notifikasi berbasis title/message/type
                       const title = notif.title?.toLowerCase() || '';
-                      // Pisahkan revisi dan ditolak
                       if (title.includes('ditolak') || title.includes('penolakan')) {
                         icon = <span className="inline-flex items-center justify-center w-6 h-6 text-[#D93025] mr-3"><svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M12 8v4m0 4h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></span>;
                         color = 'text-[#D93025]';
@@ -189,14 +200,14 @@ export default function DashboardNavbar() {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="flex items-center gap-3 h-auto p-2 text-white hover:bg-white/20 rounded-full transition-colors"
+                className="flex items-center gap-2 h-auto p-2 text-white hover:bg-white/20 rounded-full transition-colors"
               >
-                <div className="flex flex-col items-end mr-1 sm:flex gap-1">
-                  <span className="text-sm font-semibold leading-none text-white">
+                <div className="hidden sm:flex flex-col items-end gap-1">
+                  <span className="text-sm font-semibold leading-none text-white truncate max-w-[120px]">
                     {user?.name || 'Pengguna'}
                   </span>
                   {user?.email && (
-                    <span className="text-[11px] text-blue-100/90 leading-none font-medium">
+                    <span className="text-[11px] text-blue-100/90 leading-none font-medium truncate max-w-[120px]">
                       {user.email}
                     </span>
                   )}
@@ -209,7 +220,7 @@ export default function DashboardNavbar() {
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            
+
             <DropdownMenuContent align="end" className="min-w-56 w-auto max-w-[20rem] rounded-2xl shadow-xl border border-gray-200 bg-white p-2">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1.5 py-1 px-1">
@@ -230,12 +241,8 @@ export default function DashboardNavbar() {
                   <span>Profil</span>
                 </Link>
               </DropdownMenuItem>
-              {/* <DropdownMenuItem className="cursor-pointer rounded-lg py-2">
-                <Settings className="mr-2 h-4 w-4 text-gray-500" />
-                <span>Pengaturan</span>
-              </DropdownMenuItem> */}
               <DropdownMenuSeparator className="my-1" />
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 rounded-lg py-2"
                 onClick={handleLogout}
               >

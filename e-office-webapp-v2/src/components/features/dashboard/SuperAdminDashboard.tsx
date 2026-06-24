@@ -222,7 +222,7 @@ export function SuperAdminDashboard({ userName }: SuperAdminDashboardProps) {
          <div>
            <div className="text-[11px] font-medium text-[#86868B] uppercase tracking-wide mb-1">{label}</div>
            <div className="flex items-baseline gap-1.5">
-              <span className="text-3xl font-bold text-[#1D1D1F] tracking-tighter">{count}</span>
+              <span className="text-2xl sm:text-3xl font-bold text-[#1D1D1F] tracking-tighter">{count}</span>
               <span className="text-[11px] font-medium text-[#86868B]">{subLabel}</span>
            </div>
          </div>
@@ -340,7 +340,7 @@ export function SuperAdminDashboard({ userName }: SuperAdminDashboardProps) {
                                   <FileText className="w-4 h-4" />
                                   <span className="text-xs font-semibold uppercase tracking-wider">Total Surat</span>
                               </div>
-                              <div className="text-4xl font-bold tracking-tighter mb-1">{stats.total}</div>
+                              <div className="text-2xl sm:text-4xl font-bold tracking-tighter mb-1">{stats.total}</div>
                               <div className="text-xs text-white/50 font-medium">Dokumen terdata dalam sistem</div>
                           </div>
                           {/* Abstract Circle Decoration */}

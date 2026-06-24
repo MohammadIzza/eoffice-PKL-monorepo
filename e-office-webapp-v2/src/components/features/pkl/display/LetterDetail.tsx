@@ -254,7 +254,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
 
   if (isLoading) {
     return (
-      <div className="flex-1 px-[40px] py-[32px] overflow-y-auto bg-white">
+      <div className="flex-1 px-4 py-6 sm:px-10 sm:py-8 overflow-y-auto bg-white">
         <div className="max-w-7xl mx-auto">
           <Skeleton className="h-8 w-64 mb-4" />
           <Skeleton className="h-96 w-full" />
@@ -265,7 +265,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
 
   if (isForbidden) {
     return (
-      <div className="flex-1 px-[40px] py-[32px] overflow-y-auto bg-white">
+      <div className="flex-1 px-4 py-6 sm:px-10 sm:py-8 overflow-y-auto bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col items-center justify-center py-16 text-center max-w-md mx-auto">
             <FileText className="w-12 h-12 text-[#FF3B30] mx-auto mb-3" />
@@ -291,7 +291,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
 
   if (error || !letter) {
     return (
-      <div className="flex-1 px-[40px] py-[32px] overflow-y-auto bg-white">
+      <div className="flex-1 px-4 py-6 sm:px-10 sm:py-8 overflow-y-auto bg-white">
         <div className="max-w-7xl mx-auto">
           <Alert className="bg-white border-none text-[#1B5BD7]">
             <AlertCircle className="h-4 w-4 text-[#1B5BD7]" />
@@ -517,7 +517,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
   };
 
   return (
-    <div className="flex-1 px-[40px] py-[32px] overflow-y-auto bg-white">
+    <div className="flex-1 px-4 py-6 sm:px-10 sm:py-8 overflow-y-auto bg-white">
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumb */}
         <div className="flex items-center text-[16px] text-[#86868B] mb-[32px] font-lexend">
@@ -535,7 +535,7 @@ export default function LetterDetail({ id }: LetterDetailProps) {
         <div className="mb-[32px]">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="font-lexend font-bold text-[30px] leading-[36px] tracking-[-0.5px] text-[#1D1D1F] mb-2">
+              <h1 className="font-lexend font-bold text-xl sm:text-[30px] sm:leading-[36px] tracking-[-0.5px] text-[#1D1D1F] mb-2">
                 Detail Surat
               </h1>
               {/* <p className="font-lexend font-normal text-[16px] leading-[24px] text-[#86868B]">

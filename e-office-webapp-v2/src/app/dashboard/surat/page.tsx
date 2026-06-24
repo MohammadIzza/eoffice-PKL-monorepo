@@ -279,7 +279,7 @@ export default function SuratListPage() {
   }
 
   return (
-    <div className="container mx-auto px-8 py-10 space-y-8 bg-white min-h-screen">
+    <div className="container mx-auto px-4 py-6 sm:px-8 sm:py-10 space-y-6 sm:space-y-8 bg-white min-h-screen">
       {blocked && isMahasiswa && (
         <Alert className="bg-white border-none text-[#1B5BD7]">
           <AlertCircle className="h-3.5 w-3.5 text-[#1B5BD7]" />
@@ -292,7 +292,7 @@ export default function SuratListPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-semibold text-[#1D1D1F] tracking-tight flex items-center gap-3">
+          <h1 className="text-xl sm:text-3xl font-semibold text-[#1D1D1F] tracking-tight flex items-center gap-3">
             <FileText className="w-7 h-7 text-[#0071E3]" />
             Daftar Surat
           </h1>
@@ -415,6 +415,7 @@ export default function SuratListPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
+                <div className="min-w-[700px]">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-[rgba(0,0,0,0.02)] hover:bg-[rgba(0,0,0,0.02)] border-b border-[rgba(0,0,0,0.08)]">
@@ -524,6 +525,7 @@ export default function SuratListPage() {
                     })}
                   </TableBody>
                 </Table>
+              </div>
               </div>
             )}
             {/* Pagination */}

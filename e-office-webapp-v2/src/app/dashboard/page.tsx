@@ -199,12 +199,12 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="container mx-auto px-8 py-10 max-w-7xl">
+      <div className="container mx-auto px-4 py-6 sm:px-8 sm:py-10 max-w-7xl">
         {/* Header Section - Apple Style */}
         <div className="mb-10 animate-fade-in">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3">
             <div>
-              <h1 className="text-4xl font-semibold text-[#1D1D1F] mb-2 tracking-tight">Dashboard</h1>
+              <h1 className="text-2xl sm:text-4xl font-semibold text-[#1D1D1F] mb-2 tracking-tight">Dashboard</h1>
               <p className="text-base text-[#86868B]">
                 Selamat datang kembali, <span className="font-medium text-[#1D1D1F]">{user?.name || 'Pengguna'}</span>
               </p>
@@ -241,14 +241,14 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 animate-slide-up">
           <Link href={withBasePath(isApprover ? "/dashboard/approval/queue" : "/dashboard/surat")}>
             <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-xs font-medium text-[#86868B] mb-3">
                     <FileText className="w-4 h-4" />
                     Total Surat
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <p className="text-4xl font-bold text-[#1D1D1F] tracking-tight">{stats.total}</p>
+                    <p className="text-2xl sm:text-4xl font-bold text-[#1D1D1F] tracking-tight">{stats.total}</p>
                     <span className="text-sm text-[#86868B]">surat</span>
                   </div>
                 </div>
@@ -258,14 +258,14 @@ export default function DashboardPage() {
           
           <Link href={withBasePath(isApprover ? "/dashboard/approval/queue?status=pending" : "/dashboard/surat?status=PENDING,PROCESSING")}>
             <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-xs font-medium text-[#86868B] mb-3">
                     <Clock className="w-4 h-4 text-[#0071E3]" />
                     Menunggu
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <p className="text-4xl font-bold text-[#0071E3] tracking-tight">{stats.pending}</p>
+                    <p className="text-2xl sm:text-4xl font-bold text-[#0071E3] tracking-tight">{stats.pending}</p>
                     <span className="text-sm text-[#86868B]">surat</span>
                   </div>
                 </div>
@@ -275,14 +275,14 @@ export default function DashboardPage() {
           
           <Link href={withBasePath(isApprover ? "/dashboard/approval/queue?status=approved" : "/dashboard/surat?status=COMPLETED")}>
             <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-xs font-medium text-[#86868B] mb-3">
                     <CheckCircle2 className="w-4 h-4 text-[#34C759]" />
                     Selesai
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <p className="text-4xl font-bold text-[#34C759] tracking-tight">{stats.completed}</p>
+                    <p className="text-2xl sm:text-4xl font-bold text-[#34C759] tracking-tight">{stats.completed}</p>
                     <span className="text-sm text-[#86868B]">surat</span>
                   </div>
                 </div>
@@ -292,14 +292,14 @@ export default function DashboardPage() {
           
           <Link href={withBasePath(isApprover ? "/dashboard/approval/queue?status=revision" : "/dashboard/surat?status=REVISION")}>
             <Card className="bg-white border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-xs font-medium text-[#86868B] mb-3">
                     <AlertCircle className="w-4 h-4 text-[#FF9500]" />
                     Revisi
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <p className="text-4xl font-bold text-[#FF9500] tracking-tight">{stats.revision}</p>
+                    <p className="text-2xl sm:text-4xl font-bold text-[#FF9500] tracking-tight">{stats.revision}</p>
                     <span className="text-sm text-[#86868B]">surat</span>
                   </div>
                 </div>
@@ -315,7 +315,7 @@ export default function DashboardPage() {
         {/* <div className="flex items-center gap-4 animate-slide-up">
           <Link href={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/dashboard/surat`} className="flex-1">
             <Card className="border border-[rgba(0,0,0,0.08)] shadow-sm rounded-3xl overflow-hidden bg-white hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <Button variant="ghost" className="w-full justify-start gap-3 h-auto p-0 hover:bg-transparent">
                   <FileText className="w-5 h-5 text-[#0071E3]" />
                   <div className="text-left">

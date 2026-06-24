@@ -202,7 +202,7 @@ export function MasterCRUDTable<T extends Record<string, any>>({
 		: data;
 
 	return (
-		<div className="flex-1 px-[40px] py-[32px] overflow-y-auto bg-white">
+		<div className="flex-1 px-4 py-6 sm:px-10 sm:py-8 overflow-y-auto bg-white">
 			<div className="max-w-7xl mx-auto">
 				<div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 					<div>

@@ -129,7 +129,7 @@ export default function ProfilePage() {
         {/* Header */}
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-semibold text-[#1D1D1F] tracking-tight mb-2">Profil Pengguna</h1>
+            <h1 className="text-xl sm:text-3xl font-semibold text-[#1D1D1F] tracking-tight mb-2">Profil Pengguna</h1>
             <p className="text-sm text-[#86868B]">Informasi lengkap tentang akun dan data Anda</p>
           </div>
           <div className="flex gap-2">

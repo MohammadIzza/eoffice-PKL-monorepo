@@ -37,7 +37,12 @@ export default new Elysia().get(
             }
 
             const ssoData = await ssoResponse.json();
-            const userEmail = ssoData?.data?.username;
+            
+            // Extract data: handle both wrapped { data: { ... } } and flat { ... } structures
+            const userData = ssoData?.data ?? ssoData;
+            const userEmail = userData?.username;
+            const ssoRole = userData?.role;
+            const ssoName = userData?.name ?? userEmail;
 
             if (!userEmail || typeof userEmail !== "string") {
                 set.status = 401;
@@ -51,18 +56,17 @@ export default new Elysia().get(
             });
 
             if (!user) {
-                // Determine role from email domain
-                // @students.undip.ac.id → mahasiswa
-                // @lecturer.undip.ac.id → dosen_pembimbing
-                // other                 → no role assigned (admin must set manually)
+                // Determine role from SSO role field or email domain
                 let roleName: string | null = null;
-                if (userEmail.endsWith("@students.undip.ac.id")) {
+                if (ssoRole === "superadmin" || userEmail === "superadmin") {
+                    roleName = "superadmin";
+                } else if (userEmail.endsWith("@students.undip.ac.id")) {
                     roleName = "mahasiswa";
                 } else if (userEmail.endsWith("@lecturer.undip.ac.id")) {
                     roleName = "dosen_pembimbing";
+                } else if (userEmail.endsWith("@staff.undip.ac.id")) {
+                    roleName = "petugas_akademik";
                 }
-
-                const ssoName: string = ssoData?.data?.name ?? userEmail;
 
                 const created = await Prisma.user.create({
                     data: {
@@ -79,7 +83,6 @@ export default new Elysia().get(
                         await Prisma.userRole.create({ data: { userId: created.id, roleId: localRole.id } });
                     }
                 }
-
 
                 // NOTE: mahasiswa/pegawai profile records are NOT created here.
                 // They require nim/nip, departemenId, programStudiId which SSO does not provide.

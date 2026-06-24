@@ -11,7 +11,7 @@ interface MasterPlaceholderProps {
 
 export function MasterPlaceholder({ title, description, icon: Icon }: MasterPlaceholderProps) {
   return (
-    <div className="flex-1 px-[40px] py-[32px] overflow-y-auto bg-white">
+    <div className="flex-1 px-4 py-6 sm:px-10 sm:py-8 overflow-y-auto bg-white">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-[#1D1D1F] tracking-tight">{title}</h1>

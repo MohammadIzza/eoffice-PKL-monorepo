@@ -110,7 +110,7 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-4 max-w-lg">
-            <h1 className="text-4xl font-bold leading-tight tracking-tight">
+            <h1 className="text-2xl sm:text-4xl font-bold leading-tight tracking-tight">
               Sistem Informasi <br/> <span className="text-blue-400">Persuratan Digital</span>
             </h1>
             <p className="text-base text-slate-300">

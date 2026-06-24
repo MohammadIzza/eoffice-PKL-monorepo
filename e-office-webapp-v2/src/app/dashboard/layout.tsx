@@ -13,14 +13,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { user, isLoading, checkSession } = useAuthStore();
   const [isChecking, setIsChecking] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const validateSession = async () => {
       await checkSession();
-      // Check if user is null after session check
       const currentUser = useAuthStore.getState().user;
       if (!currentUser) {
-        // No user found, redirect to login
         router.push(withBasePath('/login'));
         return;
       }
@@ -30,28 +29,25 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     validateSession();
   }, [checkSession, router]);
 
-  // Show loading while checking session
   if (isChecking || isLoading) {
     return <PageLoading text="Memeriksa sesi..." />;
   }
 
-  // If no user after checking, don't render (redirect is happening)
   if (!user) {
     return null;
   }
 
   const handleProfileCompleted = async () => {
-    // Re-fetch user data so mahasiswa/pegawai is populated
     await checkSession();
   };
 
   return (
     <div className="min-h-screen w-full bg-white">
       <CompleteProfileModal user={user} onCompleted={handleProfileCompleted} />
-      <DashboardNavbar />
+      <DashboardNavbar onMenuClick={() => setMobileMenuOpen(true)} />
       <div className="flex min-h-[calc(100vh-64px)] w-full">
-        <PKLSidebar />
-        <main className="flex-1 overflow-auto animate-fade-in bg-white">
+        <PKLSidebar mobileOpen={mobileMenuOpen} onMobileClose={() => setMobileMenuOpen(false)} />
+        <main className="flex-1 overflow-auto animate-fade-in bg-white min-w-0">
           {children}
         </main>
       </div>
